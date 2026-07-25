@@ -1,0 +1,83 @@
+# Copy to polyarb.yaml and edit. Pass with --config polyarb.yaml.
+# Secrets never live here — they come from environment variables. See .env.example.
+
+# Live trading is off unless this is true AND you pass --i-understand-the-risks.
+live_enabled: false
+
+risk:
+  # Total collateral deployable at once, in pUSD.
+  max_total_exposure: 250.0
+  # Most that may sit in any single market.
+  max_position_per_market: 50.0
+  # Largest single trade, in pairs.
+  max_trade_size: 50.0
+  # Stop for the day after losing this much.
+  max_daily_loss: 25.0
+  # Minimum net edge to act on, in basis points of the $1 pair.
+  # 40bps = 0.4c per pair after fees and gas. Raise this if fills are rare —
+  # a thin edge is the first thing latency takes away from you.
+  min_edge_bps: 40.0
+  # Never trade on a book older than this.
+  max_book_age_ms: 1500.0
+  # Halt if more than this fraction of recent attempts end one-legged. A high rate
+  # means we are consistently too slow and are the one being picked off.
+  max_one_legged_rate: 0.25
+  one_legged_window: 20
+  # Halt if charged fees diverge from the model by more than this, per share.
+  fee_reconcile_tolerance: 0.002
+  max_consecutive_errors: 5
+
+execution:
+  # Round-trip latency the paper engine assumes. Measure your own and set it
+  # honestly — understating it is the easiest way to make paper results lie.
+  assumed_latency_ms: 150.0
+  # Estimated Polygon gas per merge/split, in pUSD.
+  gas_cost_per_settlement: 0.02
+  # Accumulate this many pairs before paying gas to merge.
+  merge_threshold_pairs: 25.0
+  merge_max_age_s: 600.0
+  # Send both legs in one batch request rather than sequentially.
+  batch_legs: true
+  # On a one-legged fill, immediately reverse the filled leg.
+  unwind_one_legged: true
+
+discovery:
+  # Which fee categories to track. Geopolitics is fee-free and is where net edge
+  # most often survives; crypto (0.07) and sports (0.05) rarely clear their fees
+  # at mid prices. Empty list means "all categories".
+  categories:
+    - geopolitics
+    - politics
+    - finance
+    - tech
+  # Skip illiquid markets — they show wide phantom spreads that never fill.
+  min_liquidity: 500.0
+  max_markets: 200
+  assets_per_connection: 200
+  refresh_interval_s: 900.0
+  # Neg-risk markets route through a different exchange contract; v1 skips them.
+  exclude_neg_risk: true
+
+# Per-category taker fee rates: fee_per_share = rate * price * (1 - price).
+# Verify these against the live API with `polyarb doctor` — they change.
+fee_rates:
+  geopolitics: 0.00
+  politics: 0.04
+  finance: 0.04
+  economics: 0.04
+  tech: 0.04
+  mentions: 0.04
+  culture: 0.04
+  sports: 0.05
+  crypto: 0.07
+
+# Any category not listed above is priced at this rate. It is deliberately the
+# most expensive one: an unrecognised market must never look cheaper than it is.
+unknown_fee_rate: 0.07
+
+# pUSD collateral address on Polygon, used by merge/split.
+# Resolve and confirm this with `polyarb doctor` before enabling live settlement.
+pusd_address: ""
+
+journal_dir: journals
+recording_dir: recordings

@@ -1,0 +1,30 @@
+[
+  {
+    "condition_id": "0xgeo",
+    "question": "Will the treaty be signed before year end?",
+    "slug": "treaty-signed",
+    "yes_token_id": "GEO_YES",
+    "no_token_id": "GEO_NO",
+    "category": "geopolitics",
+    "tick_size": 0.01,
+    "min_order_size": 5.0,
+    "neg_risk": false,
+    "closed": false,
+    "liquidity": 50000.0,
+    "volume_24h": 12000.0
+  },
+  {
+    "condition_id": "0xcry",
+    "question": "Will BTC close above 100k?",
+    "slug": "btc-above-100k",
+    "yes_token_id": "CRY_YES",
+    "no_token_id": "CRY_NO",
+    "category": "crypto",
+    "tick_size": 0.01,
+    "min_order_size": 5.0,
+    "neg_risk": false,
+    "closed": false,
+    "liquidity": 80000.0,
+    "volume_24h": 40000.0
+  }
+]
