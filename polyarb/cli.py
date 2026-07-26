@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import importlib.util
 import json
 import logging
 from pathlib import Path
@@ -106,11 +107,12 @@ def doctor(
     except Exception as e:
         row("gamma api", False, f"{type(e).__name__}: {e}")
 
-    # SDK availability
-    try:
-        import py_clob_client_v2  # type: ignore  # noqa: F401
-        row("py-clob-client-v2", True, "importable")
-    except ImportError:
+    # SDK availability. `find_spec` answers "is it installed?" without actually
+    # importing it — the SDK is only ever needed on the live path, and `doctor`
+    # should not pull it into memory just to tick a box.
+    if importlib.util.find_spec("py_clob_client_v2") is not None:
+        row("py-clob-client-v2", True, "installed")
+    else:
         row("py-clob-client-v2", None, "not installed — required only for live mode")
 
     # Assumptions that could not be verified offline.
