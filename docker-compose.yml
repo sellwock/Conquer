@@ -1,0 +1,38 @@
+# The measurement, in one command.
+#
+# Short run, watch it live:
+#   docker compose run --rm measure
+#
+# Long run that survives a reboot or a dropped SSH session:
+#   docker compose up -d measure && docker compose logs -f measure
+#
+# Recordings land in ./recordings on the host, so they outlive the container and can
+# be re-analysed later against a different latency assumption.
+
+services:
+  measure:
+    build: .
+    command: ["measure", "--hours", "48"]
+    volumes:
+      - ./recordings:/app/recordings
+    # on-failure, NOT unless-stopped: this is a job that finishes. `unless-stopped`
+    # would treat a completed 48-hour capture as something to restart, looping
+    # forever and overwriting nothing but your disk.
+    restart: on-failure
+    # Rotation means an interrupted capture loses at most the current hour, and the
+    # grace period gives the recorder time to flush.
+    stop_grace_period: 30s
+
+  # Re-analyse an existing recording without capturing again — e.g. to see how the
+  # verdict changes if your latency were twice as bad:
+  #   docker compose run --rm analyze recordings/ --latency-ms 300
+  analyze:
+    build: .
+    entrypoint: ["polyarb", "analyze"]
+    volumes:
+      - ./recordings:/app/recordings
+    restart: "no"
+
+# To use a custom config, mount it explicitly and pass --config, e.g.
+#   docker compose run --rm -v "$PWD/polyarb.yaml:/app/polyarb.yaml:ro" \
+#     measure measure --hours 24 --config polyarb.yaml

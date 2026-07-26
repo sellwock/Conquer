@@ -1,0 +1,27 @@
+# Keep the build context small and free of anything host-specific.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.git/
+.github/
+
+# Secrets must never reach an image layer.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime output belongs on a volume, not baked in.
+recordings/
+journals/
+state/
+*.log
+
+# Keep the committed test fixture — the image can then verify itself offline.
+!tests/fixtures/*.jsonl
