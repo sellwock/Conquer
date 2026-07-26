@@ -1,10 +1,12 @@
 name: CI
 
+# A branch with an open PR is covered by the `pull_request` trigger alone. Watching
+# `push` on every branch as well would double every run: the two events get different
+# concurrency keys (refs/heads/… vs refs/pull/N/merge), so neither cancels the other.
 on:
   push:
-    branches: ['**']
-  pull_request:
     branches: [main]
+  pull_request:
 
 concurrency:
   group: ci-${{ github.ref }}
