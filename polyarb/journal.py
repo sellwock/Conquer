@@ -173,6 +173,21 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
         if total_expected != 0:
             summary["capture_ratio"] = round(sum(realised) / total_expected, 4)
 
+    # Measured latency, if the run sampled it. Paper results are only as honest as
+    # this number, so it belongs next to them rather than buried in a log.
+    probes = [
+        r for r in rows
+        if r.get("kind") == "event" and r.get("event") == "latency_probe" and "p50_ms" in r
+    ]
+    if probes:
+        p50s = [r["p50_ms"] for r in probes]
+        summary["measured_latency"] = {
+            "probes": len(probes),
+            "median_p50_ms": round(statistics.median(p50s), 1),
+            "worst_p50_ms": round(max(p50s), 1),
+            "worst_p90_ms": round(max(r.get("p90_ms", 0.0) for r in probes), 1),
+        }
+
     by_cat: dict[str, dict[str, float]] = {}
     for r in trades:
         cat = r.get("category") or "unknown"

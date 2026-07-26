@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import glob
 import json
 import random
 import time
@@ -39,19 +40,60 @@ class FrameRecorder:
 
     This is how the bot gets tested against reality despite the API being
     unreachable from a sandbox: record on a networked machine, replay anywhere.
+
+    Answering the gap-lifetime question needs days of data, not minutes, so with
+    `rotate_seconds` set the output is split into numbered parts. One enormous file
+    is awkward to move off a VPS and loses everything if it is truncated; parts can
+    be copied and analysed as they complete.
     """
 
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, path: str | Path, rotate_seconds: float | None = None) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._fh = self.path.open("a", encoding="utf-8")
+        self.rotate_seconds = rotate_seconds
         self.count = 0
+        self.part = 0
+        self.paths: list[Path] = []
+        self._opened_at = time.time()
+        self._in_part = 0
+        self._fh = None  # type: ignore[assignment]
+        self._open_next()
+
+    def _current_path(self) -> Path:
+        if self.rotate_seconds is None:
+            return self.path
+        # foo-frames.jsonl -> foo-frames.001.jsonl
+        return self.path.with_name(
+            f"{self.path.stem}.{self.part:03d}{self.path.suffix}"
+        )
+
+    def _open_next(self) -> None:
+        if self._fh is not None:
+            with contextlib.suppress(Exception):
+                self._fh.flush()
+                self._fh.close()
+        self.part += 1
+        target = self._current_path()
+        self._fh = target.open("a", encoding="utf-8")
+        self._opened_at = time.time()
+        self._in_part = 0
+        self.paths.append(target)
 
     def write(self, frame: dict[str, Any]) -> None:
+        now = time.time()
+        # Only roll a part that actually has something in it, so a quiet feed or a
+        # zero-length window never leaves a trail of empty files.
+        if (
+            self.rotate_seconds is not None
+            and self._in_part > 0
+            and now - self._opened_at >= self.rotate_seconds
+        ):
+            self._open_next()
         # received_at lets replay reconstruct real inter-frame timing.
-        rec = {"received_at": time.time(), "frame": frame}
+        rec = {"received_at": now, "frame": frame}
         self._fh.write(json.dumps(rec, separators=(",", ":")) + "\n")
         self.count += 1
+        self._in_part += 1
 
     def close(self) -> None:
         with contextlib.suppress(Exception):
@@ -194,6 +236,25 @@ class MarketFeed:
                 await result
 
 
+def recording_parts(path: str | Path) -> list[Path]:
+    """Resolve a recording argument into an ordered list of JSONL files.
+
+    Accepts a single file, a directory of parts, or a glob. Rotated recordings are
+    numbered so lexical order is chronological order.
+    """
+    p = Path(path)
+    if p.is_dir():
+        return sorted(p.glob("*.jsonl"))
+    if any(ch in str(path) for ch in "*?["):
+        # stdlib glob, not Path.glob — the latter rejects absolute patterns.
+        return sorted(Path(hit) for hit in glob.glob(str(path)))
+    if p.exists():
+        return [p]
+    # A base name whose recording was rotated into parts.
+    parts = sorted(p.parent.glob(f"{p.stem}.[0-9][0-9][0-9]{p.suffix}"))
+    return parts
+
+
 async def replay_frames(
     path: str | Path,
     on_message: MessageHandler,
@@ -204,38 +265,39 @@ async def replay_frames(
     """Feed a recorded JSONL session back through a handler.
 
     `speed` of 0 replays as fast as possible (for tests and bulk analysis); 1.0
-    reproduces the original wall-clock spacing, which is what you want when
-    measuring how long opportunities actually persisted.
+    reproduces the original wall-clock spacing. Note that gap-lifetime analysis does
+    not need speed 1.0 — lifetimes are computed from the server timestamps carried in
+    the frames, so they are accurate at any replay speed.
     """
-    p = Path(path)
     count = 0
     prev_ts: float | None = None
 
-    with p.open("r", encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rec = json.loads(line)
-            except json.JSONDecodeError:
-                continue
+    for part in recording_parts(path):
+        with part.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
 
-            frame = rec.get("frame", rec)
-            ts = rec.get("received_at")
+                frame = rec.get("frame", rec)
+                ts = rec.get("received_at")
 
-            if speed > 0 and ts is not None and prev_ts is not None:
-                gap = (ts - prev_ts) / speed
-                if gap > 0:
-                    await asyncio.sleep(min(gap, 5.0))
-            if ts is not None:
-                prev_ts = ts
+                if speed > 0 and ts is not None and prev_ts is not None:
+                    gap = (ts - prev_ts) / speed
+                    if gap > 0:
+                        await asyncio.sleep(min(gap, 5.0))
+                if ts is not None:
+                    prev_ts = ts
 
-            if isinstance(frame, dict):
-                result = on_message(frame)
-                if asyncio.iscoroutine(result):
-                    await result
-                count += 1
-                if limit is not None and count >= limit:
-                    break
+                if isinstance(frame, dict):
+                    result = on_message(frame)
+                    if asyncio.iscoroutine(result):
+                        await result
+                    count += 1
+                    if limit is not None and count >= limit:
+                        return count
     return count

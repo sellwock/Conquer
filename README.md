@@ -57,7 +57,8 @@ Copy the config and secrets templates:
 
 A synthetic recording is committed so the whole pipeline runs with no network:
 
-    polyarb replay tests/fixtures/sample-frames.jsonl --capital 500
+    polyarb analyze tests/fixtures/sample-frames.jsonl
+    polyarb replay  tests/fixtures/sample-frames.jsonl --capital 500
 
 It contains a 3¢ gap in a fee-free geopolitics market (which should be taken) and a
 1¢ gap in a crypto market (which must be rejected, because fees cost ~3.5¢ there).
@@ -69,19 +70,47 @@ put real money on the last one until the middle ones say it is worth it.
 
 | # | Command | Question it answers |
 |---|---------|---------------------|
-| 1 | `polyarb doctor` | Can I reach the API, are my credentials good, are the fee assumptions right? |
+| 1 | `polyarb doctor` | Can I reach the API, are my credentials good, are the fee assumptions right, **and is my configured latency honest**? |
 | 2 | `polyarb discover` | Which markets are cheap enough to be worth watching? |
-| 3 | `polyarb record --minutes 60` | Capture real market data for offline analysis. |
-| 4 | `polyarb replay <file>` | **Did net-of-fee opportunities actually exist?** |
-| 5 | `polyarb paper` | **Would I have captured them, given latency?** |
-| 6 | `polyarb live --i-understand-the-risks --capital N` | Real money. |
+| 3 | `polyarb record --minutes 2880` | Capture real market data. Rotates hourly, so multi-day captures are safe. |
+| 4 | `polyarb analyze <recording>` | **How long do gaps last, and could I reach them?** |
+| 5 | `polyarb replay <recording>` | Did the full pipeline turn those gaps into profit? |
+| 6 | `polyarb paper` | Would I have captured them live, given real latency? |
+| 7 | `polyarb live --i-understand-the-risks --capital N` | Real money. |
 
 `polyarb report` summarises journals at any point.
 
-**The gate.** If rungs 4 and 5 do not show consistent positive net edge, the correct
-outcome is not to trade. The bot is instrumented to make that visible rather than to
-hide it — check `fill_rate` and `one_legged_rate` in the report. If fills are rare,
-someone faster is taking the edge, and going live just donates to them.
+### `analyze` is the gate
+
+This is the measurement everything else depends on, and it is worth understanding why
+it exists separately from `replay`.
+
+Detecting an arbitrage is easy. The question that decides whether the strategy is
+viable is *how long the gap stays open compared to how long it takes you to reach it*.
+If gaps close in 40ms and your round trip is 150ms, no amount of engineering helps —
+every "opportunity" the detector reports is one you would have missed, and you are
+looking at light from dead stars.
+
+`analyze` runs **detection only**: no trading, no execution model, nothing consumed.
+That separation matters, because the paper engine deliberately eats the liquidity it
+fills, so lifetimes measured there would confuse "the market closed the gap" with
+"I closed it". Here a lifetime means how long the opportunity existed for anyone.
+
+It reports gap lifetimes, the fraction that outlived your latency, opportunities per
+hour by category, and edge broken down by price extremity — which checks the fee-curve
+thesis against real data instead of assuming it. It ends with a plain-language verdict.
+
+Two deliberate refusals to flatter you:
+
+- **Rates are suppressed on small samples.** Under an hour of data or fewer than ten
+  gaps, per-hour figures are reported as meaningless rather than extrapolated. One
+  lucky gap in a two-minute capture should not imply an hourly income.
+- **A gap seen once has a lifetime of zero.** One sighting is no evidence it persisted.
+
+**The gate.** If `analyze` says few gaps outlive your latency, or `paper` shows a low
+`fill_rate` and a high `one_legged_rate`, the correct outcome is not to trade. Someone
+faster is taking the edge and going live just donates to them. The tooling is built to
+make that answer visible rather than to bury it.
 
 Live mode requires *three* independent confirmations: the `--i-understand-the-risks`
 flag, `live_enabled: true` in the config, and an interactive prompt.
@@ -89,12 +118,14 @@ flag, `live_enabled: true` in the config, and an interactive prompt.
 ## How it works
 
 ```
-feed.py       websocket -> raw frames        (reconnect, PING/10s, sharding)
+feed.py       websocket -> raw frames        (reconnect, PING/10s, hourly rotation)
 book.py       frames -> local order books    (desync guards, impact model)
 discovery.py  Gamma API -> tradable markets  (YES/NO pairing, fee category)
 fees.py       the fee curve and net edge     <- everything routes through here
 sizing.py     books -> optimal trade size    (depth-aware, gas-amortised)
 detector.py   books -> priced opportunities
+analysis.py   opportunities -> gap lifetimes (the decision gate)
+latency.py    measured round trips           (keeps paper results honest)
 risk.py       opportunities -> approve/deny  (caps, halts, kill switch)
 execution/    opportunities -> fills         (paper | live)
 settle.py     matched pairs -> collateral    (batched merges)
@@ -163,7 +194,7 @@ Each is marked `# VERIFY:` in the source and checked by `polyarb doctor`:
 
 ## Tests
 
-    pytest                    # 340 tests, no network required
+    pytest                    # 395 tests, no network required
 
 Includes hand-computed fee arithmetic, a no-free-money property test (complement
 prices at parity must never show a profit), randomised verification of the

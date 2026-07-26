@@ -25,12 +25,14 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from .config import DEFAULT_FEE_RATES, Settings
+from .analysis import analyse_frames
+from .config import CLOB_API, DEFAULT_FEE_RATES, Settings
 from .discovery import discover
 from .execution.paper import PaperEngine
 from .feed import FrameRecorder, MarketFeed, replay_frames
 from .fees import breakeven_spread
 from .journal import Journal, summarise, summarise_dir, read_journal
+from .latency import compare_to_assumed, probe_rest_rtt
 from .models import Market
 from .risk import RiskManager
 from .runner import Runner
@@ -115,6 +117,23 @@ def doctor(
     else:
         row("py-clob-client-v2", None, "not installed — required only for live mode")
 
+    # Latency. This is checked hard rather than warned about: `assumed_latency_ms`
+    # is what the paper engine uses to decide whether an opportunity would still be
+    # there on arrival, so an optimistic value does not produce a small error — it
+    # produces encouraging results that are entirely fictional.
+    try:
+        if markets:
+            url = f"{CLOB_API}/book?token_id={markets[0].yes_token_id}"
+            samples = asyncio.run(probe_rest_rtt(url, count=10))
+            ok_latency, message = compare_to_assumed(
+                samples, s.execution.assumed_latency_ms
+            )
+            row("latency vs assumed", ok_latency, message)
+            if len(samples):
+                row("latency detail", None, json.dumps(samples.summary()))
+    except Exception as e:
+        row("latency vs assumed", False, f"{type(e).__name__}: {e}")
+
     # Assumptions that could not be verified offline.
     row("VERIFY fee model", None,
         "fee = shares x rate x p x (1-p), taker only. Confirm against a real fill; "
@@ -184,6 +203,9 @@ def record(
     minutes: float = typer.Option(60.0, help="How long to record"),
     config: Optional[Path] = typer.Option(None, "--config"),
     out_dir: Optional[Path] = typer.Option(None, help="Where to write the recording"),
+    rotate_minutes: float = typer.Option(
+        60.0, help="Split output every N minutes (0 = one file)"
+    ),
 ) -> None:
     """Capture live websocket frames for offline replay.
 
@@ -214,7 +236,9 @@ def record(
     )
 
     async def _run() -> None:
-        with FrameRecorder(frames_path) as rec:
+        with FrameRecorder(
+            frames_path, rotate_seconds=(rotate_minutes * 60) if rotate_minutes > 0 else None
+        ) as rec:
             feed = MarketFeed(
                 asset_ids, lambda frame: None, recorder=rec,
                 assets_per_connection=s.discovery.assets_per_connection,
@@ -226,7 +250,10 @@ def record(
                 feed.stop()
                 task.cancel()
                 await asyncio.gather(task, return_exceptions=True)
-            console.print(f"[green]recorded {rec.count} frames[/] to {frames_path}")
+            console.print(
+                f"[green]recorded {rec.count} frames[/] across {len(rec.paths)} "
+                f"file(s) in {directory}"
+            )
 
     asyncio.run(_run())
 
@@ -269,10 +296,97 @@ def replay(
 
 
 def _sibling_markets(frames: Path) -> Path | None:
-    name = Path(frames).name
-    if "-frames.jsonl" in name:
-        return Path(frames).with_name(name.replace("-frames.jsonl", "-markets.json"))
-    return None
+    """Find the market list saved beside a recording.
+
+    Handles a plain file, a rotated part (`…-frames.001.jsonl`), and a directory of
+    parts, since a multi-day capture produces all three shapes.
+    """
+    p = Path(frames)
+    if p.is_dir():
+        found = sorted(p.glob("*-markets.json"))
+        return found[0] if found else None
+    idx = p.name.find("-frames")
+    if idx != -1:
+        return p.with_name(p.name[:idx] + "-markets.json")
+    found = sorted(p.parent.glob("*-markets.json"))
+    return found[0] if found else None
+
+
+# --------------------------------------------------------------------------
+@app.command()
+def analyze(
+    frames: Path = typer.Argument(..., help="Recording: a file, a directory of parts, or a glob"),
+    markets: Optional[Path] = typer.Option(None, help="Market JSON (defaults to sibling file)"),
+    config: Optional[Path] = typer.Option(None, "--config"),
+    latency_ms: Optional[float] = typer.Option(
+        None, help="Latency to judge capturability against (defaults to config)"
+    ),
+    verbose: bool = typer.Option(False, "--verbose", "-v"),
+) -> None:
+    """Measure how long opportunities actually last. **Run this before paper.**
+
+    Detection only — no trading, no execution model, nothing consumed. So a gap
+    lifetime here means how long the opportunity existed for *anyone*, which is the
+    number that decides whether this strategy is reachable at your latency or
+    whether the edge belongs to someone closer to the exchange.
+    """
+    _setup_logging(verbose)
+    s = _load_settings(config)
+
+    markets_path = markets or _sibling_markets(frames)
+    if markets_path is None or not Path(markets_path).exists():
+        console.print("[red]could not find the market list for this recording[/]")
+        raise typer.Exit(1)
+
+    latency = latency_ms if latency_ms is not None else s.execution.assumed_latency_ms
+    tracker, on_frame = analyse_frames(_load_markets(markets_path), s)
+    count = asyncio.run(replay_frames(frames, on_frame))
+    tracker.finish()
+
+    console.print(f"analysed [bold]{count}[/] frames from {frames}")
+    _print_analysis(tracker.summary(latency))
+
+
+def _print_analysis(summary: dict[str, Any]) -> None:
+    head = Table(title="gap analysis")
+    head.add_column("metric")
+    head.add_column("value", overflow="fold")
+    for key in (
+        "window_hours", "scans", "markets_observed", "gaps_detected",
+        "gaps_per_hour", "assumed_latency_ms", "theoretical_profit_all_gaps",
+    ):
+        if key in summary:
+            head.add_row(key, str(summary[key]))
+    for key in ("lifetime_ms", "peak_edge_bps", "capturable"):
+        if key in summary:
+            for k2, v2 in summary[key].items():
+                head.add_row(f"{key}.{k2}", str(v2))
+    console.print(head)
+
+    for section, title in (("by_category", "by category"), ("by_extremity", "by price extremity")):
+        rows = summary.get(section)
+        if not rows:
+            continue
+        table = Table(title=title)
+        table.add_column(section.replace("by_", ""))
+        for col in ("gaps", "capturable", "median_edge_bps", "median_lifetime_ms", "profit"):
+            table.add_column(col, justify="right")
+        for name, vals in rows.items():
+            table.add_row(
+                name, str(vals["gaps"]), str(vals["capturable"]),
+                str(vals["median_edge_bps"]), str(vals["median_lifetime_ms"]),
+                f"{vals['profit']:.4f}",
+            )
+        console.print(table)
+
+    verdict = summary.get("verdict")
+    if verdict:
+        frac = summary.get("capturable", {}).get("fraction", 0.0)
+        if summary.get("sample_too_small_for_rates"):
+            colour = "yellow"
+        else:
+            colour = "green" if frac >= 0.2 else "yellow" if frac >= 0.05 else "red"
+        console.print(f"\n[{colour}]{verdict}[/]")
 
 
 # --------------------------------------------------------------------------
@@ -303,9 +417,41 @@ def paper(
             f"Journal: {journal.path}"
         )
 
-        asyncio.run(_run_feed(runner, asset_ids, s, minutes))
+        probe_url = f"{CLOB_API}/book?token_id={markets[0].yes_token_id}"
+
+        async def _main() -> None:
+            # Latency drifts over a multi-day run, and the whole paper result is
+            # conditional on it, so keep measuring rather than trusting the config.
+            stop = asyncio.Event()
+            probe = asyncio.create_task(_latency_probe_loop(probe_url, journal, stop))
+            try:
+                await _run_feed(runner, asset_ids, s, minutes)
+            finally:
+                stop.set()
+                probe.cancel()
+                await asyncio.gather(probe, return_exceptions=True)
+
+        asyncio.run(_main())
         runner.finish()
         _print_summary(runner.summary())
+
+
+async def _latency_probe_loop(
+    url: str, journal: Journal, stop: asyncio.Event, interval_s: float = 300.0
+) -> None:
+    """Sample round-trip latency into the journal until stopped."""
+    while not stop.is_set():
+        try:
+            samples = await probe_rest_rtt(url, count=5, delay_s=0.1)
+            if len(samples):
+                journal.event("latency_probe", **samples.summary())
+        except Exception:  # a probe failure must never take down a paper run
+            pass
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=interval_s)
+            return
+        except asyncio.TimeoutError:
+            continue
 
 
 async def _run_feed(runner: Runner, asset_ids: list[str], s: Settings, minutes: float) -> None:
