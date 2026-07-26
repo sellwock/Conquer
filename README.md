@@ -53,7 +53,7 @@ Copy the config and secrets templates:
     cp polyarb.example.yaml polyarb.yaml
     cp .env.example .env             # never commit this
 
-## Try it right now, offline
+## Check it works, offline (30 seconds)
 
 A synthetic recording is committed so the whole pipeline runs with no network:
 
@@ -63,14 +63,49 @@ A synthetic recording is committed so the whole pipeline runs with no network:
 It contains a 3¢ gap in a fee-free geopolitics market (which should be taken) and a
 1¢ gap in a crypto market (which must be rejected, because fees cost ~3.5¢ there).
 
-## The verification ladder
+## Start here: run the measurement
 
-Each rung answers a question the next depends on. **Do not skip rungs**, and do not
-put real money on the last one until the middle ones say it is worth it.
+Before anything else, find out whether the edge is real and reachable. One command:
+
+    polyarb measure --hours 48
+
+or with no Python setup at all:
+
+    docker compose run --rm measure
+
+**This needs no wallet, no funds and no API keys.** It only reads the public market
+feed, so the experiment that decides everything costs nothing but time and a machine.
+(`has_credentials()` is checked in exactly one place in the codebase — the `live`
+command.)
+
+It will discover markets, measure your real latency, capture for 48 hours (rotating
+hourly, reporting projected disk use as it goes), then analyse and print a verdict.
+Ctrl-C stops early and still analyses what it captured.
+
+**Where to run it:** any cheap VPS. Closer to the exchange is better, since latency is
+the binding constraint on what you can capture — but for the measurement itself,
+anywhere honest is fine, because it judges against *your* measured latency.
+
+**How to read the verdict.** The number that matters is what fraction of gaps outlived
+your latency:
+
+- *"Do not deploy capital"* — gaps exist but close faster than you can reach them.
+  **This is a successful outcome.** You just learned the strategy doesn't work at your
+  latency for the price of two days of recording, instead of finding out with money.
+- *"Real but rare"* — check the per-hour profit clears your infrastructure cost.
+- *"Worth paper trading"* — go on to `polyarb paper` and confirm the fill rate holds.
+
+Keep the recording. You can re-analyse it against a different latency without
+capturing again: `polyarb analyze recordings/ --latency-ms 300`.
+
+## The full ladder
+
+`measure` chains the first four rungs. The individual commands exist for when you want
+them separately, and the last three are what you do only if the measurement justifies it.
 
 | # | Command | Question it answers |
 |---|---------|---------------------|
-| 1 | `polyarb doctor` | Can I reach the API, are my credentials good, are the fee assumptions right, **and is my configured latency honest**? |
+| 1 | `polyarb doctor` | Can I reach the API, are the fee assumptions right, **and is my configured latency honest**? |
 | 2 | `polyarb discover` | Which markets are cheap enough to be worth watching? |
 | 3 | `polyarb record --minutes 2880` | Capture real market data. Rotates hourly, so multi-day captures are safe. |
 | 4 | `polyarb analyze <recording>` | **How long do gaps last, and could I reach them?** |
@@ -194,7 +229,7 @@ Each is marked `# VERIFY:` in the source and checked by `polyarb doctor`:
 
 ## Tests
 
-    pytest                    # 395 tests, no network required
+    pytest                    # 405 tests, no network required
 
 Includes hand-computed fee arithmetic, a no-free-money property test (complement
 prices at parity must never show a profit), randomised verification of the

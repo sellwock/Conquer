@@ -1,13 +1,15 @@
 """Command line interface.
 
-The commands are deliberately ordered as a ladder, and the docs push you up it one
-rung at a time:
+Start with `measure`. It is one command — discover, record, analyse, verdict — and it
+answers the only question that decides whether any of this is worth funding: do gaps
+that clear fees actually exist, and do they last long enough for us to reach them?
+It needs no wallet, no funds and no API keys, because it only reads the public feed.
 
-    doctor -> discover -> record -> replay -> paper -> live
+The individual rungs exist for when you want them separately:
 
-Each rung answers a question the next one depends on. `replay` and `paper` exist to
-answer the only question that decides whether this is worth funding: does net-of-fee
-edge actually exist, and would we capture it? `live` refuses to run until you have
+    doctor -> discover -> record -> analyze -> replay -> paper -> live
+
+Each answers a question the next depends on. `live` refuses to run until you have
 said, explicitly and twice, that you want real money at risk.
 """
 
@@ -18,6 +20,7 @@ import dataclasses
 import importlib.util
 import json
 import logging
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -222,9 +225,9 @@ def record(
         console.print("[red]no markets matched the discovery filters[/]")
         raise typer.Exit(1)
 
-    import time as _time
 
-    stamp = _time.strftime("%Y%m%d-%H%M%S")
+
+    stamp = time.strftime("%Y%m%d-%H%M%S")
     frames_path = directory / f"{stamp}-frames.jsonl"
     markets_path = directory / f"{stamp}-markets.json"
     _save_markets(markets_path, markets)
@@ -235,27 +238,94 @@ def record(
         f"for {minutes:g} min -> {frames_path}"
     )
 
-    async def _run() -> None:
-        with FrameRecorder(
-            frames_path, rotate_seconds=(rotate_minutes * 60) if rotate_minutes > 0 else None
-        ) as rec:
-            feed = MarketFeed(
-                asset_ids, lambda frame: None, recorder=rec,
-                assets_per_connection=s.discovery.assets_per_connection,
-            )
-            task = asyncio.create_task(feed.run())
-            try:
-                await asyncio.sleep(minutes * 60)
-            finally:
-                feed.stop()
-                task.cancel()
-                await asyncio.gather(task, return_exceptions=True)
-            console.print(
-                f"[green]recorded {rec.count} frames[/] across {len(rec.paths)} "
-                f"file(s) in {directory}"
-            )
+    rec = _capture(
+        s, asset_ids, frames_path, seconds=minutes * 60,
+        rotate_seconds=(rotate_minutes * 60) if rotate_minutes > 0 else None,
+    )
+    console.print(
+        f"[green]recorded {rec.count} frames[/] across {len(rec.paths)} "
+        f"file(s) in {directory}"
+    )
 
-    asyncio.run(_run())
+
+def _bytes_on_disk(paths: list[Path]) -> int:
+    total = 0
+    for p in paths:
+        try:
+            total += p.stat().st_size
+        except OSError:
+            pass
+    return total
+
+
+def _human(n: float) -> str:
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if abs(n) < 1024 or unit == "TB":
+            return f"{n:.1f}{unit}"
+        n /= 1024
+    return f"{n:.1f}TB"
+
+
+def _capture(
+    s: Settings,
+    asset_ids: list[str],
+    frames_path: Path,
+    *,
+    seconds: float,
+    rotate_seconds: float | None,
+    progress_every_s: float = 300.0,
+) -> FrameRecorder:
+    """Run the market feed into a recorder for `seconds`.
+
+    Ctrl-C stops the capture cleanly rather than killing the process, so a partial
+    run still leaves a usable recording — losing 30 hours of capture to an impatient
+    keystroke would be an expensive way to learn that lesson.
+    """
+    rec = FrameRecorder(frames_path, rotate_seconds=rotate_seconds)
+
+    async def _run() -> None:
+        feed = MarketFeed(
+            asset_ids, lambda frame: None, recorder=rec,
+            assets_per_connection=s.discovery.assets_per_connection,
+        )
+        task = asyncio.create_task(feed.run())
+        started = time.monotonic()
+        try:
+            while True:
+                elapsed = time.monotonic() - started
+                remaining = seconds - elapsed
+                if remaining <= 0:
+                    break
+                await asyncio.sleep(min(progress_every_s, remaining))
+                _report_progress(rec, time.monotonic() - started, seconds)
+        finally:
+            feed.stop()
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    try:
+        asyncio.run(_run())
+    except KeyboardInterrupt:
+        console.print("\n[yellow]interrupted — keeping what was captured[/]")
+    finally:
+        rec.close()
+    return rec
+
+
+def _report_progress(rec: FrameRecorder, elapsed_s: float, total_s: float) -> None:
+    """Progress plus a projected disk footprint.
+
+    The projection matters: hundreds of tokens of book updates over two days can run
+    to gigabytes, and discovering that at hour 30 with a full disk loses the entire
+    capture. Better to see it coming in the first five minutes.
+    """
+    written = _bytes_on_disk(rec.paths)
+    hours_done = elapsed_s / 3600.0
+    projected = written / elapsed_s * total_s if elapsed_s > 0 else 0.0
+    console.print(
+        f"  {hours_done:.2f}h / {total_s / 3600:.2f}h · {rec.count:,} frames · "
+        f"{_human(written)} written · ~{_human(projected)} projected"
+    )
 
 
 # --------------------------------------------------------------------------
@@ -387,6 +457,87 @@ def _print_analysis(summary: dict[str, Any]) -> None:
         else:
             colour = "green" if frac >= 0.2 else "yellow" if frac >= 0.05 else "red"
         console.print(f"\n[{colour}]{verdict}[/]")
+
+
+# --------------------------------------------------------------------------
+@app.command()
+def measure(
+    hours: float = typer.Option(48.0, help="How long to capture before analysing"),
+    config: Optional[Path] = typer.Option(None, "--config"),
+    out_dir: Optional[Path] = typer.Option(None, help="Where to write the recording"),
+    rotate_minutes: float = typer.Option(60.0, help="Split output every N minutes"),
+) -> None:
+    """**Start here.** Capture the market, then tell you whether the edge is reachable.
+
+    One command for the whole gate: discover, record, analyse, verdict. Needs no
+    wallet, no funds and no API keys — it only reads the public market feed.
+
+    Leave it running (a couple of days is a reasonable first sample) and read the
+    verdict at the end. "Do not deploy capital" is a successful outcome: it is the
+    cheapest possible way to learn the strategy does not work at your latency.
+    """
+    _setup_logging(False)
+    s = _load_settings(config)
+    directory = Path(out_dir or s.recording_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+
+    markets = asyncio.run(discover(s.discovery))
+    if not markets:
+        console.print("[red]no markets matched the discovery filters[/]")
+        raise typer.Exit(1)
+
+    # Judge against real latency, not a configured guess. If the config is
+    # optimistic we use the measured value rather than aborting — refusing to start
+    # a two-day capture over a config number would waste the run for no reason, and
+    # the honest figure is the one we just measured anyway.
+    latency = s.execution.assumed_latency_ms
+    try:
+        samples = asyncio.run(
+            probe_rest_rtt(f"{CLOB_API}/book?token_id={markets[0].yes_token_id}", count=10)
+        )
+        ok_latency, message = compare_to_assumed(samples, latency)
+        if not ok_latency:
+            latency = samples.p50
+            console.print(f"[yellow]{message}[/]")
+            console.print(f"[yellow]judging capturability against the measured "
+                          f"p50 of {latency:.0f}ms instead.[/]")
+        else:
+            console.print(f"latency: {message}")
+    except Exception as e:
+        console.print(f"[yellow]latency probe failed ({type(e).__name__}); "
+                      f"using configured {latency:.0f}ms[/]")
+
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    frames_path = directory / f"{stamp}-frames.jsonl"
+    _save_markets(directory / f"{stamp}-markets.json", markets)
+
+    asset_ids = [tid for m in markets for tid in m.token_ids]
+    console.print(
+        f"capturing {len(asset_ids)} tokens across {len(markets)} markets for "
+        f"{hours:g}h -> {directory}\n[dim]Ctrl-C stops early and still analyses.[/]"
+    )
+
+    rec = _capture(
+        s, asset_ids, frames_path,
+        seconds=hours * 3600,
+        rotate_seconds=(rotate_minutes * 60) if rotate_minutes > 0 else None,
+    )
+    console.print(
+        f"[green]captured {rec.count:,} frames[/] "
+        f"({_human(_bytes_on_disk(rec.paths))}) across {len(rec.paths)} file(s)\n"
+    )
+
+    if rec.count == 0:
+        console.print("[red]no frames captured — check connectivity and rerun[/]")
+        raise typer.Exit(1)
+
+    market_map = {m.condition_id: m for m in markets}
+    tracker, on_frame = analyse_frames(market_map, s)
+    asyncio.run(replay_frames(frames_path, on_frame))
+    tracker.finish()
+    _print_analysis(tracker.summary(latency))
+    console.print(f"\n[dim]recording kept at {directory} — "
+                  f"`polyarb analyze` it again with a different --latency-ms.[/]")
 
 
 # --------------------------------------------------------------------------
