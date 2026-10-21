@@ -151,6 +151,10 @@ export interface GameSnapshot {
   fouls?: Record<string, number>;
   /** Seconds played so far by player id. */
   played?: Record<string, number>;
+  /** Final [home, away] points of each completed period. */
+  prior?: [number, number][];
+  /** Score when the current period began. */
+  periodStart?: [number, number];
 }
 
 export interface GameData {

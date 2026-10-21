@@ -395,10 +395,13 @@ export function parseOdds(summary: J, homeId: string): Odds | undefined {
   let spread: number | undefined = o.spread != null ? num(o.spread) : undefined;
   // ESPN's `spread` is from the home team's perspective in recent payloads; verify with `details`.
   const details: string | undefined = o.details;
-  const homeAbbr = summary?.header?.competitions?.[0]?.competitors?.find((c: J) => String(c?.team?.id) === homeId)?.team?.abbreviation;
-  if (details && homeAbbr && spread != null) {
+  const comps: J[] = summary?.header?.competitions?.[0]?.competitors ?? [];
+  const homeAbbr = comps.find((c) => String(c?.team?.id) === homeId)?.team?.abbreviation;
+  const awayAbbr = comps.find((c) => String(c?.team?.id) !== homeId)?.team?.abbreviation;
+  if (details && spread != null) {
     const m = details.match(/^([A-Z.&]+)\s+([-+]?\d+(?:\.\d+)?)/);
-    if (m) spread = m[1] === homeAbbr ? num(m[2]) : -num(m[2]);
+    if (m && m[1] === homeAbbr) spread = num(m[2]);
+    else if (m && m[1] === awayAbbr) spread = -num(m[2]);
   }
   const ml = (side: J) => (side?.moneyLine != null ? num(side.moneyLine) : undefined);
   return {

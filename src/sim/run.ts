@@ -99,7 +99,7 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
         periodSum[p][1] += r.periodScores[p][1];
       }
     }
-    if (!spec.start || spec.start.period <= half) firstHalf.add(h1 + (spec.start && spec.start.period <= half ? spec.start.homeScore - spec.start.awayScore : 0));
+    if (!spec.start || spec.start.prior) firstHalf.add(h1);
     for (let t = 0; t < 2; t++) {
       maxRun[t].add(r.maxRun[t]);
       largestLead[t].add(r.largestLead[t]);

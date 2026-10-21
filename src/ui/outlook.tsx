@@ -143,7 +143,7 @@ export function Outlook(props: { game: GameData; sim: Required<SimState>; palett
       <section class="card">
         <header class="card-head">
           <h2>By {lg.periods === 4 ? 'quarter' : 'half'}</h2>
-          <p class="muted small">Average points per period across all sims{props.start ? ' (remaining periods only)' : ''}.</p>
+          <p class="muted small">Average points per period across all sims{props.start ? '; finished periods show the actual score' : ''}.</p>
         </header>
         <div class="table-wrap">
           <table class="data">

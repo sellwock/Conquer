@@ -52,6 +52,8 @@ export interface SimStart {
   clockSec: number;
   homeScore: number;
   awayScore: number;
+  prior?: [number, number][];
+  periodStart?: [number, number];
 }
 
 export interface SimSpec {

@@ -47,8 +47,8 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
   let period = spec.start?.period ?? 1;
   let clock = spec.start?.clockSec ?? lg.periodSec;
   const periodScores: [number, number][] = [];
-  for (let p = 1; p < period; p++) periodScores.push([0, 0]);
-  let periodStart: [number, number] = [score[0], score[1]];
+  for (let p = 1; p < period; p++) periodScores.push(spec.start?.prior?.[p - 1] ?? [0, 0]);
+  let periodStart: [number, number] = spec.start?.periodStart ? [...spec.start.periodStart] : [score[0], score[1]];
 
   // Mean seconds of the first shot-clock segment of a possession, so that the total game hits `pace`.
   // (Empirically calibrated: transition, OREB segments and period ends shave time off.)
@@ -59,7 +59,7 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
   const maxRun: [number, number] = [0, 0];
   let leadChanges = 0;
   let lastLeader = Math.sign(score[0] - score[1]);
-  const largestLead: [number, number] = [0, 0];
+  const largestLead: [number, number] = [Math.max(0, score[0] - score[1]), Math.max(0, score[1] - score[0])];
   const possessions: [number, number] = [0, 0];
   let lastSubAt = -1e9;
   let transition = 0; // make bonus on the next possession after a live-ball steal
@@ -474,6 +474,7 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
   for (const ts of teams) {
     for (let i = 0; i < ts.n; i++) {
       ts.fouls[i] = ts.t.players[i].initFouls;
+      if (ts.fouls[i] >= lg.foulOut) ts.out[i] = 1;
       ts.sec[i] = ts.t.players[i].initSec;
     }
   }

@@ -38,7 +38,7 @@ const AND_ONE = 0.2;
 const PRIOR_MIN = 180;
 
 export function isUnavailable(p: PlayerProfile, opts: Pick<BuildOptions, 'outs' | 'ins' | 'healthy' | 'minutesMode'>): boolean {
-  if (opts.minutesMode === 'actual' && p.actual) return !p.actual.played;
+  if (opts.minutesMode === 'actual' && p.actual) return !p.actual.played || (!opts.healthy && opts.outs.has(p.id));
   if (opts.healthy) return false;
   if (opts.outs.has(p.id)) return true;
   if (p.injury?.out && !opts.ins.has(p.id)) return true;
@@ -60,7 +60,7 @@ export function planMinutes(team: TeamProfile, lg: LeagueConfig, opts: BuildOpti
   if (opts.minutesMode === 'actual' && team.players.some((p) => p.actual?.played)) {
     let sum = 0;
     for (const p of team.players) {
-      base[p.id] = p.actual?.played ? p.actual.min : 0;
+      base[p.id] = p.actual?.played && !unavailable.has(p.id) ? p.actual.min : 0;
       sum += base[p.id];
     }
     for (const p of team.players) minutes[p.id] = sum > 0 ? (base[p.id] * total) / sum : 0;
@@ -241,6 +241,12 @@ export function teamPace(t: TeamProfile, lg: LeagueConfig): number {
 }
 
 function buildTeam(t: TeamProfile, lg: LeagueConfig, plan: MinutesPlan, makeMult: number, snapshot?: GameSnapshot): SimTeam {
+  // Without a minutes history (a start picked from the play-by-play), assume everyone is on pace
+  // for his projection so far; otherwise the rotation would hand the starters all the rest.
+  const reg = regulationSec(lg);
+  const elapsedFrac = snapshot
+    ? Math.min(1, (snapshot.period <= lg.periods ? (snapshot.period - 1) * lg.periodSec + lg.periodSec - snapshot.clockSec : reg) / reg)
+    : 0;
   const ids = t.players.map((p) => p.id);
   const players: SimPlayer[] = t.players.map((p) => {
     const r = playerRates(p, lg);
@@ -271,7 +277,7 @@ function buildTeam(t: TeamProfile, lg: LeagueConfig, plan: MinutesPlan, makeMult
       pf: r.pf,
       assistTo,
       initFouls: snapshot?.fouls?.[p.id] ?? 0,
-      initSec: snapshot?.played?.[p.id] ?? 0,
+      initSec: snapshot?.played?.[p.id] ?? (plan.unavailable.has(p.id) ? 0 : (plan.minutes[p.id] ?? 0) * 60 * elapsedFrac),
     };
   });
   const d = teamDefense(t, lg);
@@ -301,7 +307,14 @@ export function buildSpec(game: GameData, opts: BuildOptions): BuiltSpec {
     pace,
     whistle: opts.whistle,
     start: opts.start
-      ? { period: opts.start.period, clockSec: opts.start.clockSec, homeScore: opts.start.homeScore, awayScore: opts.start.awayScore }
+      ? {
+          period: opts.start.period,
+          clockSec: opts.start.clockSec,
+          homeScore: opts.start.homeScore,
+          awayScore: opts.start.awayScore,
+          prior: opts.start.prior,
+          periodStart: opts.start.periodStart,
+        }
       : undefined,
   };
   return { spec, plans: { home: homePlan, away: awayPlan } };

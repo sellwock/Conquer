@@ -1,6 +1,6 @@
 // Assembles everything the simulator needs for one game from ESPN: header, rosters, injuries,
 // odds, officials, and per-player samples built from each team's recent completed games.
-import { addBox, emptyBox, emptyZones, ZONES, type BoxLine, type GameData, type GameSnapshot, type LeagueId, type PlayerProfile, type PlayerSample, type ScoreboardGame, type TeamProfile, type TeamSample, type ZoneTable } from '../../model/types';
+import { addBox, emptyBox, emptyZones, ZONES, type BoxLine, type GameData, type GameSnapshot, type LeagueId, type Play, type PlayerProfile, type PlayerSample, type ScoreboardGame, type TeamProfile, type TeamSample, type ZoneTable } from '../../model/types';
 import { DataError, getJson, mapLimit, readCache, sitePath, webPath, writeCache } from './client';
 import {
   clockToSec,
@@ -342,6 +342,27 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
   };
 }
 
+/** Completed-period line scores and the current period's opening score, read off the play-by-play. */
+export function periodContext(plays: Play[], period: number): Pick<GameSnapshot, 'prior' | 'periodStart'> {
+  const endOf = new Map<number, [number, number]>();
+  for (const p of plays) if (p.period < period) endOf.set(p.period, [p.homeScore, p.awayScore]);
+  const prior: [number, number][] = [];
+  let prev: [number, number] = [0, 0];
+  for (let q = 1; q < period; q++) {
+    const end = endOf.get(q) ?? prev;
+    prior.push([end[0] - prev[0], end[1] - prev[1]]);
+    prev = end;
+  }
+  return { prior, periodStart: prev };
+}
+
+/** Game state at a given play, for "simulate from this moment". */
+export function snapshotAtPlay(g: GameData, seq: number): GameSnapshot | undefined {
+  const p = g.plays.find((x) => x.seq === seq);
+  if (!p) return undefined;
+  return { period: p.period, clockSec: p.clockSec, homeScore: p.homeScore, awayScore: p.awayScore, ...periodContext(g.plays, p.period) };
+}
+
 /** Live game state for "simulate the rest" from the current box score. */
 export function snapshotFromGame(g: GameData): GameSnapshot | undefined {
   if (g.phase !== 'in' || g.homeScore == null || g.awayScore == null) return undefined;
@@ -354,5 +375,6 @@ export function snapshotFromGame(g: GameData): GameSnapshot | undefined {
       played[p.id] = p.actual.min * 60;
     }
   }
-  return { period: Math.max(1, g.period), clockSec: g.clockSec, homeScore: g.homeScore, awayScore: g.awayScore, fouls, played };
+  const period = Math.max(1, g.period);
+  return { period, clockSec: g.clockSec, homeScore: g.homeScore, awayScore: g.awayScore, fouls, played, ...periodContext(g.plays, period) };
 }

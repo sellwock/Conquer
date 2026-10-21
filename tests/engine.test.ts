@@ -144,3 +144,20 @@ describe('whistle and game state', () => {
     expect(q.home).toBeLessThan(110);
   });
 });
+
+describe('mid-game starts', () => {
+  it('keeps fouled-out players on the bench and seeds lead history and line score', () => {
+    const g = demoGame();
+    const star = g.home.players[0];
+    const { spec } = buildSpec(g, {
+      ...base,
+      start: { period: 4, clockSec: 420, homeScore: 90, awayScore: 70, fouls: { [star.id]: 6 }, prior: [[25, 20], [22, 18], [24, 17]], periodStart: [71, 55] },
+    });
+    const s = runSims(spec, 400, 'mid');
+    expect(s.players.find((p) => p.id === star.id)!.min).toBe(0);
+    expect(Hist.from(s.largestLead[0]).probAtLeast(20)).toBe(1);
+    const r = s.typical.result;
+    const sums = [0, 1].map((t) => r.periodScores.reduce((a, ps) => a + ps[t], 0));
+    expect(sums).toEqual([r.score[0], r.score[1]]);
+  });
+});

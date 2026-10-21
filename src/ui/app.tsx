@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { buildSpec, type BuildOptions, type BuiltSpec } from '../model/build';
 import type { GameData, GameSnapshot, ScoreboardGame } from '../model/types';
-import { loadGame, loadScoreboard, snapshotFromGame } from '../data/espn/load';
+import { loadGame, loadScoreboard, snapshotAtPlay, snapshotFromGame } from '../data/espn/load';
 import { DataError, getProxy, setProxy } from '../data/espn/client';
 import { demoGame } from '../data/demo';
 import { CancelledError, runInBackground, runQuickInBackground, type Job } from '../sim/client';
@@ -73,16 +73,24 @@ export function App() {
     };
   }, []);
 
+  // Effects that finish later must see the game selected *now*, not when they started.
+  const urlRef = useRef(url);
+  urlRef.current = url;
+  const jobs = useRef<Job<unknown>[]>([]);
+  const cancelJobs = () => {
+    jobs.current.forEach((j) => j.cancel());
+    jobs.current = [];
+  };
+
   // --- Scoreboard -------------------------------------------------------------------------------
   useEffect(() => {
-    if (url.game === 'demo') return;
     const ac = new AbortController();
     setBoard((b) => ({ status: 'loading', games: b.games }));
     loadScoreboard(url.league, url.date!, ac.signal)
       .then((games) => {
         setOffline(false);
         setBoard({ status: 'ok', games });
-        if (!url.game && games.length) {
+        if (!urlRef.current.game && games.length) {
           const pick = games.find((g) => g.phase === 'in') ?? games.find((g) => g.phase === 'pre') ?? games[0];
           update({ game: pick.id });
         }
@@ -91,9 +99,9 @@ export function App() {
         if (e?.name === 'AbortError') return;
         setBoard({ status: 'error', games: [], error: e?.message ?? String(e) });
         // No network path to ESPN at all (offline, or an embed that blocks requests): show the sample.
-        if (e instanceof DataError && e.status == null && !url.game) {
+        if (e instanceof DataError && e.status == null) {
           setOffline(true);
-          update({ game: 'demo' });
+          if (!urlRef.current.game) update({ game: 'demo' });
         }
       });
     return () => ac.abort();
@@ -101,6 +109,9 @@ export function App() {
 
   // --- Game data --------------------------------------------------------------------------------
   useEffect(() => {
+    // Never show one game's results under another game's teams.
+    cancelJobs();
+    setSim({ status: 'idle', progress: 0 });
     if (!url.game) return;
     if (url.game === 'demo') {
       setGame({ status: 'ok', data: demoGame() });
@@ -133,18 +144,14 @@ export function App() {
     if (!data) return undefined;
     if (url.from === 'now') return snapshotFromGame(data);
     const seq = Number(url.from);
-    if (url.from !== 'tip' && Number.isFinite(seq)) {
-      const p = data.plays.find((x) => x.seq === seq);
-      if (p) return { period: p.period, clockSec: p.clockSec, homeScore: p.homeScore, awayScore: p.awayScore };
-    }
+    if (url.from !== 'tip' && Number.isFinite(seq)) return snapshotAtPlay(data, seq);
     return undefined;
   }, [data, url.from]);
 
-  const jobs = useRef<Job<unknown>[]>([]);
   useEffect(() => {
     if (!data) return;
     const timer = setTimeout(() => {
-      jobs.current.forEach((j) => j.cancel());
+      cancelJobs();
       const options: BuildOptions = {
         outs: new Set(url.outs),
         ins: new Set(url.ins),
@@ -177,8 +184,8 @@ export function App() {
     return () => clearTimeout(timer);
   }, [data, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);
 
-  useEffect(() => () => jobs.current.forEach((j) => j.cancel()), []);
-  useEffect(() => setImpact({ status: 'idle', rows: [] }), [data, url.outs.join(), url.ins.join(), url.whistle, url.hca, url.mode, start]);
+  useEffect(() => () => cancelJobs(), []);
+  useEffect(() => setImpact({ status: 'idle', rows: [] }), [data, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);
 
   const runImpact = useCallback(() => {
     if (!data || !sim.built || !sim.options) return;
@@ -211,9 +218,7 @@ export function App() {
         rows.sort((a, b) => b.winSwing - a.winSwing);
         setImpact({ status: 'done', rows });
       })
-      .catch((e) => {
-        if (!(e instanceof CancelledError)) setImpact({ status: 'idle', rows: [] });
-      });
+      .catch(() => setImpact({ status: 'idle', rows: [] }));
   }, [data, sim.built, sim.options, url.seed]);
 
   // --- Theme colors -----------------------------------------------------------------------------
