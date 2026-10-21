@@ -1444,6 +1444,20 @@ table.box + table.box,
   .brand-sub {
     display: none;
   }
+  .ib-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'name val' 'track track';
+    gap: 2px 8px;
+  }
+  .ib-name {
+    grid-area: name;
+  }
+  .ib-val {
+    grid-area: val;
+  }
+  .ib-track {
+    grid-area: track;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   *,

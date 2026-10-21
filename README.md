@@ -58,17 +58,17 @@ Calibration (`npm run calibrate`, 4,000 league-average games):
 
 | | Simulated | Real NBA |
 |---|---|---|
-| Possessions per team | 99.0 | 99.5 |
-| Points per possession | 1.154 | 1.145 |
-| Home margin | +2.3 | +2.2 |
+| Possessions per team | 99.2 | 99.5 |
+| Points per possession | 1.146 | 1.145 |
+| Home margin | +2.2 | +2.2 |
 | Margin standard deviation | 13.9 | ~13.5 |
-| Foul-outs per game | 0.19 | ~0.15 |
+| Foul-outs per game | 0.18 | ~0.15 |
 
-In the sample matchup, ruling out the 31-point star drops his team from 62% to 53% and costs about 2.8 points of margin.
+In the sample matchup, ruling out the 29-point star drops his team from 59% to 49% and costs about 3.5 points of margin.
 
 ### Known gaps
 
-- Overtime comes up in about 3.5% of simulated games against about 6% in the NBA. Endgame tactics are simpler than real coaching.
+- Overtime comes up in about 3.7% of simulated games against about 6% in the NBA. Endgame tactics are simpler than real coaching.
 - No individual defense beyond steals, blocks, rebounding and fouls. No matchups, rest, travel or motivation.
 - College play-by-play rarely has shot distances, so college zones are coarser. College priors are less tuned than NBA ones.
 - The parser tests use synthetic fixtures built from ESPN's documented shapes (`tests/fixtures/espn`). This repo was built in an environment that couldn't reach ESPN, so the first run against live data is the real integration test. Everything is parsed defensively by key, never by column position.

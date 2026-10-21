@@ -40,7 +40,10 @@ export function Method(props: { game: GameData }) {
       <h3>Inside a possession</h3>
       <ul>
         <li>Assists come from a passing network: each passer's share of assists to each teammate.</li>
-        <li>Misses can be blocked, more often at the rim and with shot blockers on the floor. Offensive rebounds use both lineups' rebounding rates.</li>
+        <li>
+          Misses can be blocked, more often at the rim and with shot blockers on the floor. Offensive rebounds pit the two lineups' rebounding rates against each other,
+          with diminishing returns.
+        </li>
         <li>
           Fouls accumulate. The bonus is live, players in foul trouble defend more carefully, and {lg.foulOut} fouls end a night. The whistle slider scales every foul call
           and so shifts free throws, foul trouble and rotations.
@@ -61,7 +64,7 @@ export function Method(props: { game: GameData }) {
       <ul>
         <li>Individual defense beyond steals, blocks, rebounding and fouls isn't modeled; neither are matchups, rest, travel or motivation.</li>
         <li>Shot zones depend on ESPN's play text. College feeds rarely list shot distances, so college zones are coarser.</li>
-        <li>Overtime comes up in about 3.5% of simulated NBA games against roughly 6% in real ones; the endgame is simpler than real coaching.</li>
+        <li>Overtime comes up in about 3.7% of simulated NBA games against roughly 6% in real ones; the endgame is simpler than real coaching.</li>
         <li>The model knows nothing the box scores don't. Use it to reason about scenarios, not as a betting service.</li>
       </ul>
       <h3>Data for this game</h3>

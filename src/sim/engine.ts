@@ -234,8 +234,10 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
   const rebound = (off: 0 | 1, ftMiss: boolean): boolean => {
     const def = (1 - off) as 0 | 1;
     const os = teams[off], ds = teams[def];
-    const o = lineupSum(os, (p) => p.oreb) / (5 * lgLineup.oreb);
-    const d = lineupSum(ds, (p) => p.dreb) / (5 * lgLineup.dreb);
+    // Rebounding has strong diminishing returns (players take boards from teammates), so only
+    // half of a lineup's edge over average carries through.
+    const o = 1 + 0.5 * (lineupSum(os, (p) => p.oreb) / (5 * lgLineup.oreb) - 1);
+    const d = 1 + 0.5 * (lineupSum(ds, (p) => p.dreb) / (5 * lgLineup.dreb) - 1);
     const base = ftMiss ? lg.ftOrebPct : lg.orebPct;
     const pOff = (base * o) / (base * o + (1 - base) * d);
     const offensive = rng() < pOff;
