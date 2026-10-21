@@ -103,7 +103,7 @@ export const LEAGUES: Record<LeagueId, LeagueConfig> = {
     zonePct: { rim: 0.6, paint: 0.4, mid: 0.37, c3: 0.36, ab3: 0.33 },
     assisted: { rim: 0.45, paint: 0.3, mid: 0.3, c3: 0.92, ab3: 0.78 },
     nonShootFoul: 0.1,
-    bonusTripShare: 0.3,
+    bonusTripShare: 0.15,
     priors: {
       G: { oreb: per40(0.8), dreb: per40(2.8), ast: per40(3.2), stl: per40(1.3), blk: per40(0.3), pf: per40(2.5), usage: 0.2 },
       F: { oreb: per40(1.6), dreb: per40(4.2), ast: per40(1.8), stl: per40(1.1), blk: per40(0.7), pf: per40(2.8), usage: 0.19 },
