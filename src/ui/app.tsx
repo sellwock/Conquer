@@ -253,7 +253,9 @@ export function App() {
       />
       {offline && (
         <div class="banner" role="status">
-          ESPN's live data can't be reached from here, so you're looking at a synthetic sample matchup. Everything else works the same.
+          {url.game === 'demo'
+            ? "ESPN's live data can't be reached from here, so you're looking at a synthetic sample matchup. Everything else works the same."
+            : "ESPN's live data can't be reached from here. Open the sample matchup to try the simulator, or retry once you're online."}
           <button type="button" class="link" onClick={() => location.reload()}>
             Retry
           </button>

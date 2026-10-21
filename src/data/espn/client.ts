@@ -68,6 +68,10 @@ async function getJsonFrom<T>(host: 'site' | 'web', path: string, opts: { signal
       if ((e as Error)?.name === 'AbortError') throw e;
       throw new DataError('Could not reach ESPN. Check your connection, or set a data proxy under Data connection at the bottom of the page.');
     }
+    // Vite's dev proxy answers 5xx when it can't reach ESPN at all: treat that as offline.
+    if (!res.ok && url.startsWith('/espn-') && res.status >= 500) {
+      throw new DataError('Could not reach ESPN from the dev server. Check your connection, or set a data proxy under Data connection at the bottom of the page.');
+    }
     if (!res.ok) throw new DataError(`ESPN returned ${res.status} for ${path}`, res.status);
     return (await res.json()) as T;
   })();
