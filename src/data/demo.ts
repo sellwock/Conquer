@@ -125,7 +125,7 @@ export function demoGame(): GameData {
     away,
     neutral: false,
     officials: ['Sample crew'],
-    odds: { provider: 'a sample book', details: 'HCT -1.5', spread: -1.5, total: 226.5, homeML: -125, awayML: 105 },
+    odds: { provider: 'a sample book', details: 'HCT -1.5', spread: -1.5, total: 226.5, homeML: -125, awayML: 105, homeSpreadOdds: -110, awaySpreadOdds: -110, overOdds: -112, underOdds: -108 },
     plays: [],
     espnWinProb: [],
     notes: ['Synthetic sample data. Teams, players and the betting line are fictional.'],

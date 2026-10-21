@@ -126,6 +126,11 @@ export interface Odds {
   total?: number;
   homeML?: number;
   awayML?: number;
+  /** Prices for each side of the spread and total (American). */
+  homeSpreadOdds?: number;
+  awaySpreadOdds?: number;
+  overOdds?: number;
+  underOdds?: number;
 }
 
 export interface Play {

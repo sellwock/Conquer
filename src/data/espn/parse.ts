@@ -403,14 +403,21 @@ export function parseOdds(summary: J, homeId: string): Odds | undefined {
     if (m && m[1] === homeAbbr) spread = num(m[2]);
     else if (m && m[1] === awayAbbr) spread = -num(m[2]);
   }
-  const ml = (side: J) => (side?.moneyLine != null ? num(side.moneyLine) : undefined);
+  const price = (v: unknown) => {
+    const x = num(v, NaN);
+    return Number.isFinite(x) && Math.abs(x) >= 100 ? x : undefined;
+  };
   return {
     provider: o?.provider?.name ?? 'Sportsbook',
     details,
     spread,
     total: o?.overUnder != null ? num(o.overUnder) : undefined,
-    homeML: ml(o?.homeTeamOdds),
-    awayML: ml(o?.awayTeamOdds),
+    homeML: price(o?.homeTeamOdds?.moneyLine),
+    awayML: price(o?.awayTeamOdds?.moneyLine),
+    homeSpreadOdds: price(o?.homeTeamOdds?.spreadOdds),
+    awaySpreadOdds: price(o?.awayTeamOdds?.spreadOdds),
+    overOdds: price(o?.overOdds),
+    underOdds: price(o?.underOdds),
   };
 }
 

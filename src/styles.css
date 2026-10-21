@@ -1318,6 +1318,118 @@ table.box + table.box,
   white-space: nowrap;
 }
 
+/* Parlays */
+.disclaimer {
+  border-color: var(--out);
+  background: var(--out-bg);
+}
+.disclaimer p {
+  margin: 0;
+  max-width: 90ch;
+}
+.scan {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 10px;
+}
+.parlay-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+}
+.parlay {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+.p-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.p-price {
+  font: 800 26px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  margin-right: auto;
+}
+.chip {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 8px;
+  color: var(--muted);
+  background: var(--surface);
+}
+.p-legs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.p-legs li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 8px;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent);
+}
+.p-leg {
+  font-weight: 600;
+}
+.p-leg-price {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.p-game {
+  grid-column: 1 / -1;
+  justify-self: start;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  text-decoration-color: var(--line);
+}
+.p-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin: 0;
+}
+.p-metrics dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.p-metrics dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.p-metrics dd.pos {
+  color: var(--pos);
+}
+.p-metrics dd.neg {
+  color: var(--neg);
+}
+.p-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 /* Flow */
 .moment p {
   margin: 0 0 10px;

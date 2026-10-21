@@ -4,8 +4,8 @@
 import type { LeagueId } from '../model/types';
 import type { MinutesMode } from '../model/build';
 
-export type Tab = 'outlook' | 'typical' | 'players' | 'flow' | 'method';
-export const TABS: Tab[] = ['outlook', 'typical', 'players', 'flow', 'method'];
+export type Tab = 'outlook' | 'typical' | 'players' | 'parlays' | 'flow' | 'method';
+export const TABS: Tab[] = ['outlook', 'typical', 'players', 'parlays', 'flow', 'method'];
 
 export interface UrlState {
   league: LeagueId;

@@ -45,6 +45,8 @@ export interface SimSummary {
   possessions: number;
   players: PlayerSummary[];
   typical: { index: number; result: SerializedResult };
+  /** Every simulation's final margin (home minus away) and total, for joint probabilities. */
+  outcomes: { margin: Int16Array; total: Int16Array };
   elapsedMs: number;
 }
 
@@ -176,6 +178,7 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
     possessions: possSum / n,
     players,
     typical: { index: typicalIndex, result: serializeResult(typical) },
+    outcomes: { margin: simMargin, total: simTotal },
     elapsedMs: Date.now() - t0,
   };
 }

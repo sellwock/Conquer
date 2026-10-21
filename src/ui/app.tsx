@@ -17,6 +17,8 @@ import { TypicalGame } from './typical';
 import { Players, type ImpactRow } from './players';
 import { Flow } from './flow';
 import { Method } from './method';
+import { Parlays, type ScanState } from './parlays';
+import type { GameMarket } from '../model/parlays';
 
 export interface SimState {
   status: 'idle' | 'running' | 'done' | 'error';
@@ -36,6 +38,12 @@ export interface Palette {
 
 const SAMPLE_GAMES = 10;
 export const IMPACT_SIMS = 2000;
+const SLATE_SIMS = 2000;
+
+function marketFrom(g: GameData, s: SimSummary, note?: string): GameMarket | undefined {
+  if (g.phase !== 'pre' || !g.odds) return undefined;
+  return { gameId: g.id, label: `${g.away.abbr} @ ${g.home.abbr}`, home: g.home.abbr, away: g.away.abbr, tip: g.date, note, odds: g.odds, margin: s.outcomes.margin, total: s.outcomes.total };
+}
 
 export function App() {
   const [url, setUrl] = useState<UrlState>(() => {
@@ -47,6 +55,10 @@ export function App() {
   const [sim, setSim] = useState<SimState>({ status: 'idle', progress: 0 });
   const [impact, setImpact] = useState<{ status: 'idle' | 'running' | 'done'; rows: ImpactRow[] }>({ status: 'idle', rows: [] });
   const [offline, setOffline] = useState(false);
+  // Simulated games on the current date with posted lines, for parlays across the slate.
+  const [markets, setMarkets] = useState<Record<string, GameMarket>>({});
+  const [scan, setScan] = useState<ScanState>({ status: 'idle', done: 0, total: 0, failed: 0 });
+  const scanAbort = useRef<AbortController | null>(null);
   const [dark, setDark] = useState(prefersDark());
 
   // --- URL sync ---------------------------------------------------------------------------------
@@ -84,6 +96,9 @@ export function App() {
 
   // --- Scoreboard -------------------------------------------------------------------------------
   useEffect(() => {
+    scanAbort.current?.abort();
+    setMarkets({});
+    setScan({ status: 'idle', done: 0, total: 0, failed: 0 });
     const ac = new AbortController();
     setBoard((b) => ({ status: 'loading', games: b.games }));
     loadScoreboard(url.league, url.date!, ac.signal)
@@ -175,7 +190,19 @@ export function App() {
       const bl = base ? runInBackground(base.spec, Math.min(url.n, 5000), url.seed) : undefined;
       jobs.current = [main, ...(bl ? [bl] : [])];
       Promise.all([main.promise, bl?.promise])
-        .then(([scenario, baseline]) => setSim({ status: 'done', progress: 1, scenario, baseline, built, options }))
+        .then(([scenario, baseline]) => {
+          setSim({ status: 'done', progress: 1, scenario, baseline, built, options });
+          if (!start) {
+            const tweaks = [
+              url.outs.length ? `${url.outs.length} ruled out by you` : '',
+              url.ins.length ? `${url.ins.length} injured player${url.ins.length > 1 ? 's' : ''} cleared` : '',
+              url.whistle !== 1 ? 'custom whistle' : '',
+              !url.hca ? 'no home court' : '',
+            ].filter(Boolean);
+            const m = marketFrom(data, scenario, tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined);
+            if (m) setMarkets((ms) => ({ ...ms, [m.gameId]: m }));
+          }
+        })
         .catch((e) => {
           if (e instanceof CancelledError) return;
           setSim((s) => ({ ...s, status: 'error', error: (e as Error).message }));
@@ -220,6 +247,43 @@ export function App() {
       })
       .catch(() => setImpact({ status: 'idle', rows: [] }));
   }, [data, sim.built, sim.options, url.seed]);
+
+  const pendingSlate = board.games.filter((g) => g.phase === 'pre' && !markets[g.id] && g.id !== url.game);
+
+  const scanSlate = useCallback(async () => {
+    const targets = pendingSlate;
+    if (!targets.length) return;
+    scanAbort.current?.abort();
+    const ac = new AbortController();
+    scanAbort.current = ac;
+    let failed = 0;
+    for (let i = 0; i < targets.length; i++) {
+      if (ac.signal.aborted) return;
+      const t = targets[i];
+      setScan({ status: 'running', done: i, total: targets.length, current: `${t.away.abbr} @ ${t.home.abbr}`, failed });
+      try {
+        const gd = await loadGame(url.league, t.id, { sampleGames: SAMPLE_GAMES, signal: ac.signal });
+        if (!gd.odds) continue;
+        const built = buildSpec(gd, { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
+        const job = runInBackground(built.spec, SLATE_SIMS, url.seed);
+        const onAbort = () => job.cancel();
+        ac.signal.addEventListener('abort', onAbort);
+        const summary = await job.promise.finally(() => ac.signal.removeEventListener('abort', onAbort));
+        const m = marketFrom(gd, summary);
+        if (m && !ac.signal.aborted) setMarkets((ms) => ({ ...ms, [m.gameId]: ms[m.gameId] ?? m }));
+      } catch (e) {
+        if (ac.signal.aborted || e instanceof CancelledError || (e as Error)?.name === 'AbortError') return;
+        failed++;
+      }
+    }
+    setScan({ status: 'done', done: targets.length, total: targets.length, failed });
+  }, [pendingSlate.map((g) => g.id).join(), url.league, url.seed]);
+
+  const cancelScan = useCallback(() => {
+    scanAbort.current?.abort();
+    setScan((s) => ({ ...s, status: 'idle' }));
+  }, []);
+  useEffect(() => () => scanAbort.current?.abort(), []);
 
   // --- Theme colors -----------------------------------------------------------------------------
   const palette: Palette | undefined = useMemo(() => {
@@ -291,6 +355,7 @@ export function App() {
                     ['outlook', 'Outlook'],
                     ['typical', 'Typical game'],
                     ['players', 'Players'],
+                    ['parlays', 'Parlays'],
                     ['flow', data.phase === 'pre' ? 'Runs' : 'Game flow'],
                     ['method', 'Method'],
                   ] as [Tab, string][]
@@ -309,6 +374,17 @@ export function App() {
                   {url.tab === 'players' && <Players game={data} summary={sim.scenario} built={sim.built} palette={palette} impact={impact} onImpact={runImpact} />}
                   {url.tab === 'flow' && (
                     <Flow game={data} summary={sim.scenario} palette={palette} from={url.from} onFrom={(from) => update({ from })} />
+                  )}
+                  {url.tab === 'parlays' && (
+                    <Parlays
+                      game={data}
+                      markets={markets}
+                      remaining={pendingSlate.length}
+                      scan={scan}
+                      onScan={scanSlate}
+                      onCancelScan={cancelScan}
+                      onOpen={(id) => update({ game: id, outs: [], ins: [], from: 'tip', mode: 'projected', tab: 'parlays' })}
+                    />
                   )}
                   {url.tab === 'method' && <Method game={data} />}
                 </div>

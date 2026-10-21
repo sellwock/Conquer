@@ -60,6 +60,12 @@ export function Method(props: { game: GameData }) {
         scorers sit nearest the middle, so you can read its box score and play-by-play as a plausible version of tonight. Fixing the seed makes every number reproducible
         and shareable.
       </p>
+      <h3>Suggested parlays</h3>
+      <p>
+        Parlays use only legs with a posted price: moneylines, spreads and totals. Legs from the same game are scored together from that game's simulations, so legs that tend to
+        win together are priced that way. Legs from different games are treated as independent. Model chances are blended evenly with the market's no-vig odds before ranking,
+        and a suggestion needs positive expected value, a minimum hit chance and a capped price. These are suggestions from a model, not advice.
+      </p>
       <h3>Limits</h3>
       <ul>
         <li>Individual defense beyond steals, blocks, rebounding and fouls isn't modeled; neither are matchups, rest, travel or motivation.</li>
