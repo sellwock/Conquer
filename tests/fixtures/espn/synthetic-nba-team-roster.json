@@ -1,0 +1,351 @@
+{
+  "timestamp": "2026-01-15T15:04:11Z",
+  "status": "success",
+  "season": {
+    "year": 2026,
+    "displayName": "2025-26",
+    "type": 2,
+    "name": "Regular Season"
+  },
+  "athletes": [
+    {
+      "id": "4432101",
+      "uid": "s:40~l:46~a:4432101",
+      "guid": "synthetic-guid-4432101",
+      "alternateIds": {
+        "sdr": "4432101"
+      },
+      "firstName": "Marcus",
+      "lastName": "Hale",
+      "fullName": "Marcus Hale",
+      "displayName": "Marcus Hale",
+      "shortName": "M. Hale",
+      "weight": 210.0,
+      "displayWeight": "210 lbs",
+      "height": 80.0,
+      "displayHeight": "6' 8\"",
+      "age": 27,
+      "dateOfBirth": "1998-03-03T08:00Z",
+      "links": [
+        {
+          "language": "en-US",
+          "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+          ],
+          "href": "https://www.espn.com/nba/player/_/id/4432101",
+          "text": "Player Card",
+          "shortText": "Player Card",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ],
+      "birthPlace": {
+        "city": "Atlanta",
+        "state": "GA",
+        "country": "USA"
+      },
+      "college": {
+        "id": "2",
+        "guid": "synthetic-college",
+        "mascot": "Tigers",
+        "name": "Auburn",
+        "shortName": "Auburn",
+        "abbrev": "AUBU",
+        "logos": []
+      },
+      "slug": "marcus-hale",
+      "headshot": {
+        "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432101.png",
+        "alt": "Marcus Hale"
+      },
+      "jersey": "0",
+      "position": {
+        "id": "6",
+        "name": "Small Forward",
+        "displayName": "Small Forward",
+        "abbreviation": "SF",
+        "leaf": true
+      },
+      "injuries": [],
+      "teams": [
+        {
+          "$ref": "http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/teams/2?lang=en&region=us"
+        }
+      ],
+      "contracts": [],
+      "experience": {
+        "years": 8
+      },
+      "status": {
+        "id": "1",
+        "name": "Active",
+        "type": "active",
+        "abbreviation": "Active"
+      }
+    },
+    {
+      "id": "4432104",
+      "uid": "s:40~l:46~a:4432104",
+      "guid": "synthetic-guid-4432104",
+      "alternateIds": {
+        "sdr": "4432104"
+      },
+      "firstName": "Jalen",
+      "lastName": "Okafor",
+      "fullName": "Jalen Okafor",
+      "displayName": "Jalen Okafor",
+      "shortName": "J. Okafor",
+      "weight": 190.0,
+      "displayWeight": "190 lbs",
+      "height": 75.0,
+      "displayHeight": "6' 3\"",
+      "age": 25,
+      "dateOfBirth": "2000-07-19T07:00Z",
+      "links": [
+        {
+          "language": "en-US",
+          "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+          ],
+          "href": "https://www.espn.com/nba/player/_/id/4432104",
+          "text": "Player Card",
+          "shortText": "Player Card",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ],
+      "birthPlace": {
+        "city": "Atlanta",
+        "state": "GA",
+        "country": "USA"
+      },
+      "college": {
+        "id": "2",
+        "guid": "synthetic-college",
+        "mascot": "Tigers",
+        "name": "Memphis",
+        "shortName": "Memphis",
+        "abbrev": "MEMP",
+        "logos": []
+      },
+      "slug": "jalen-okafor",
+      "headshot": {
+        "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432104.png",
+        "alt": "Jalen Okafor"
+      },
+      "jersey": "4",
+      "position": {
+        "id": "1",
+        "name": "Point Guard",
+        "displayName": "Point Guard",
+        "abbreviation": "PG",
+        "leaf": true
+      },
+      "injuries": [],
+      "teams": [
+        {
+          "$ref": "http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/teams/2?lang=en&region=us"
+        }
+      ],
+      "contracts": [],
+      "experience": {
+        "years": 5
+      },
+      "status": {
+        "id": "1",
+        "name": "Active",
+        "type": "active",
+        "abbreviation": "Active"
+      }
+    },
+    {
+      "id": "4432110",
+      "uid": "s:40~l:46~a:4432110",
+      "guid": "synthetic-guid-4432110",
+      "alternateIds": {
+        "sdr": "4432110"
+      },
+      "firstName": "Caleb",
+      "lastName": "Northrup",
+      "fullName": "Caleb Northrup",
+      "displayName": "Caleb Northrup",
+      "shortName": "C. Northrup",
+      "weight": 205.0,
+      "displayWeight": "205 lbs",
+      "height": 77.0,
+      "displayHeight": "6' 5\"",
+      "age": 30,
+      "dateOfBirth": "1995-11-02T08:00Z",
+      "links": [
+        {
+          "language": "en-US",
+          "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+          ],
+          "href": "https://www.espn.com/nba/player/_/id/4432110",
+          "text": "Player Card",
+          "shortText": "Player Card",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ],
+      "birthPlace": {
+        "city": "Atlanta",
+        "state": "GA",
+        "country": "USA"
+      },
+      "college": {
+        "id": "2",
+        "guid": "synthetic-college",
+        "mascot": "Tigers",
+        "name": "Villanova",
+        "shortName": "Villanova",
+        "abbrev": "VILL",
+        "logos": []
+      },
+      "slug": "caleb-northrup",
+      "headshot": {
+        "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432110.png",
+        "alt": "Caleb Northrup"
+      },
+      "jersey": "13",
+      "position": {
+        "id": "2",
+        "name": "Shooting Guard",
+        "displayName": "Shooting Guard",
+        "abbreviation": "SG",
+        "leaf": true
+      },
+      "injuries": [
+        {
+          "status": "Out",
+          "date": "2026-01-14T18:22Z"
+        }
+      ],
+      "teams": [
+        {
+          "$ref": "http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/teams/2?lang=en&region=us"
+        }
+      ],
+      "contracts": [],
+      "experience": {
+        "years": 9
+      },
+      "status": {
+        "id": "1",
+        "name": "Active",
+        "type": "active",
+        "abbreviation": "Active"
+      }
+    },
+    {
+      "id": "4432103",
+      "uid": "s:40~l:46~a:4432103",
+      "guid": "synthetic-guid-4432103",
+      "alternateIds": {
+        "sdr": "4432103"
+      },
+      "firstName": "Theo",
+      "lastName": "Lindqvist",
+      "fullName": "Theo Lindqvist",
+      "displayName": "Theo Lindqvist",
+      "shortName": "T. Lindqvist",
+      "weight": 250.0,
+      "displayWeight": "250 lbs",
+      "height": 84.0,
+      "displayHeight": "7' 0\"",
+      "age": 28,
+      "dateOfBirth": "1997-05-30T07:00Z",
+      "links": [
+        {
+          "language": "en-US",
+          "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+          ],
+          "href": "https://www.espn.com/nba/player/_/id/4432103",
+          "text": "Player Card",
+          "shortText": "Player Card",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ],
+      "birthPlace": {
+        "city": "Atlanta",
+        "state": "GA",
+        "country": "USA"
+      },
+      "college": {
+        "id": "2",
+        "guid": "synthetic-college",
+        "mascot": "Tigers",
+        "name": "Gonzaga",
+        "shortName": "Gonzaga",
+        "abbrev": "GONZ",
+        "logos": []
+      },
+      "slug": "theo-lindqvist",
+      "headshot": {
+        "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432103.png",
+        "alt": "Theo Lindqvist"
+      },
+      "jersey": "42",
+      "position": {
+        "id": "9",
+        "name": "Center",
+        "displayName": "Center",
+        "abbreviation": "C",
+        "leaf": true
+      },
+      "injuries": [
+        {
+          "status": "Day-To-Day",
+          "date": "2026-01-13T21:00Z"
+        }
+      ],
+      "teams": [
+        {
+          "$ref": "http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/teams/2?lang=en&region=us"
+        }
+      ],
+      "contracts": [],
+      "experience": {
+        "years": 7
+      },
+      "status": {
+        "id": "1",
+        "name": "Active",
+        "type": "active",
+        "abbreviation": "Active"
+      }
+    }
+  ],
+  "coach": [
+    {
+      "id": "7121",
+      "firstName": "Riley",
+      "lastName": "Ashford",
+      "experience": 3
+    }
+  ],
+  "team": {
+    "id": "2",
+    "abbreviation": "BOS",
+    "location": "Boston",
+    "name": "Celtics",
+    "displayName": "Boston Celtics",
+    "clubhouse": "https://www.espn.com/nba/team/_/name/bos/boston-celtics",
+    "color": "008348",
+    "logo": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
+    "recordSummary": "29-12",
+    "seasonSummary": "2025-26 Regular Season",
+    "standingSummary": "1st in Atlantic Division"
+  }
+}
