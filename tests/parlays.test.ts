@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { evaluate, legsForGame, suggestParlays, toAmerican, toDecimal, HIT_FLOOR, MAX_PRICE, type GameMarket } from '../src/model/parlays';
+import { evaluate, legsForGame, modelHasSay, suggestParlays, toAmerican, toDecimal, HIT_FLOOR, MAX_PRICE, type GameMarket } from '../src/model/parlays';
 import { makeRng } from '../src/lib/rng';
+import type { LeagueId } from '../src/model/types';
 
-function market(id: string, margins: number[], totals: number[], odds: GameMarket['odds']): GameMarket {
-  return { gameId: id, label: `A${id} @ H${id}`, home: `H${id}`, away: `A${id}`, odds, margin: Int16Array.from(margins), total: Int16Array.from(totals) };
+function market(id: string, margins: number[], totals: number[], odds: GameMarket['odds'], league: LeagueId = 'ncaam'): GameMarket {
+  return { gameId: id, league, label: `A${id} @ H${id}`, home: `H${id}`, away: `A${id}`, odds, margin: Int16Array.from(margins), total: Int16Array.from(totals) };
 }
+
+/** Pins the blend so the parlay-building tests don't depend on the fitted weights. */
+const HALF = { ml: 0.5, spread: 0.5, total: 0.5 };
 
 const evenOdds = { provider: 'test', spread: -0.5, total: 220.5, homeML: -110, awayML: -110, homeSpreadOdds: -110, awaySpreadOdds: -110, overOdds: -110, underOdds: -110 };
 
@@ -56,7 +60,7 @@ describe('parlay math', () => {
       // Market sees a pick'em; the sims see a home favorite, so home legs carry value.
       games.push(market(String(gi), m, t, { ...evenOdds, spread: -1.5, total: 226.5 }));
     }
-    const s = suggestParlays(games);
+    const s = suggestParlays(games, 3, HALF);
     for (const size of [1, 2, 3] as const) {
       expect(s.bySize[size].length).toBeGreaterThan(0);
       for (const p of s.bySize[size]) {
@@ -74,10 +78,27 @@ describe('parlay math', () => {
     }
   });
 
-  it('blends toward the market so a wild model edge is tempered', () => {
+  it('weights the model only as far as backtests earned it', () => {
+    // The sims say the home side wins and covers every time; the market says a coin flip.
     const g = market('1', Array(100).fill(10), Array(100).fill(200), evenOdds);
-    const home = legsForGame(g).find((l) => l.key.endsWith('ml:home'))!;
-    expect(home.pModel).toBe(1);
-    expect(home.pBlend).toBeCloseTo(0.75);
+    const legs = legsForGame(g);
+    const ml = legs.find((l) => l.key.endsWith('ml:home'))!;
+    const spread = legs.find((l) => l.key.endsWith('spread:home'))!;
+    expect(ml.pModel).toBe(1);
+    expect(ml.pBlend).toBeCloseTo(0.5); // college moneylines: market alone
+    expect(spread.pBlend).toBeCloseTo(0.25 * 1 + 0.75 * 0.5); // college spreads: a quarter model
+    expect(legsForGame(g, HALF).find((l) => l.key.endsWith('ml:home'))!.pBlend).toBeCloseTo(0.75);
+  });
+
+  it('suggests nothing where the market alone ranks every bet', () => {
+    expect(modelHasSay('nba')).toBe(false);
+    expect(modelHasSay('ncaam')).toBe(true);
+    const g = market('1', Array(100).fill(10), Array(100).fill(200), evenOdds, 'nba');
+    for (const l of legsForGame(g)) {
+      expect(l.pBlend).toBeCloseTo(l.pFair);
+      expect(l.ev).toBeLessThan(0); // the vig always wins against the market's own odds
+    }
+    const s = suggestParlays([g, market('2', Array(100).fill(-10), Array(100).fill(260), evenOdds, 'nba')]);
+    expect(s.bySize[1].length + s.bySize[2].length + s.bySize[3].length).toBe(0);
   });
 });

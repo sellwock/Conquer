@@ -4,13 +4,15 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { LeagueId, ScoreboardGame } from '../model/types';
 import { boardRow } from '../model/slate';
-import type { Parlay } from '../model/parlays';
+import { MODEL_WEIGHT, modelHasSay, type Parlay } from '../model/parlays';
+import { LEAGUES } from '../model/leagues';
 import { fmtAmerican, impliedFromAmerican } from '../lib/stats';
 import { loadForwardLog } from '../track/forward';
 import { gradeEntry, type Graded } from '../track/grade';
 import type { Entry } from '../track/types';
 import { dateLabel, lineText, pct, perHundred, tipTime } from './format';
 import type { Slate } from './useSlate';
+import { blendText } from './parlays';
 
 type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge';
 
@@ -70,6 +72,7 @@ export function SlateBoard(props: {
 }) {
   const { slate, board } = props;
   const [sort, setSort] = useState<SortKey>('tip');
+  const hasSay = modelHasSay(props.league);
   const [log, setLog] = useState<Record<string, Entry>>({});
 
   // Started games show the prediction saved before tip, when the log has one.
@@ -121,8 +124,10 @@ export function SlateBoard(props: {
           </p>
         </header>
         <p class="muted small">
-          Model numbers come from 2,000 simulations per game with everyone available (the open game uses your settings). Edges blend the simulation 50/50 with the market's
-          no-vig odds and clear the same bar as the parlays tab. Suggestions, not advice.
+          Model numbers come from 2,000 simulations per game with everyone available (the open game uses your settings).{' '}
+          {hasSay
+            ? `Best singles weight the simulation against the market by how it did in backtests (${blendText(MODEL_WEIGHT[props.league])}) and clear the same bar as the parlays tab. Suggestions, not advice.`
+            : `No best singles for ${LEAGUES[props.league].label} games: in backtests the model hasn't beaten the betting market on any ${LEAGUES[props.league].label} bet.`}
         </p>
         <div class="scan">
           {slate.scan.status === 'running' ? (
@@ -172,12 +177,20 @@ export function SlateBoard(props: {
                   </th>
                   <Th k="total" label="Total" num />
                   <Th k="win" label="Home win" num />
-                  <Th k="edge" label="Best single" />
+                  {hasSay ? <Th k="edge" label="Best single" /> : <th scope="col">Result</th>}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <BoardRowView key={r.g.id} r={r} queued={pendingIds.has(r.g.id)} scanning={slate.scan.status === 'running'} open={r.g.id === props.openGame} onOpen={props.onOpen} />
+                  <BoardRowView
+                    key={r.g.id}
+                    r={r}
+                    hasSay={hasSay}
+                    queued={pendingIds.has(r.g.id)}
+                    scanning={slate.scan.status === 'running'}
+                    open={r.g.id === props.openGame}
+                    onOpen={props.onOpen}
+                  />
                 ))}
               </tbody>
             </table>
@@ -191,7 +204,7 @@ export function SlateBoard(props: {
   );
 }
 
-function BoardRowView(props: { r: Row; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
+function BoardRowView(props: { r: Row; hasSay: boolean; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
   const { g, n, best, logged } = props.r;
   const pre = g.phase === 'pre';
   const waiting = pre && !n;
@@ -232,7 +245,7 @@ function BoardRowView(props: { r: Row; queued: boolean; scanning: boolean; open:
           {pre ? placeholder : 'No saved prediction'}
         </td>
       )}
-      <td>{pre ? <BestCell best={best} waiting={waiting} /> : <ResultCell g={g} logged={logged} />}</td>
+      <td>{!pre ? <ResultCell g={g} logged={logged} /> : props.hasSay ? <BestCell best={best} waiting={waiting} /> : <span class="muted">–</span>}</td>
     </tr>
   );
 }
