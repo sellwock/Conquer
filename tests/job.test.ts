@@ -59,31 +59,35 @@ describe('forward log job', () => {
     expect(easternYmd(new Date('2026-01-17T06:00:00Z'))).toBe('20260117');
   });
 
-  it('snapshots within 12 hours, refreshes near tip, and never writes after tip', async () => {
+  it('snapshots up to 30 hours out, refreshes in the last 3 hours, and never writes after tip', async () => {
     const { io, files } = memoryIO();
-    // 16 hours out: too early.
-    let r = await run(io, '2026-01-16T08:30:00Z');
+    // 31 hours out: too early.
+    let r = await run(io, '2026-01-15T17:30:00Z');
     expect(r.snapshots).toBe(0);
 
-    // 4.5 hours out: first snapshot.
-    r = await run(io, '2026-01-16T20:00:00Z');
+    // 20 hours out: first snapshot.
+    r = await run(io, '2026-01-16T04:30:00Z');
     expect(r.snapshots).toBe(1);
     const first = (files.get(PRE_PATH) as LogFile)['401810131'];
     expect(first).toMatchObject({ status: 'open', league: 'nba', home: { abbr: 'NY' }, away: { abbr: 'BKN' } });
-    expect(first.pred).toMatchObject({ model: MODEL_VERSION, n: 200, minsToTip: 270 });
+    expect(first.pred).toMatchObject({ model: MODEL_VERSION, n: 200, minsToTip: 1200 });
     expect(first.pred!.marginPmf[1].reduce((a, b) => a + b, 0)).toBeCloseTo(1, 3);
     expect(first.line?.spread).toBeDefined();
 
     expect(files.get('index.json')).toEqual({ files: [PRE_PATH] });
 
-    // Two hours out: outside the refresh window, untouched.
-    r = await run(io, '2026-01-16T22:30:00Z');
+    // Four hours out: outside the refresh window, untouched.
+    r = await run(io, '2026-01-16T20:30:00Z');
     expect(r.refreshed + r.snapshots).toBe(0);
 
-    // An hour out and the last snapshot is old: refreshed.
-    r = await run(io, '2026-01-16T23:30:00Z');
+    // Two and a half hours out with an old snapshot: refreshed.
+    r = await run(io, '2026-01-16T22:00:00Z');
     expect(r.refreshed).toBe(1);
-    expect((files.get(PRE_PATH) as LogFile)['401810131'].pred!.minsToTip).toBe(60);
+    expect((files.get(PRE_PATH) as LogFile)['401810131'].pred!.minsToTip).toBe(150);
+
+    // Two hours out, but the snapshot is only 30 minutes old: untouched.
+    r = await run(io, '2026-01-16T22:30:00Z');
+    expect(r.refreshed + r.snapshots).toBe(0);
 
     // Past tip (the fixture still says "pre"): nothing written.
     const before = JSON.stringify(files.get(PRE_PATH));

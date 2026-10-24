@@ -313,7 +313,7 @@ export function TrackRecord(props: { league: LeagueId }) {
       {rows.length === 0 && !(source === 'log' && log.status === 'loading') && bt.status !== 'running' && (
         <div class="empty-panel">
           {source === 'log'
-            ? 'No graded games yet. The scheduled job saves predictions within 12 hours of tip-off and grades them once the games end.'
+            ? 'No graded games yet. The scheduled job saves predictions up to a day before tip-off, refreshes them in the last few hours, and grades them once the games end.'
             : bt.status === 'done'
               ? 'No finished games with results in that range.'
               : 'Pick a range and run the backtest to grade the model on recent games.'}
