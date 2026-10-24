@@ -7,6 +7,7 @@ import {
   extractGame,
   num,
   parseBoxPlayers,
+  parseStatLine,
   parseInjuries,
   parseOdds,
   parseOfficials,
@@ -30,6 +31,12 @@ export interface LoadOptions {
   sampleGames: number;
   signal?: AbortSignal;
   onStatus?: (msg: string) => void;
+  /**
+   * Rebuild the game as it looked before this instant (ISO), for backtests: season stats stop at
+   * this date, today's roster and injury report are ignored, and starters come from the sample.
+   * Who dressed still comes from the box score, so the backtest knows availability.
+   */
+  asOf?: string;
 }
 
 export async function loadScoreboard(league: LeagueId, yyyymmdd: string, signal?: AbortSignal): Promise<ScoreboardGame[]> {
@@ -65,19 +72,72 @@ async function recentCompleted(league: LeagueId, teamId: string, before: string,
   return found;
 }
 
-/** Season averages for players with no recent games for this team (new arrivals, returning injuries). */
-export async function fetchAthleteSeason(league: LeagueId, athleteId: string, signal?: AbortSignal): Promise<PlayerSample | null> {
+/**
+ * Season averages for players with no recent games for this team (new arrivals, returning
+ * injuries). With `asOf`, only seasons before that date's season count, topped up with that
+ * season's game log up to the date, so a backtest never sees later games.
+ */
+export async function fetchAthleteSeason(league: LeagueId, athleteId: string, signal?: AbortSignal, asOf?: string): Promise<PlayerSample | null> {
   try {
     const json = await getJson('web', webPath(league, `/athletes/${athleteId}/stats`), { signal });
-    return parseAthleteStats(json);
+    if (!asOf) return parseAthleteStats(json);
+    const before = parseAthleteStats(json, { beforeSeason: seasonYear(asOf, league) });
+    let current: PlayerSample | null = null;
+    try {
+      const log = await getJson('web', webPath(league, `/athletes/${athleteId}/gamelog`), { signal });
+      current = parseGamelog(log, asOf);
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') throw e;
+    }
+    return combineSeasons(current, before);
   } catch (e) {
     if ((e as Error)?.name === 'AbortError') throw e;
     return null;
   }
 }
 
+const scaleBox = (b: BoxLine, k: number): BoxLine => Object.fromEntries(Object.entries(b).map(([key, v]) => [key, v * k])) as unknown as BoxLine;
+
+/** A small current sample topped up to about 20 games with the previous one. */
+export function combineSeasons(current: PlayerSample | null, previous: PlayerSample | null): PlayerSample | null {
+  if (!current || current.games <= 0) return previous;
+  if (!previous || previous.games <= 0 || current.games >= 20) return current;
+  const w = Math.min(previous.games, 20 - current.games) / previous.games;
+  return {
+    games: current.games + previous.games * w,
+    starts: current.starts + previous.starts * w,
+    box: addBox(current.box, scaleBox(previous.box, w)),
+  };
+}
+
+/** Sums an athlete game log over games before `before` (ISO). */
+export function parseGamelog(json: J, before: string): PlayerSample | null {
+  const keys: string[] = (json?.names ?? json?.labels ?? []).map((k: unknown) => String(k).toLowerCase());
+  const events: Record<string, J> = json?.events ?? {};
+  const cutoff = Date.parse(before);
+  const box = emptyBox();
+  let games = 0;
+  for (const st of Array.isArray(json?.seasonTypes) ? json.seasonTypes : []) {
+    for (const cat of st?.categories ?? []) {
+      for (const ev of cat?.events ?? []) {
+        const meta = events[String(ev?.eventId)];
+        const when = Date.parse(meta?.gameDate ?? '');
+        if (!Number.isFinite(when) || when >= cutoff) continue;
+        const line = parseStatLine(
+          keys.map((k) => (k === 'totalrebounds' ? 'rebounds' : k)),
+          ev?.stats ?? [],
+        );
+        if (!line || line.min <= 0) continue;
+        games++;
+        for (const k of Object.keys(box) as (keyof BoxLine)[]) box[k] += line[k];
+      }
+    }
+  }
+  return games ? { games, starts: 0, box } : null;
+}
+
 /** Parses ESPN's athlete stats page payload: categories[] with labels and per-season rows. */
-export function parseAthleteStats(json: J): PlayerSample | null {
+export function parseAthleteStats(json: J, opts: { beforeSeason?: number } = {}): PlayerSample | null {
   const cats: J[] = Array.isArray(json?.categories) ? json.categories : [];
   const avg = cats.find((c) => /average/i.test(c?.name ?? c?.displayName ?? '')) ?? cats[0];
   if (!avg) return null;
@@ -121,24 +181,23 @@ export function parseAthleteStats(json: J): PlayerSample | null {
   const bySeason = new Map<number, J>();
   for (const row of rows) {
     const yr = num(row?.season?.year, NaN);
-    if (!Number.isFinite(yr)) continue;
+    if (!Number.isFinite(yr) || (opts.beforeSeason != null && yr >= opts.beforeSeason)) continue;
     const isTotal = /total/i.test(String(row?.teamSlug ?? '')) || row?.teamId == null;
     const cur = bySeason.get(yr);
     if (!cur || isTotal) bySeason.set(yr, row);
   }
-  const ordered = bySeason.size ? [...bySeason.entries()].sort((a, b) => a[0] - b[0]).map(([, r]) => r) : rows;
+  const ordered = bySeason.size || opts.beforeSeason != null ? [...bySeason.entries()].sort((a, b) => a[0] - b[0]).map(([, r]) => r) : rows;
   // Latest season with games; blend in the season before when the latest is a small sample.
   const parsed = ordered.map(pick).filter((r) => r.gp > 0 && r.per.min > 0);
   if (!parsed.length) return null;
   const latest = parsed[parsed.length - 1];
   const prev = parsed.length > 1 ? parsed[parsed.length - 2] : undefined;
-  const scale = (b: BoxLine, k: number): BoxLine => Object.fromEntries(Object.entries(b).map(([key, v]) => [key, v * k])) as unknown as BoxLine;
-  let box = scale(latest.per, latest.gp);
+  let box = scaleBox(latest.per, latest.gp);
   let games = latest.gp;
   let starts = latest.gs;
   if (prev && latest.gp < 20) {
     const w = Math.min(prev.gp, 20 - latest.gp);
-    box = addBox(box, scale(prev.per, w));
+    box = addBox(box, scaleBox(prev.per, w));
     games += w;
     starts += (prev.gs * w) / Math.max(1, prev.gp);
   }
@@ -207,8 +266,10 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
   const date: string = comp.date ?? summary?.header?.date ?? new Date().toISOString();
   const season = num(summary?.header?.season?.year, seasonYear(date, league));
 
+  const asOf = opts.asOf;
   const boxPlayers = parseBoxPlayers(summary);
-  const injuries = parseInjuries(summary);
+  // A finished game's injury list describes today, not tip-off; as-of rebuilds use the box score.
+  const injuries = asOf ? {} : parseInjuries(summary);
 
   const teamBase = async (c: J): Promise<{ t: TeamProfile; roster: RosterAthlete[] }> => {
     const tm = c?.team ?? {};
@@ -216,7 +277,7 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
     let roster: RosterAthlete[] = [];
     const fromBox = boxPlayers[id];
     if (fromBox?.length) roster = rosterFromBox(fromBox);
-    try {
+    if (!(asOf && roster.length)) try {
       const rj = await getJson('site', sitePath(league, `/teams/${id}/roster`), { signal });
       const official = parseRoster(rj);
       if (!roster.length) roster = official;
@@ -267,17 +328,18 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
     onStatus?.(`Reading play-by-play ${++done}/${allIds.length}`);
   });
 
-  const finishTeam = async (side: { t: TeamProfile; roster: RosterAthlete[] }, recent: { id: string }[]) => {
+  const finishTeam = async (side: { t: TeamProfile; roster: RosterAthlete[] }, recent: { id: string; date: string }[]) => {
     const exs = recent.map((r) => extracts.get(r.id)).filter((x): x is GameExtract => !!x);
     const { players, team } = buildSamples(side.t.id, exs);
     side.t.sample = team;
     const withPbp = exs.some((e) => zonesHaveData(e.teams[side.t.id]?.oppZones));
     side.t.source = exs.length ? `${exs.length} recent game${exs.length === 1 ? '' : 's'}${withPbp ? ' with play-by-play' : ''}` : 'League averages';
+    side.t.rest = restOf(recent, date);
     const needSeason = side.roster.filter((a) => (players.get(a.id)?.box.min ?? 0) < 40);
     const season = new Map<string, PlayerSample | null>();
     if (needSeason.length) {
       onStatus?.(`Season stats for ${side.t.abbr} newcomers`);
-      await mapLimit(needSeason, 6, async (a) => season.set(a.id, await fetchAthleteSeason(league, a.id, signal)));
+      await mapLimit(needSeason, 6, async (a) => season.set(a.id, await fetchAthleteSeason(league, a.id, signal, asOf)));
     }
     const box = boxPlayers[side.t.id] ?? [];
     side.t.players = side.roster.map((a): PlayerProfile => {
@@ -302,7 +364,7 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
         group: posGroup(a.pos),
         headshot: a.headshot,
         injury,
-        starter: b ? b.starter : (recentS?.starts ?? 0) >= Math.max(1, (recentS?.games ?? 0) * 0.5),
+        starter: b && !asOf ? b.starter : (recentS?.starts ?? 0) >= Math.max(1, (recentS?.games ?? 0) * 0.5),
         sample,
         source,
         actual: b && phase !== 'pre' ? { ...b.box, played: b.played, starter: b.starter } : undefined,
@@ -339,6 +401,73 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
     plays,
     espnWinProb: parseWinProb(summary, plays),
     notes,
+  };
+}
+
+/** Days since the team's previous game and whether this is the second night of a back-to-back. */
+export function restOf(recent: { date: string }[], tip: string): { days: number | null; b2b: boolean } {
+  const last = recent.reduce((m, r) => Math.max(m, Date.parse(r.date) || 0), 0);
+  if (!last) return { days: null, b2b: false };
+  const hours = (Date.parse(tip) - last) / 3_600_000;
+  return { days: Math.max(0, Math.round(hours / 24)), b2b: hours > 0 && hours < 36 };
+}
+
+/** The game as it stood before tip-off: no box score, plays, score or win probability. */
+export function pregameView(g: GameData): GameData {
+  const strip = (t: TeamProfile): TeamProfile => ({ ...t, players: t.players.map((p) => ({ ...p, actual: undefined })) });
+  return {
+    ...g,
+    phase: 'pre',
+    statusText: '',
+    period: 0,
+    clockSec: 0,
+    homeScore: undefined,
+    awayScore: undefined,
+    home: strip(g.home),
+    away: strip(g.away),
+    plays: [],
+    espnWinProb: [],
+  };
+}
+
+/** Patches the live parts of a game (status, score, box, plays, win probability) from a fresh summary. */
+export function applySummary(g: GameData, summary: J): GameData {
+  const comp = summary?.header?.competitions?.[0];
+  if (!comp) return g;
+  const status = comp.status ?? {};
+  const phase = phaseOf(status?.type?.state);
+  const cs: J[] = comp.competitors ?? [];
+  const score = (id: string) => {
+    const c = cs.find((x) => String(x?.team?.id ?? x?.id) === id);
+    return c?.score != null && c.score !== '' ? num(c.score) : undefined;
+  };
+  const box = parseBoxPlayers(summary);
+  const patch = (t: TeamProfile): TeamProfile => {
+    const lines = box[t.id];
+    if (!lines?.length) return t;
+    const byId = new Map(lines.map((b) => [b.id, b]));
+    return {
+      ...t,
+      players: t.players.map((p) => {
+        const b = byId.get(p.id);
+        return b && phase !== 'pre' ? { ...p, actual: { ...b.box, played: b.played, starter: b.starter } } : p;
+      }),
+    };
+  };
+  const plays = phase === 'pre' ? [] : parsePlays(summary);
+  return {
+    ...g,
+    phase,
+    statusText: status?.type?.detail ?? status?.type?.shortDetail ?? g.statusText,
+    period: num(status?.period, g.period),
+    clockSec: clockToSec(status?.displayClock ?? status?.clock),
+    homeScore: score(g.home.id) ?? g.homeScore,
+    awayScore: score(g.away.id) ?? g.awayScore,
+    home: patch(g.home),
+    away: patch(g.away),
+    plays,
+    espnWinProb: parseWinProb(summary, plays),
+    odds: parseOdds(summary, g.home.id) ?? g.odds,
   };
 }
 
