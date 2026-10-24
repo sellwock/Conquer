@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'preact/hooks';
 import { Hist } from '../lib/stats';
 import { periodName } from '../sim/engine';
 import { LEAGUES } from '../model/leagues';
@@ -45,18 +46,33 @@ function TeamBlock(props: { side: 'home' | 'away'; t: GameData['home']; color: s
   );
 }
 
-export function Scoreboard(props: { game: GameData; sim: SimState; palette: Palette; start?: GameSnapshot }) {
+export interface LiveState {
+  /** When the last refresh landed. */
+  updatedAt?: number;
+  failing?: boolean;
+}
+
+/** "Updated 12s ago", ticking. */
+function LiveAge(props: { live: LiveState }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => tick((x) => x + 1), 5000);
+    return () => clearInterval(t);
+  }, []);
+  if (props.live.failing) return <span>Update failed, retrying</span>;
+  if (!props.live.updatedAt) return <span>Auto-updating</span>;
+  const secs = Math.max(0, Math.round((Date.now() - props.live.updatedAt) / 1000));
+  return <span>Updated {secs < 60 ? `${secs}s` : `${Math.round(secs / 60)} min`} ago</span>;
+}
+
+export function Scoreboard(props: { game: GameData; sim: SimState; palette: Palette; start?: GameSnapshot; live?: LiveState }) {
   const { game: g, sim, palette } = props;
   const s = sim.scenario;
   const lg = LEAGUES[g.league];
   const margin = s ? Hist.from(s.margin).mean() : 0;
   const total = s ? s.homeScore + s.awayScore : 0;
-  const status =
-    g.phase === 'pre'
-      ? `Tip ${tipTime(g.date)}`
-      : g.phase === 'in'
-        ? `Live · ${g.statusText}`
-        : `Final${g.homeScore != null ? ` · ${g.away.abbr} ${g.awayScore}, ${g.home.abbr} ${g.homeScore}` : ''}`;
+  const score = g.homeScore != null ? ` · ${g.away.abbr} ${g.awayScore}, ${g.home.abbr} ${g.homeScore}` : '';
+  const status = g.phase === 'pre' ? `Tip ${tipTime(g.date)}` : g.phase === 'in' ? `Live · ${g.statusText}${score}` : `Final${score}`;
   const fromText = props.start
     ? `Simulating from ${g.away.abbr} ${props.start.awayScore}–${props.start.homeScore} ${g.home.abbr}, ${periodName(props.start.period, lg.periods)}`
     : g.phase === 'pre'
@@ -66,7 +82,10 @@ export function Scoreboard(props: { game: GameData; sim: SimState; palette: Pale
     <section class="scoreboard" aria-label="Matchup">
       <div class="sb-inner">
         <div class="sb-status">
-          <span class={g.phase === 'in' ? 'live-dot' : ''}>{status}</span>
+          <span class={g.phase === 'in' ? 'live-dot' : ''} aria-live="polite">
+            {status}
+          </span>
+          {props.live && <LiveAge live={props.live} />}
           {g.venue && <span>{g.venue}</span>}
           {g.neutral && <span>Neutral site</span>}
           {g.demo && <span class="sb-flag">Sample data</span>}
