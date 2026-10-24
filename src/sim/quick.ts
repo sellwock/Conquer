@@ -21,3 +21,24 @@ export function runQuick(spec: SimSpec, n: number, seed: string): QuickResult {
   }
   return { homeWin: w / n, margin: m / n, home: h / n, away: a / n };
 }
+
+export interface Outcomes {
+  margin: Int16Array;
+  total: Int16Array;
+  homeWin: number;
+  otPct: number;
+}
+
+/** Final margin and total of every simulation, for backtests and logged predictions. */
+export function runOutcomes(spec: SimSpec, n: number, seed: string): Outcomes {
+  const margin = new Int16Array(n), total = new Int16Array(n);
+  let w = 0, ot = 0;
+  for (let s = 0; s < n; s++) {
+    const r = simulateGame(spec, makeRng(seed, s));
+    margin[s] = r.score[0] - r.score[1];
+    total[s] = r.score[0] + r.score[1];
+    if (margin[s] > 0) w++;
+    if (r.ot) ot++;
+  }
+  return { margin, total, homeWin: w / n, otPct: ot / n };
+}

@@ -18,6 +18,7 @@ import { Players, type ImpactRow } from './players';
 import { Flow } from './flow';
 import { Method } from './method';
 import { Parlays, type ScanState } from './parlays';
+import { TrackRecord } from './record';
 import type { GameMarket } from '../model/parlays';
 
 export interface SimState {
@@ -309,12 +310,18 @@ export function App() {
   return (
     <div class="app">
       <TopBar
+        view={url.view}
+        onView={(view) => update({ view })}
         league={url.league}
         date={url.date!}
         onLeague={(league) => update({ league, game: undefined, outs: [], ins: [], from: 'tip', mode: 'projected' })}
         onDate={(date) => update({ date, game: undefined, outs: [], ins: [], from: 'tip', mode: 'projected' })}
         onSample={() => update({ game: 'demo', outs: [], ins: [], from: 'tip', mode: 'projected' })}
       />
+      {url.view === 'record' ? (
+        <TrackRecord league={url.league} />
+      ) : (
+        <>
       {offline && (
         <div class="banner" role="status">
           {url.game === 'demo'
@@ -391,6 +398,8 @@ export function App() {
               )}
             </section>
           </main>
+        </>
+      )}
         </>
       )}
       <footer class="foot">

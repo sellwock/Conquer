@@ -5,9 +5,12 @@ import type { LeagueId } from '../model/types';
 import type { MinutesMode } from '../model/build';
 
 export type Tab = 'outlook' | 'typical' | 'players' | 'parlays' | 'flow' | 'method';
+export type View = 'game' | 'record';
+export const VIEWS: View[] = ['game', 'record'];
 export const TABS: Tab[] = ['outlook', 'typical', 'players', 'parlays', 'flow', 'method'];
 
 export interface UrlState {
+  view: View;
   league: LeagueId;
   date?: string;
   game?: string;
@@ -26,6 +29,7 @@ export interface UrlState {
 export const SIM_COUNTS = [1000, 5000, 10000, 25000];
 
 export const DEFAULTS: UrlState = {
+  view: 'game',
   league: 'nba',
   outs: [],
   ins: [],
@@ -46,8 +50,10 @@ export function parseHash(hash: string): UrlState {
   const n = Number(q.get('n'));
   const whistle = Number(q.get('whistle'));
   const tab = q.get('tab') as Tab;
+  const view = q.get('view') as View;
   const date = q.get('date') ?? undefined;
   return {
+    view: VIEWS.includes(view) ? view : 'game',
     league,
     date: date && /^\d{8}$/.test(date) ? date : undefined,
     game: q.get('game') ?? undefined,
@@ -65,6 +71,7 @@ export function parseHash(hash: string): UrlState {
 
 export function toHash(s: UrlState): string {
   const q = new URLSearchParams();
+  if (s.view !== 'game') q.set('view', s.view);
   if (s.league !== 'nba') q.set('league', s.league);
   if (s.game) q.set('game', s.game);
   if (s.date) q.set('date', s.date);

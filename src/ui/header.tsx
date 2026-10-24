@@ -1,7 +1,16 @@
 import type { LeagueId, ScoreboardGame } from '../model/types';
+import type { View } from './state';
 import { dateLabel, parseYmd, tipTime, yyyymmdd } from './format';
 
-export function TopBar(props: { league: LeagueId; date: string; onLeague: (l: LeagueId) => void; onDate: (d: string) => void; onSample: () => void }) {
+export function TopBar(props: {
+  view: View;
+  league: LeagueId;
+  date: string;
+  onView: (v: View) => void;
+  onLeague: (l: LeagueId) => void;
+  onDate: (d: string) => void;
+  onSample: () => void;
+}) {
   const shift = (days: number) => {
     const d = parseYmd(props.date);
     d.setDate(d.getDate() + days);
@@ -20,6 +29,18 @@ export function TopBar(props: { league: LeagueId; date: string; onLeague: (l: Le
         <span class="brand-name">Conquer</span>
         <span class="brand-sub">Game Sim</span>
       </div>
+      <div class="seg" role="radiogroup" aria-label="View">
+        {(
+          [
+            ['game', 'Games'],
+            ['record', 'Track record'],
+          ] as [View, string][]
+        ).map(([v, label]) => (
+          <button key={v} type="button" role="radio" aria-checked={props.view === v} class={props.view === v ? 'on' : ''} onClick={() => props.onView(v)}>
+            {label}
+          </button>
+        ))}
+      </div>
       <div class="seg" role="radiogroup" aria-label="League">
         {(['nba', 'ncaam'] as LeagueId[]).map((l) => (
           <button key={l} type="button" role="radio" aria-checked={props.league === l} class={props.league === l ? 'on' : ''} onClick={() => props.onLeague(l)}>
@@ -27,7 +48,7 @@ export function TopBar(props: { league: LeagueId; date: string; onLeague: (l: Le
           </button>
         ))}
       </div>
-      <div class="datebar">
+      <div class="datebar" hidden={props.view === 'record'}>
         <button type="button" class="icon-btn" aria-label="Previous day" onClick={() => shift(-1)}>
           ‹
         </button>

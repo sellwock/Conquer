@@ -103,5 +103,6 @@ export function fmtPct(p: number, digits = 1): string {
 
 export function signed(x: number, digits = 1): string {
   const v = x.toFixed(digits);
-  return x > 0 ? `+${v}` : v === (-0).toFixed(digits) ? (0).toFixed(digits) : v;
+  if (Number(v) === 0) return (0).toFixed(digits);
+  return x > 0 ? `+${v}` : v;
 }

@@ -2,7 +2,7 @@
 // be killed outright instead of finishing in the background.
 import SimWorker from './worker?worker&inline';
 import { runSims, type SimSummary } from './run';
-import { runQuick, type QuickResult } from './quick';
+import { runOutcomes, runQuick, type Outcomes, type QuickResult } from './quick';
 import type { WorkerRequest, WorkerResponse } from './protocol';
 import type { SimSpec } from './types';
 
@@ -72,4 +72,9 @@ export function runInBackground(spec: SimSpec, n: number, seed: string, onProgre
 export function runQuickInBackground(specs: SimSpec[], n: number, seed: string): Job<QuickResult[]> {
   if (!supportsWorkers) return { promise: Promise.resolve(specs.map((s) => runQuick(s, n, seed))), cancel: () => {} };
   return startJob({ kind: 'quick', specs, n, seed }, (r) => (r.kind === 'quick' ? r.results : undefined));
+}
+
+export function runOutcomesInBackground(spec: SimSpec, n: number, seed: string): Job<Outcomes> {
+  if (!supportsWorkers) return { promise: Promise.resolve(runOutcomes(spec, n, seed)), cancel: () => {} };
+  return startJob({ kind: 'outcomes', spec, n, seed }, (r) => (r.kind === 'outcomes' ? r.outcomes : undefined));
 }
