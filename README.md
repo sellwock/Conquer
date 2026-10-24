@@ -43,6 +43,18 @@ All data comes from ESPN's public JSON (`site.api.espn.com`, with `site.web.api.
 
 Completed-game extracts are cached in `localStorage`. If a host blocks direct calls to ESPN, set a proxy prefix under **Data connection** at the bottom of the page. When ESPN can't be reached at all, the app falls back to a clearly labeled synthetic sample matchup.
 
+## Track record
+
+`.github/workflows/forward.yml` runs twice an hour. It saves each game's prediction before tip-off into the `data` branch, grades the game once it ends, and records every final score (`src/track/job.ts`, run by `scripts/forward.ts`):
+
+- NBA games are logged, plus college games with a posted line.
+- The first snapshot comes within 12 hours of tip. It's refreshed within 90 minutes of tip if it's more than 25 minutes old.
+- Nothing is written after tip and nothing is backfilled, so the record has no hindsight.
+- Each prediction stores the model version (`src/model/version.ts`), the line at that moment, and the full margin and total distributions.
+- `src/track/grade.ts` derives the record from those entries: winners, against the spread, over/under, Brier score vs the market's no-vig odds with a bootstrap interval, calibration and closing-line value.
+
+To run the job by hand (dry run writes nothing): Actions → Forward log → Run workflow.
+
 ## Model
 
 `src/sim/engine.ts` plays one game a possession at a time:
