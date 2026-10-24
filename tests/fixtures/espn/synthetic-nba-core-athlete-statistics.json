@@ -1,0 +1,144 @@
+{
+  "$ref": "http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/types/2/athletes/4432101/statistics/0?lang=en&region=us",
+  "athlete": {
+    "$ref": "http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/athletes/4432101?lang=en&region=us"
+  },
+  "splits": {
+    "id": "0",
+    "name": "All Splits",
+    "abbreviation": "Any",
+    "categories": [
+      {
+        "name": "defensive",
+        "displayName": "Defensive",
+        "shortDisplayName": "Defensive",
+        "abbreviation": "def",
+        "stats": [
+          {
+            "name": "blocks",
+            "displayName": "Blocks",
+            "shortDisplayName": "BLK",
+            "description": "Blocks",
+            "abbreviation": "BLK",
+            "value": 32.0,
+            "displayValue": "32",
+            "perGameValue": 0.8,
+            "perGameDisplayValue": "0.8"
+          },
+          {
+            "name": "defensiveRebounds",
+            "displayName": "Defensive Rebounds",
+            "shortDisplayName": "DR",
+            "description": "Defensive Rebounds",
+            "abbreviation": "DR",
+            "value": 256.0,
+            "displayValue": "256",
+            "perGameValue": 6.4,
+            "perGameDisplayValue": "6.4"
+          },
+          {
+            "name": "steals",
+            "displayName": "Steals",
+            "shortDisplayName": "STL",
+            "description": "Steals",
+            "abbreviation": "STL",
+            "value": 52.0,
+            "displayValue": "52",
+            "perGameValue": 1.3,
+            "perGameDisplayValue": "1.3"
+          }
+        ]
+      },
+      {
+        "name": "general",
+        "displayName": "General",
+        "shortDisplayName": "General",
+        "abbreviation": "gen",
+        "stats": [
+          {
+            "name": "gamesPlayed",
+            "displayName": "Games Played",
+            "shortDisplayName": "GP",
+            "description": "Games Played",
+            "abbreviation": "GP",
+            "value": 40.0,
+            "displayValue": "40"
+          },
+          {
+            "name": "minutes",
+            "displayName": "Minutes",
+            "shortDisplayName": "MIN",
+            "description": "Minutes",
+            "abbreviation": "MIN",
+            "value": 1408.0,
+            "displayValue": "1,408",
+            "perGameValue": 35.2,
+            "perGameDisplayValue": "35.2"
+          },
+          {
+            "name": "rebounds",
+            "displayName": "Rebounds",
+            "shortDisplayName": "REB",
+            "description": "Rebounds",
+            "abbreviation": "REB",
+            "value": 304.0,
+            "displayValue": "304",
+            "perGameValue": 7.6,
+            "perGameDisplayValue": "7.6"
+          }
+        ]
+      },
+      {
+        "name": "offensive",
+        "displayName": "Offensive",
+        "shortDisplayName": "Offensive",
+        "abbreviation": "off",
+        "stats": [
+          {
+            "name": "points",
+            "displayName": "Points",
+            "shortDisplayName": "PTS",
+            "description": "Points",
+            "abbreviation": "PTS",
+            "value": 996.0,
+            "displayValue": "996",
+            "perGameValue": 24.9,
+            "perGameDisplayValue": "24.9"
+          },
+          {
+            "name": "assists",
+            "displayName": "Assists",
+            "shortDisplayName": "AST",
+            "description": "Assists",
+            "abbreviation": "AST",
+            "value": 176.0,
+            "displayValue": "176",
+            "perGameValue": 4.4,
+            "perGameDisplayValue": "4.4"
+          },
+          {
+            "name": "fieldGoalPct",
+            "displayName": "Field Goal Percentage",
+            "shortDisplayName": "FG%",
+            "description": "Field Goal Percentage",
+            "abbreviation": "FG%",
+            "value": 48.3,
+            "displayValue": "48.3"
+          },
+          {
+            "name": "threePointFieldGoalPct",
+            "displayName": "3-Point Field Goal Percentage",
+            "shortDisplayName": "3P%",
+            "description": "3-Point Field Goal Percentage",
+            "abbreviation": "3P%",
+            "value": 39.2,
+            "displayValue": "39.2"
+          }
+        ]
+      }
+    ]
+  },
+  "seasonType": {
+    "$ref": "http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/types/2?lang=en&region=us"
+  }
+}

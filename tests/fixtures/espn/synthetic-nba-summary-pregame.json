@@ -1,0 +1,451 @@
+{
+  "boxscore": {
+    "teams": [
+      {
+        "team": {
+          "id": "17",
+          "uid": "s:40~l:46~t:17",
+          "slug": "brooklyn-nets",
+          "location": "Brooklyn",
+          "name": "Nets",
+          "abbreviation": "BKN",
+          "displayName": "Brooklyn Nets",
+          "shortDisplayName": "Nets",
+          "color": "000000",
+          "alternateColor": "ffffff",
+          "logo": "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png"
+        },
+        "statistics": [],
+        "displayOrder": 1,
+        "homeAway": "away"
+      },
+      {
+        "team": {
+          "id": "18",
+          "uid": "s:40~l:46~t:18",
+          "slug": "new-york-knicks",
+          "location": "New York",
+          "name": "Knicks",
+          "abbreviation": "NY",
+          "displayName": "New York Knicks",
+          "shortDisplayName": "Knicks",
+          "color": "1d428a",
+          "alternateColor": "f58426",
+          "logo": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png"
+        },
+        "statistics": [],
+        "displayOrder": 2,
+        "homeAway": "home"
+      }
+    ]
+  },
+  "format": {
+    "regulation": {
+      "periods": 4,
+      "displayName": "Quarter",
+      "slug": "quarter",
+      "clock": 720.0
+    },
+    "overtime": {
+      "displayName": "Overtime",
+      "slug": "overtime",
+      "clock": 300.0
+    }
+  },
+  "gameInfo": {
+    "venue": {
+      "id": "1872",
+      "fullName": "Madison Square Garden",
+      "address": {
+        "city": "New York",
+        "state": "NY",
+        "country": "USA"
+      },
+      "indoor": true
+    }
+  },
+  "leaders": [],
+  "injuries": [
+    {
+      "team": {
+        "id": "18",
+        "uid": "s:40~l:46~t:18",
+        "location": "New York",
+        "name": "Knicks",
+        "abbreviation": "NY",
+        "displayName": "New York Knicks",
+        "shortDisplayName": "Knicks",
+        "color": "1d428a",
+        "alternateColor": "f58426",
+        "logos": [
+          {
+            "href": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
+            "width": 500,
+            "height": 500,
+            "alt": "",
+            "rel": [
+              "full",
+              "default"
+            ],
+            "lastUpdated": "2024-06-25T21:17Z"
+          }
+        ],
+        "links": []
+      },
+      "injuries": [
+        {
+          "status": "Out",
+          "date": "2026-01-14T18:22Z",
+          "athlete": {
+            "id": "4432310",
+            "uid": "s:40~l:46~a:4432310",
+            "displayName": "Jordan Pike",
+            "shortName": "Jordan Pike",
+            "links": [],
+            "headshot": {
+              "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432310.png",
+              "alt": "Jordan Pike"
+            },
+            "position": {
+              "name": "Center",
+              "displayName": "Center",
+              "abbreviation": "C"
+            }
+          },
+          "type": {
+            "id": "21",
+            "name": "INJURY_STATUS_OUT",
+            "description": "out",
+            "abbreviation": "O"
+          },
+          "details": {
+            "fantasyStatus": {
+              "description": "OUT",
+              "abbreviation": "OUT"
+            },
+            "type": "Hamstring",
+            "location": "Leg",
+            "detail": "Strain",
+            "side": "Right",
+            "returnDate": "2026-01-25"
+          }
+        }
+      ]
+    },
+    {
+      "team": {
+        "id": "17",
+        "uid": "s:40~l:46~t:17",
+        "location": "Brooklyn",
+        "name": "Nets",
+        "abbreviation": "BKN",
+        "displayName": "Brooklyn Nets",
+        "shortDisplayName": "Nets",
+        "color": "000000",
+        "alternateColor": "ffffff",
+        "logos": [
+          {
+            "href": "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png",
+            "width": 500,
+            "height": 500,
+            "alt": "",
+            "rel": [
+              "full",
+              "default"
+            ],
+            "lastUpdated": "2024-06-25T21:17Z"
+          }
+        ],
+        "links": []
+      },
+      "injuries": []
+    }
+  ],
+  "broadcasts": [],
+  "predictor": {
+    "header": "ESPN BPI Win Probability",
+    "homeTeam": {
+      "id": "18",
+      "gameProjection": "78.4",
+      "teamChanceLoss": "21.6"
+    },
+    "awayTeam": {
+      "id": "17",
+      "gameProjection": "21.6",
+      "teamChanceLoss": "78.4"
+    }
+  },
+  "pickcenter": [
+    {
+      "provider": {
+        "id": "58",
+        "name": "ESPN BET",
+        "priority": 1
+      },
+      "details": "NY -8.5",
+      "overUnder": 221.5,
+      "spread": -8.5,
+      "overOdds": -110.0,
+      "underOdds": -110.0,
+      "awayTeamOdds": {
+        "favorite": false,
+        "underdog": true,
+        "moneyLine": 280,
+        "spreadOdds": -110.0,
+        "team": {
+          "id": "17",
+          "abbreviation": "BKN"
+        }
+      },
+      "homeTeamOdds": {
+        "favorite": true,
+        "underdog": false,
+        "moneyLine": -350,
+        "spreadOdds": -110.0,
+        "team": {
+          "id": "18",
+          "abbreviation": "NY"
+        }
+      },
+      "moneyline": {
+        "displayName": "Moneyline",
+        "shortDisplayName": "ML",
+        "home": {
+          "open": {
+            "odds": "-340"
+          }
+        },
+        "away": {
+          "open": {
+            "odds": "+270"
+          }
+        }
+      },
+      "pointSpread": {
+        "displayName": "Spread",
+        "shortDisplayName": "Spread",
+        "home": {
+          "open": {
+            "line": "-8",
+            "odds": "-110"
+          },
+          "close": {
+            "line": "-8.5",
+            "odds": "-110"
+          }
+        },
+        "away": {
+          "open": {
+            "line": "+8",
+            "odds": "-110"
+          },
+          "close": {
+            "line": "+8.5",
+            "odds": "-110"
+          }
+        }
+      },
+      "total": {
+        "displayName": "Total",
+        "shortDisplayName": "Total",
+        "over": {
+          "open": {
+            "line": "o220.5",
+            "odds": "-110"
+          },
+          "close": {
+            "line": "o221.5",
+            "odds": "-110"
+          }
+        },
+        "under": {
+          "open": {
+            "line": "u220.5",
+            "odds": "-110"
+          },
+          "close": {
+            "line": "u221.5",
+            "odds": "-110"
+          }
+        }
+      },
+      "link": {
+        "language": "en-US",
+        "rel": [
+          "home",
+          "desktop",
+          "bets",
+          "espnbet"
+        ],
+        "href": "https://sportsbook.example.invalid/",
+        "text": "Game",
+        "shortText": "Game",
+        "isExternal": true,
+        "isPremium": false
+      }
+    }
+  ],
+  "againstTheSpread": [],
+  "odds": [],
+  "header": {
+    "id": "401810131",
+    "uid": "s:40~l:46~e:401810123",
+    "season": {
+      "year": 2026,
+      "type": 2
+    },
+    "timeValid": true,
+    "competitions": [
+      {
+        "id": "401810131",
+        "uid": "s:40~l:46~e:401810131~c:401810131",
+        "date": "2026-01-17T00:30Z",
+        "neutralSite": false,
+        "conferenceCompetition": false,
+        "boxscoreAvailable": false,
+        "commentaryAvailable": false,
+        "liveAvailable": false,
+        "onWatchESPN": false,
+        "recent": false,
+        "boxscoreSource": "none",
+        "playByPlaySource": "none",
+        "competitors": [
+          {
+            "id": "18",
+            "uid": "s:40~l:46~t:18",
+            "order": 0,
+            "homeAway": "home",
+            "team": {
+              "id": "18",
+              "uid": "s:40~l:46~t:18",
+              "location": "New York",
+              "name": "Knicks",
+              "abbreviation": "NY",
+              "displayName": "New York Knicks",
+              "shortDisplayName": "Knicks",
+              "color": "1d428a",
+              "alternateColor": "f58426",
+              "logos": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
+                  "width": 500,
+                  "height": 500,
+                  "alt": "",
+                  "rel": [
+                    "full",
+                    "default"
+                  ],
+                  "lastUpdated": "2024-06-25T21:17Z"
+                }
+              ],
+              "links": []
+            },
+            "record": [
+              {
+                "type": "total",
+                "summary": "26-15",
+                "displayValue": "26-15"
+              }
+            ],
+            "possession": false
+          },
+          {
+            "id": "17",
+            "uid": "s:40~l:46~t:17",
+            "order": 1,
+            "homeAway": "away",
+            "team": {
+              "id": "17",
+              "uid": "s:40~l:46~t:17",
+              "location": "Brooklyn",
+              "name": "Nets",
+              "abbreviation": "BKN",
+              "displayName": "Brooklyn Nets",
+              "shortDisplayName": "Nets",
+              "color": "000000",
+              "alternateColor": "ffffff",
+              "logos": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png",
+                  "width": 500,
+                  "height": 500,
+                  "alt": "",
+                  "rel": [
+                    "full",
+                    "default"
+                  ],
+                  "lastUpdated": "2024-06-25T21:17Z"
+                }
+              ],
+              "links": []
+            },
+            "record": [
+              {
+                "type": "total",
+                "summary": "15-26",
+                "displayValue": "15-26"
+              }
+            ],
+            "possession": false
+          }
+        ],
+        "status": {
+          "type": {
+            "id": "1",
+            "name": "STATUS_SCHEDULED",
+            "state": "pre",
+            "completed": false,
+            "description": "Scheduled",
+            "detail": "Fri, January 16th at 7:30 PM EST",
+            "shortDetail": "1/16 - 7:30 PM EST"
+          }
+        },
+        "broadcasts": [
+          {
+            "type": {
+              "id": "1",
+              "shortName": "TV"
+            },
+            "market": {
+              "id": "1",
+              "type": "National"
+            },
+            "media": {
+              "shortName": "ESPN"
+            },
+            "lang": "en",
+            "region": "us"
+          }
+        ]
+      }
+    ],
+    "links": [
+      {
+        "rel": [
+          "summary",
+          "desktop",
+          "event"
+        ],
+        "href": "https://www.espn.com/nba/game/_/gameId/401810123/lakers-celtics",
+        "text": "Gamecast",
+        "shortText": "Summary",
+        "isExternal": false,
+        "isPremium": false
+      }
+    ],
+    "league": {
+      "id": "46",
+      "uid": "s:40~l:46",
+      "name": "National Basketball Association",
+      "abbreviation": "NBA",
+      "midsizeName": "NBA",
+      "slug": "nba",
+      "isTournament": false,
+      "links": []
+    }
+  },
+  "videos": [],
+  "meta": {
+    "gameState": "pre"
+  }
+}
