@@ -17,6 +17,7 @@ It rebuilds the "simulate" tool on Runs & Whistles (`/simulate/#game=â€¦&date=â€
 | Officials | Runs & Whistles: ref studies | whistle slider that changes foul calls, bonus free throws, foul trouble and rotations |
 | Props | RotoBot: chat | line checker for points, rebounds, assists, threes and PRA from the full distributions |
 | Parlays | RotoBot: parlay generator | suggested 1 to 3 leg parlays for one game or the whole slate, same-game legs scored jointly from the sims, capped hit chance and price |
+| Slate board | RotoBot: slate view | every game on the date in one sortable table: model line, total and win chance next to the market's, the best single, and for started games the prediction saved before tip-off |
 | Reproducible | no | seeded; every scenario is a shareable URL |
 
 ## Use it
@@ -65,7 +66,7 @@ Completed-game extracts are cached in `localStorage`. If a host blocks direct ca
 - **Assists** come from each passer's actual assist network. Blocks, offensive rebounds (lineup vs lineup), team fouls and the bonus, foul-outs, clock milking, last-shot holds, and intentional fouling are all modeled.
 - **Minutes redistribution:** an absent player's minutes go to teammates with headroom. Players at his position absorb more.
 
-**Parlays** (`src/model/parlays.ts`) use only legs with a posted price: moneylines, spreads and totals. Legs from one game are scored together from that game's simulations, so correlation comes from the sims; legs from different games are independent. Model chances are blended 50/50 with the market's no-vig odds before ranking. A suggestion needs positive expected value, a hit chance of at least 40%, 25% or 15%, and a price no longer than +200, +400 or +700 for one, two or three legs. "Across the slate" simulates every upcoming game on the date (2,000 sims each). The tab carries a disclaimer: suggestions, not advice.
+**Parlays** (`src/model/parlays.ts`) use only legs with a posted price: moneylines, spreads and totals. Legs from one game are scored together from that game's simulations, so correlation comes from the sims; legs from different games are independent. Model chances are blended 50/50 with the market's no-vig odds before ranking. A suggestion needs positive expected value, a hit chance of at least 40%, 25% or 15%, and a price no longer than +200, +400 or +700 for one, two or three legs. "Across the slate" and the Slate view share one scan of every upcoming game on the date (2,000 outcome-only sims each, two games at a time, cached for 30 minutes per model version); the board's best single is exactly the parlays tab's top single for that game. The tab carries a disclaimer: suggestions, not advice.
 
 `src/sim/run.ts` aggregates the runs into margin, total, first-half, run and lead distributions, plus per-player stat histograms. It picks the typical game (closest to the median margin, total and key scorers) and replays it from its seed with a full log.
 

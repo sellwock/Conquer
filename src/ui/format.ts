@@ -11,6 +11,15 @@ export function spreadText(abbr: string, margin: number): string {
   return `${abbr} ${margin > 0 ? '-' : '+'}${Math.abs(margin).toFixed(1)}`;
 }
 
+/** A home margin as "BOS -3.5", naming whichever side is favored. */
+export const lineText = (home: string, away: string, homeMargin: number) => (homeMargin >= 0 ? spreadText(home, homeMargin) : spreadText(away, -homeMargin));
+
+/** Expected profit as "+$4 per $100". */
+export function perHundred(ev: number): string {
+  const v = Math.round(ev * 100);
+  return `${v >= 0 ? '+' : '−'}$${Math.abs(v)} per $100`;
+}
+
 export function yyyymmdd(d: Date): string {
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
 }

@@ -33,6 +33,7 @@ export function TopBar(props: {
         {(
           [
             ['game', 'Games'],
+            ['slate', 'Slate'],
             ['record', 'Track record'],
           ] as [View, string][]
         ).map(([v, label]) => (

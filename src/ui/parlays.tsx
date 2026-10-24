@@ -2,7 +2,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { DEFAULT_JUICE, HIT_FLOOR, MAX_PRICE, suggestParlays, type GameMarket, type Parlay } from '../model/parlays';
 import type { GameData } from '../model/types';
 import { fmtAmerican } from '../lib/stats';
-import { pct, tipTime } from './format';
+import { pct, perHundred, tipTime } from './format';
 
 export interface ScanState {
   status: 'idle' | 'running' | 'done';
@@ -13,11 +13,6 @@ export interface ScanState {
 }
 
 const SIZE_TITLE: Record<1 | 2 | 3, string> = { 1: 'Singles', 2: '2-leg parlays', 3: '3-leg parlays' };
-
-function money(ev: number) {
-  const v = Math.round(ev * 100);
-  return `${v >= 0 ? '+' : '−'}$${Math.abs(v)} per $100`;
-}
 
 function ParlayCard(props: { p: Parlay; showGame: boolean; markets: Record<string, GameMarket>; onOpen: (id: string) => void }) {
   const { p } = props;
@@ -63,7 +58,7 @@ function ParlayCard(props: { p: Parlay; showGame: boolean; markets: Record<strin
         </div>
         <div>
           <dt>Expected return</dt>
-          <dd class={p.ev > 0 ? 'pos' : 'neg'}>{money(p.ev)}</dd>
+          <dd class={p.ev > 0 ? 'pos' : 'neg'}>{perHundred(p.ev)}</dd>
         </div>
       </dl>
       {(p.correlation != null && Math.abs(p.correlation) >= 0.03) || assumed ? (
@@ -128,7 +123,7 @@ export function Parlays(props: {
               <>
                 <span class="spinner" aria-hidden="true" />
                 <span>
-                  Simulating {props.scan.current ?? 'the slate'} ({props.scan.done + 1} of {props.scan.total})
+                  Simulating {props.scan.current ?? 'the slate'} ({props.scan.done} of {props.scan.total} done)
                 </span>
                 <button type="button" class="ghost-btn" onClick={props.onCancelScan}>
                   Stop

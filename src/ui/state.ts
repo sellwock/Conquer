@@ -5,8 +5,8 @@ import type { LeagueId } from '../model/types';
 import type { MinutesMode } from '../model/build';
 
 export type Tab = 'outlook' | 'typical' | 'players' | 'parlays' | 'flow' | 'method';
-export type View = 'game' | 'record';
-export const VIEWS: View[] = ['game', 'record'];
+export type View = 'game' | 'slate' | 'record';
+export const VIEWS: View[] = ['game', 'slate', 'record'];
 export const TABS: Tab[] = ['outlook', 'typical', 'players', 'parlays', 'flow', 'method'];
 
 export interface UrlState {
