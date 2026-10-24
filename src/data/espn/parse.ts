@@ -51,6 +51,19 @@ export function phaseOf(state: unknown): GamePhase {
   return state === 'in' ? 'in' : state === 'post' ? 'post' : 'pre';
 }
 
+/**
+ * The period a game is in, or ended in. Summaries of finished games leave `status.period` out, so
+ * fall back to the number of line-score periods, then to "Final/OT"-style status text.
+ */
+export function periodOf(comp: J, regulation: number): number {
+  const p = num(comp?.status?.period);
+  if (p > 0) return p;
+  const lines = Math.max(0, ...(comp?.competitors ?? []).map((c: J) => (Array.isArray(c?.linescores) ? c.linescores.length : 0)));
+  if (lines > 0) return lines;
+  const ot = /(\d*)\s*OT\b/i.exec(String(comp?.status?.type?.detail ?? comp?.status?.type?.shortDetail ?? ''));
+  return ot ? regulation + (ot[1] ? Number(ot[1]) : 1) : 0;
+}
+
 const teamColor = (c: unknown, fallback: string) => (typeof c === 'string' && /^[0-9a-f]{6}$/i.test(c) ? `#${c}` : fallback);
 const logoOf = (team: J): string | undefined => team?.logo ?? team?.logos?.[0]?.href;
 const recordOf = (comp: J): string | undefined => {
