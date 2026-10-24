@@ -1434,12 +1434,14 @@ table.box + table.box,
 }
 
 /* Track record */
-.record {
+.record,
+.slate {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-.record > .card > p {
+.record > .card > p,
+.slate > .card > p {
   margin: 0 0 8px;
   max-width: 80ch;
 }
@@ -1479,6 +1481,39 @@ table.box + table.box,
 }
 td .pos {
   color: var(--pos);
+  font-weight: 600;
+}
+td .small {
+  font-size: 11px;
+}
+/* Sortable headers look like the others until hovered or active. */
+th button.sort {
+  all: unset;
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+}
+th button.sort:hover,
+th button.sort:focus-visible {
+  border-bottom-color: currentColor;
+}
+th button.sort.on {
+  color: var(--ink);
+}
+th button.sort.on::after {
+  content: ' ↓';
+}
+table.board tbody th .link {
+  font-weight: 600;
+}
+/* The matchup stays in view while the rest of the row scrolls on a phone. */
+table.board th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+}
+table.board .live-text {
+  color: var(--neg);
   font-weight: 600;
 }
 td .neg {

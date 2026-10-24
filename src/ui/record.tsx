@@ -7,7 +7,7 @@ import { loadForwardLog, type ForwardLog } from '../track/forward';
 import { runBacktest, type BacktestProgress } from '../track/backtest';
 import type { Entry } from '../track/types';
 import { Reliability } from './charts';
-import { pct, signed1, spreadText } from './format';
+import { lineText, pct, signed1 } from './format';
 
 type Source = 'log' | 'backtest';
 const BACKTEST_DAYS = [7, 14, 30];
@@ -112,9 +112,6 @@ function SummaryCards({ s, source }: { s: Summary; source: Source }) {
   );
 }
 
-/** A home margin as "BOS -3.5", naming whichever side is favored. */
-const favored = (e: Entry, homeMargin: number) => (homeMargin >= 0 ? spreadText(e.home.abbr, homeMargin) : spreadText(e.away.abbr, -homeMargin));
-
 function GamesTable({ rows }: { rows: { e: Entry; g: Graded }[] }) {
   const cell = (r?: string) => (r === 'win' ? <span class="pos">Won</span> : r === 'loss' ? <span class="neg">Lost</span> : r === 'push' ? <span class="muted">Push</span> : <span class="muted">–</span>);
   return (
@@ -142,8 +139,8 @@ function GamesTable({ rows }: { rows: { e: Entry; g: Graded }[] }) {
                   {e.away.abbr} @ {e.home.abbr}
                 </th>
                 <td class="num">{pct(g.pHome, 0)}</td>
-                <td class="num">{favored(e, m)}</td>
-                <td class="num">{e.line?.spread != null ? favored(e, -e.line.spread) : (e.line?.details ?? '–')}</td>
+                <td class="num">{lineText(e.home.abbr, e.away.abbr, m)}</td>
+                <td class="num">{e.line?.spread != null ? lineText(e.home.abbr, e.away.abbr, -e.line.spread) : (e.line?.details ?? '–')}</td>
                 <td class="num">
                   {e.result!.away}–{e.result!.home}
                 </td>

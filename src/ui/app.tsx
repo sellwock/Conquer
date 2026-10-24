@@ -17,9 +17,10 @@ import { TypicalGame } from './typical';
 import { Players, type ImpactRow } from './players';
 import { Flow } from './flow';
 import { Method } from './method';
-import { Parlays, type ScanState } from './parlays';
+import { Parlays } from './parlays';
 import { TrackRecord } from './record';
-import type { GameMarket } from '../model/parlays';
+import { SlateBoard } from './slate';
+import { marketFrom, useSlate } from './useSlate';
 
 export interface SimState {
   status: 'idle' | 'running' | 'done' | 'error';
@@ -39,12 +40,7 @@ export interface Palette {
 
 const SAMPLE_GAMES = 10;
 export const IMPACT_SIMS = 2000;
-const SLATE_SIMS = 2000;
-
-function marketFrom(g: GameData, s: SimSummary, note?: string): GameMarket | undefined {
-  if (g.phase !== 'pre' || !g.odds) return undefined;
-  return { gameId: g.id, label: `${g.away.abbr} @ ${g.home.abbr}`, home: g.home.abbr, away: g.away.abbr, tip: g.date, note, odds: g.odds, margin: s.outcomes.margin, total: s.outcomes.total };
-}
+const NO_GAMES: ScoreboardGame[] = [];
 
 export function App() {
   const [url, setUrl] = useState<UrlState>(() => {
@@ -56,11 +52,9 @@ export function App() {
   const [sim, setSim] = useState<SimState>({ status: 'idle', progress: 0 });
   const [impact, setImpact] = useState<{ status: 'idle' | 'running' | 'done'; rows: ImpactRow[] }>({ status: 'idle', rows: [] });
   const [offline, setOffline] = useState(false);
-  // Simulated games on the current date with posted lines, for parlays across the slate.
-  const [markets, setMarkets] = useState<Record<string, GameMarket>>({});
-  const [scan, setScan] = useState<ScanState>({ status: 'idle', done: 0, total: 0, failed: 0 });
-  const scanAbort = useRef<AbortController | null>(null);
   const [dark, setDark] = useState(prefersDark());
+  // Simulated games on the current date with posted lines, for the slate board and parlays.
+  const slate = useSlate(url.league, url.date!, board.status === 'ok' ? board.games : NO_GAMES, url.seed, url.game, url.view === 'slate');
 
   // --- URL sync ---------------------------------------------------------------------------------
   const update = useCallback((patch: Partial<UrlState>) => setUrl((u) => ({ ...u, ...patch })), []);
@@ -97,9 +91,6 @@ export function App() {
 
   // --- Scoreboard -------------------------------------------------------------------------------
   useEffect(() => {
-    scanAbort.current?.abort();
-    setMarkets({});
-    setScan({ status: 'idle', done: 0, total: 0, failed: 0 });
     const ac = new AbortController();
     setBoard((b) => ({ status: 'loading', games: b.games }));
     loadScoreboard(url.league, url.date!, ac.signal)
@@ -200,8 +191,8 @@ export function App() {
               url.whistle !== 1 ? 'custom whistle' : '',
               !url.hca ? 'no home court' : '',
             ].filter(Boolean);
-            const m = marketFrom(data, scenario, tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined);
-            if (m) setMarkets((ms) => ({ ...ms, [m.gameId]: m }));
+            const m = marketFrom(data, scenario.outcomes, tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined);
+            if (m) slate.put(m);
           }
         })
         .catch((e) => {
@@ -249,43 +240,6 @@ export function App() {
       .catch(() => setImpact({ status: 'idle', rows: [] }));
   }, [data, sim.built, sim.options, url.seed]);
 
-  const pendingSlate = board.games.filter((g) => g.phase === 'pre' && !markets[g.id] && g.id !== url.game);
-
-  const scanSlate = useCallback(async () => {
-    const targets = pendingSlate;
-    if (!targets.length) return;
-    scanAbort.current?.abort();
-    const ac = new AbortController();
-    scanAbort.current = ac;
-    let failed = 0;
-    for (let i = 0; i < targets.length; i++) {
-      if (ac.signal.aborted) return;
-      const t = targets[i];
-      setScan({ status: 'running', done: i, total: targets.length, current: `${t.away.abbr} @ ${t.home.abbr}`, failed });
-      try {
-        const gd = await loadGame(url.league, t.id, { sampleGames: SAMPLE_GAMES, signal: ac.signal });
-        if (!gd.odds) continue;
-        const built = buildSpec(gd, { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
-        const job = runInBackground(built.spec, SLATE_SIMS, url.seed);
-        const onAbort = () => job.cancel();
-        ac.signal.addEventListener('abort', onAbort);
-        const summary = await job.promise.finally(() => ac.signal.removeEventListener('abort', onAbort));
-        const m = marketFrom(gd, summary);
-        if (m && !ac.signal.aborted) setMarkets((ms) => ({ ...ms, [m.gameId]: ms[m.gameId] ?? m }));
-      } catch (e) {
-        if (ac.signal.aborted || e instanceof CancelledError || (e as Error)?.name === 'AbortError') return;
-        failed++;
-      }
-    }
-    setScan({ status: 'done', done: targets.length, total: targets.length, failed });
-  }, [pendingSlate.map((g) => g.id).join(), url.league, url.seed]);
-
-  const cancelScan = useCallback(() => {
-    scanAbort.current?.abort();
-    setScan((s) => ({ ...s, status: 'idle' }));
-  }, []);
-  useEffect(() => () => scanAbort.current?.abort(), []);
-
   // --- Theme colors -----------------------------------------------------------------------------
   const palette: Palette | undefined = useMemo(() => {
     if (!data) return undefined;
@@ -320,6 +274,15 @@ export function App() {
       />
       {url.view === 'record' ? (
         <TrackRecord league={url.league} />
+      ) : url.view === 'slate' ? (
+        <SlateBoard
+          league={url.league}
+          date={url.date!}
+          board={board}
+          slate={slate}
+          openGame={url.game}
+          onOpen={(id) => update({ view: 'game', game: id, outs: [], ins: [], from: 'tip', mode: 'projected' })}
+        />
       ) : (
         <>
       {offline && (
@@ -385,11 +348,11 @@ export function App() {
                   {url.tab === 'parlays' && (
                     <Parlays
                       game={data}
-                      markets={markets}
-                      remaining={pendingSlate.length}
-                      scan={scan}
-                      onScan={scanSlate}
-                      onCancelScan={cancelScan}
+                      markets={slate.markets}
+                      remaining={slate.pending.length}
+                      scan={slate.scan}
+                      onScan={slate.start}
+                      onCancelScan={slate.stop}
                       onOpen={(id) => update({ game: id, outs: [], ins: [], from: 'tip', mode: 'projected', tab: 'parlays' })}
                     />
                   )}
