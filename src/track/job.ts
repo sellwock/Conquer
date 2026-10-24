@@ -195,6 +195,10 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
   }
 
   for (const path of dirty) o.io.write(path, sortKeys(files.get(path)!));
+  // The site can't list folders on raw.githubusercontent.com, so keep an index of log files.
+  const index = o.io.read<{ files: string[] }>('index.json') ?? { files: [] };
+  const all = [...new Set([...index.files, ...dirty])].sort();
+  if (all.length !== index.files.length) o.io.write('index.json', { files: all });
   o.io.write('status.json', { lastRun: o.now.toISOString(), model: MODEL_VERSION, requests: requestCount(), ...report });
   return report;
 }

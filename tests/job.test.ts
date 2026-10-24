@@ -74,6 +74,8 @@ describe('forward log job', () => {
     expect(first.pred!.marginPmf[1].reduce((a, b) => a + b, 0)).toBeCloseTo(1, 3);
     expect(first.line?.spread).toBeDefined();
 
+    expect(files.get('index.json')).toEqual({ files: [PRE_PATH] });
+
     // Two hours out: outside the refresh window, untouched.
     r = await run(io, '2026-01-16T22:30:00Z');
     expect(r.refreshed + r.snapshots).toBe(0);

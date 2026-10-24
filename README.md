@@ -53,7 +53,7 @@ Completed-game extracts are cached in `localStorage`. If a host blocks direct ca
 - Each prediction stores the model version (`src/model/version.ts`), the line at that moment, and the full margin and total distributions.
 - `src/track/grade.ts` derives the record from those entries: winners, against the spread, over/under, Brier score vs the market's no-vig odds with a bootstrap interval, calibration and closing-line value.
 
-To run the job by hand (dry run writes nothing): Actions → Forward log → Run workflow.
+`v1/index.json` lists the log files, since the site can't list folders on raw.githubusercontent.com. To run the job by hand (dry run writes nothing): Actions → Forward log → Run workflow.
 
 ## Model
 
