@@ -211,63 +211,45 @@ function rosterFromBox(ath: ReturnType<typeof parseBoxPlayers>[string]): RosterA
   return ath.map((a) => ({ id: a.id, name: a.name, short: a.short, jersey: a.jersey, pos: a.pos, headshot: a.headshot }));
 }
 
-/** Recent games count more: a game's weight halves every this many games back. */
-export const RECENCY_HALF_LIFE = 6;
-
-/**
- * Weights for games ordered newest first. They sum to the effective sample size rather than the
- * game count, so shrinkage toward priors sees how much information the weighted sample holds.
- */
-export function recencyWeights(n: number, halfLife = RECENCY_HALF_LIFE): number[] {
-  const w = Array.from({ length: n }, (_, i) => 0.5 ** (i / halfLife));
-  const sum = w.reduce((a, b) => a + b, 0);
-  const sumSq = w.reduce((a, b) => a + b * b, 0);
-  return w.map((x) => (x * sum) / sumSq);
-}
-
-/** Team and player samples from recent games, newest first, weighted toward the newest. */
-export function buildSamples(teamId: string, extracts: GameExtract[]): { players: Map<string, PlayerSample>; team: TeamSample | null } {
+function buildSamples(teamId: string, extracts: GameExtract[]): { players: Map<string, PlayerSample>; team: TeamSample | null } {
   const players = new Map<string, PlayerSample>();
   let team: TeamSample | null = null;
-  const played = extracts.filter((ex) => ex.teams[teamId]);
-  const weights = recencyWeights(played.length);
-  played.forEach((ex, i) => {
+  for (const ex of extracts) {
     const t = ex.teams[teamId];
-    const w = weights[i];
+    if (!t) continue;
     team ??= { games: 0, poss: 0, ptsFor: 0, ptsAgainst: 0, oppTov: 0 };
-    team.games += w;
-    team.poss += w * t.poss;
-    team.ptsFor += w * t.ptsFor;
-    team.ptsAgainst += w * t.ptsAgainst;
-    team.oppTov += w * t.oppTov;
+    team.games++;
+    team.poss += t.poss;
+    team.ptsFor += t.ptsFor;
+    team.ptsAgainst += t.ptsAgainst;
+    team.oppTov += t.oppTov;
     if (t.oppZones) {
       team.oppZones ??= emptyZones();
       for (const z of ZONES) {
-        team.oppZones[z].att += w * t.oppZones[z].att;
-        team.oppZones[z].made += w * t.oppZones[z].made;
+        team.oppZones[z].att += t.oppZones[z].att;
+        team.oppZones[z].made += t.oppZones[z].made;
       }
     }
     for (const [pid, p] of Object.entries(t.players)) {
-      const s = players.get(pid) ?? { games: 0, played: 0, starts: 0, box: emptyBox() };
-      s.games += w;
-      s.played = (s.played ?? 0) + 1;
-      if (p.starter) s.starts += w;
-      s.box = addBox(s.box, scaleBox(p.box, w));
+      const s = players.get(pid) ?? { games: 0, starts: 0, box: emptyBox() };
+      s.games++;
+      if (p.starter) s.starts++;
+      s.box = addBox(s.box, p.box);
       if (p.zones) {
         s.zones ??= emptyZones();
         for (const z of ZONES) {
-          s.zones[z].att += w * p.zones[z].att;
-          s.zones[z].made += w * p.zones[z].made;
+          s.zones[z].att += p.zones[z].att;
+          s.zones[z].made += p.zones[z].made;
         }
       }
-      if (p.assistedMakes != null) s.assistedMakes = (s.assistedMakes ?? 0) + w * p.assistedMakes;
+      if (p.assistedMakes != null) s.assistedMakes = (s.assistedMakes ?? 0) + p.assistedMakes;
       if (p.assistsTo) {
         s.assistsTo ??= {};
-        for (const [k, v] of Object.entries(p.assistsTo)) s.assistsTo[k] = (s.assistsTo[k] ?? 0) + w * v;
+        for (const [k, v] of Object.entries(p.assistsTo)) s.assistsTo[k] = (s.assistsTo[k] ?? 0) + v;
       }
       players.set(pid, s);
     }
-  });
+  }
   return { players, team };
 }
 
@@ -367,8 +349,7 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
       const recentS = players.get(a.id);
       const seasonS = season.get(a.id);
       let sample: PlayerSample | null = recentS ?? null;
-      const n = recentS?.played ?? recentS?.games ?? 0;
-      let source = recentS ? `Last ${n} game${n === 1 ? '' : 's'} with team` : 'Replacement level (no data)';
+      let source = recentS ? `Last ${recentS.games} game${recentS.games === 1 ? '' : 's'} with team` : 'Replacement level (no data)';
       if (seasonS && (!recentS || recentS.box.min < 40)) {
         sample = seasonS;
         source = `Season averages (${Math.round(seasonS.games)} gp)`;

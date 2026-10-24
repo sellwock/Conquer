@@ -18,8 +18,7 @@ export function Method(props: { game: GameData }) {
         <li>
           <b>Player tendencies</b> come from each team's last {g.demo ? 'several' : 'ten'} completed games on ESPN. The box scores give minutes, usage, turnovers, free
           throws, rebounding, assists, steals, blocks and fouls. The play-by-play gives every shot's location and who assisted whom. Players new to a team use their season
-          averages. Recent games count more: a game's weight halves every six games back. Everything is shrunk toward league norms by sample size, so a hot week doesn't become a
-          superstar.
+          averages. Everything is shrunk toward league norms by sample size, so a hot week doesn't become a superstar.
         </li>
         <li>
           <b>Team defense</b> is the opponents' shooting by zone and turnover rate in those same games, shrunk heavily toward league average.

@@ -57,10 +57,7 @@ export const emptyZones = (): ZoneTable => ({
 
 /** Everything we know about a player's recent production, as totals. */
 export interface PlayerSample {
-  /** Games in the sample; recency-weighted samples count their effective size. */
   games: number;
-  /** Games actually played, when `games` is weighted. */
-  played?: number;
   starts: number;
   box: BoxLine;
   /** Shot locations from play-by-play (optional). */

@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { requestCount, setFetch, setStore, type KeyValueStore } from '../src/data/espn/client';
-import { applySummary, combineSeasons, loadGame, parseGamelog, pregameView, recencyWeights, refreshGame, restOf } from '../src/data/espn/load';
+import { applySummary, combineSeasons, loadGame, parseGamelog, pregameView, refreshGame, restOf } from '../src/data/espn/load';
 import { buildSpec } from '../src/model/build';
 import { runSims } from '../src/sim/run';
 
@@ -142,19 +142,5 @@ describe('season helpers', () => {
     expect(restOf([{ date: '2026-01-14T00:30Z' }], '2026-01-15T00:30Z')).toEqual({ days: 1, b2b: true });
     expect(restOf([{ date: '2026-01-12T00:30Z' }], '2026-01-15T00:30Z')).toEqual({ days: 3, b2b: false });
     expect(restOf([], '2026-01-15T00:30Z')).toEqual({ days: null, b2b: false });
-  });
-});
-
-describe('recency weighting', () => {
-  it('counts newer games more and sums to the effective sample size', () => {
-    const w = recencyWeights(10, 6);
-    for (let i = 1; i < w.length; i++) expect(w[i]).toBeLessThan(w[i - 1]);
-    expect(w[6] / w[0]).toBeCloseTo(0.5, 10);
-    const sum = w.reduce((a, b) => a + b, 0);
-    const raw = Array.from({ length: 10 }, (_, i) => 0.5 ** (i / 6));
-    const ess = raw.reduce((a, b) => a + b, 0) ** 2 / raw.reduce((a, b) => a + b * b, 0);
-    expect(sum).toBeCloseTo(ess, 10);
-    expect(sum).toBeLessThan(10);
-    expect(recencyWeights(1)).toEqual([1]);
   });
 });
