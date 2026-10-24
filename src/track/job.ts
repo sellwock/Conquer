@@ -8,7 +8,7 @@ import { MODEL_VERSION } from '../model/version';
 import { runSims } from '../sim/run';
 import { getJson, requestCount, sitePath } from '../data/espn/client';
 import { loadGame, loadScoreboard } from '../data/espn/load';
-import { num, parseOdds, phaseOf, seasonYear } from '../data/espn/parse';
+import { num, parseOdds, periodOf, phaseOf, seasonYear } from '../data/espn/parse';
 import { predictionFrom } from './predict';
 import { easternYmd } from './dates';
 import type { Entry, LogFile } from './types';
@@ -149,7 +149,7 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
             put(path, {
               ...e,
               status: 'final',
-              result: { home, away, ot: num(comp?.status?.period) > LEAGUES[league].periods, gradedAt: o.now.toISOString() },
+              result: { home, away, ot: periodOf(comp, LEAGUES[league].periods) > LEAGUES[league].periods, gradedAt: o.now.toISOString() },
               closeReported: close ? { ...close, fetchedAt: o.now.toISOString() } : undefined,
             });
             report.graded++;

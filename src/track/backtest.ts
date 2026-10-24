@@ -7,7 +7,7 @@ import { mapLimit, readCache, writeCache } from '../data/espn/client';
 import { loadScoreboard } from '../data/espn/load';
 import { runOutcomesInBackground } from '../sim/client';
 import { daysBefore } from './dates';
-import { rebuildGame } from './rebuild';
+import { evenly, finalsToGrade, rebuildGame } from './rebuild';
 import type { Entry } from './types';
 
 export interface BacktestProgress {
@@ -25,6 +25,8 @@ export interface BacktestOptions {
   onProgress?: (p: BacktestProgress) => void;
 }
 
+const COLLEGE_MAX = 100;
+
 export const backtestKey = (league: LeagueId, id: string) => `bt.${MODEL_VERSION}.${league}.${id}`;
 
 export async function runBacktest(o: BacktestOptions): Promise<{ entries: Entry[]; failed: number }> {
@@ -33,10 +35,11 @@ export async function runBacktest(o: BacktestOptions): Promise<{ entries: Entry[
   for (const ymd of dates) {
     o.onProgress?.({ done: 0, total: 0, label: `Finding games on ${ymd.slice(4, 6)}/${ymd.slice(6)}` });
     const board = await loadScoreboard(o.league, ymd, o.signal);
-    // College backtests stick to games with a line, like the forward log.
-    for (const g of board) if (g.phase === 'post' && (o.league === 'nba' || !!g.odds)) found.set(g.id, g);
+    for (const g of finalsToGrade(board, o.league)) found.set(g.id, g);
   }
-  const games = [...found.values()];
+  // A college week can have hundreds of finals; a browser run grades an even sample of them.
+  const all = [...found.values()].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+  const games = o.league === 'nba' ? all : evenly(all, COLLEGE_MAX);
   let done = 0, failed = 0;
   const entries: Entry[] = [];
   await mapLimit(games, 2, async (g) => {

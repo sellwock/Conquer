@@ -11,6 +11,23 @@ import type { SimSpec } from '../sim/types';
 import { predictionFromOutcomes } from './predict';
 import type { Entry } from './types';
 
+/**
+ * Finished games worth grading on one scoreboard. College prefers games with a posted line, but
+ * scoreboards drop the line once games end, so a day with none keeps all its finals.
+ */
+export function finalsToGrade(board: ScoreboardGame[], league: LeagueId): ScoreboardGame[] {
+  const finals = board.filter((g) => g.phase === 'post' && g.home.score != null && g.away.score != null);
+  if (league === 'nba') return finals;
+  const lined = finals.filter((g) => g.odds);
+  return lined.length ? lined : finals;
+}
+
+/** At most `max` items, evenly spaced, so a thinned set still spans the whole range. */
+export function evenly<T>(xs: T[], max: number): T[] {
+  if (xs.length <= max) return xs;
+  return Array.from({ length: max }, (_, i) => xs[Math.floor((i * xs.length) / max)]);
+}
+
 export type Simulate = (spec: SimSpec, n: number, seed: string) => Promise<Outcomes> | Outcomes;
 
 export async function rebuildGame(league: LeagueId, game: Pick<ScoreboardGame, 'id' | 'date'>, sims: number, simulate: Simulate, signal?: AbortSignal): Promise<Entry | null> {
