@@ -49,13 +49,26 @@ Completed-game extracts are cached in `localStorage`. If a host blocks direct ca
 `.github/workflows/forward.yml` runs on a schedule. It saves each game's prediction before tip-off into the `data` branch, grades the game once it ends, and records every final score (`src/track/job.ts`, run by `scripts/forward.ts`):
 
 - NBA games are logged, plus college games with a posted line.
-- The workflow asks to run every 15 minutes, but GitHub drops many scheduled runs on quiet repos (on the first day they came hours apart), so the windows are wide.
+- GitHub drops most scheduled runs on quiet repos (on the first day they came 3 to 4 hours apart), so an external cron service starts the workflow every 15 minutes through GitHub's API (setup below). The workflow's own 15-minute schedule stays as a backup, and the windows are wide enough to cope with gaps.
 - The first snapshot comes within 30 hours of tip (within the next Eastern day's slate). It's refreshed within 3 hours of tip if it's more than 45 minutes old, and at any point before tip if it was taken before the book posted a line and one has since appeared. Each prediction records when it was taken (`takenAt`, `minsToTip`).
 - Nothing is written after tip and nothing is backfilled, so the record has no hindsight.
 - Each prediction stores the model version (`src/model/version.ts`), the line at that moment, and the full margin and total distributions.
 - `src/track/grade.ts` derives the record from those entries: winners, against the spread, over/under, Brier score vs the market's no-vig odds with a bootstrap interval, calibration and closing-line value.
 
 `v1/index.json` lists the log files, since the site can't list folders on raw.githubusercontent.com. To run the job by hand (dry run writes nothing): Actions → Forward log → Run workflow.
+
+**The external trigger.** A free [cron-job.org](https://cron-job.org) job calls GitHub's `workflow_dispatch` API every 15 minutes. Extra runs are harmless: the `forward-log` concurrency group keeps them from overlapping, and a run with nothing due changes nothing. To set it up or move it:
+
+1. Create a fine-grained personal access token (GitHub → Settings → Developer settings → Fine-grained tokens). Give it access to this repository only, with **Actions: Read and write** and nothing else, and an expiry date.
+2. Create a cron job:
+   - URL: `https://api.github.com/repos/sellwock/Conquer/actions/workflows/forward.yml/dispatches`
+   - Schedule: every 15 minutes
+   - Request method: `POST`. Body: `{"ref":"main"}`
+   - Headers: `Authorization: Bearer <token>`, `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, `Content-Type: application/json`
+   - Turn on failure notifications, so an expired token gets noticed.
+3. A working call returns `204 No Content` and a new run appears under Actions → Forward log. A `401` means the token expired or was revoked. To rotate it, create a new token, swap the header, then delete the old token.
+
+`v1/status.json` records each run's time (`lastRun`). If it's more than an hour old, the trigger has stopped.
 
 **Judging model changes.** Any change to simulation output bumps `MODEL_VERSION` (`tests/model-version.test.ts` fails otherwise). Label the pull request `backtest` and `.github/workflows/backtest.yml` runs `scripts/backtest.ts`:
 

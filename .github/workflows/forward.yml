@@ -1,8 +1,9 @@
 name: Forward log
 
 # Saves each game's prediction before tip-off and grades it afterwards, into the `data` branch.
-# Asks to run every 15 minutes, off the top of the hour; GitHub drops many scheduled runs on quiet
-# repos, so the job's windows are wide enough to cope with runs hours apart.
+# An external cron calls workflow_dispatch every 15 minutes (README → Track record), since GitHub
+# drops most scheduled runs on quiet repos. The schedule below stays as a backup, off the top of
+# the hour, and the job's windows are wide enough to cope with runs hours apart.
 on:
   schedule:
     - cron: '7,22,37,52 * * * *'
