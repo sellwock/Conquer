@@ -63,6 +63,36 @@ describe('engine calibration', () => {
   });
 });
 
+describe('endgame', () => {
+  it('sends close games to overtime about as often as real ones', () => {
+    for (const league of ['nba', 'ncaam'] as const) {
+      const { spec } = buildSpec(leagueAverageGame(league), base);
+      let ot = 0;
+      const n = 6000;
+      for (let s = 0; s < n; s++) if (simulateGame(spec, makeRng('ot', s)).ot) ot++;
+      // Real rates are about 6% in both; the model was at 3.5% before the last seconds were fixed.
+      expect(ot / n).toBeGreaterThan(0.043);
+      expect(ot / n).toBeLessThan(0.07);
+    }
+  });
+
+  it('leaves time for one rushed shot, not several possessions, in the final seconds', () => {
+    const { spec } = buildSpec(leagueAverageGame(), base);
+    let late = 0, twice = 0;
+    const n = 1500;
+    for (let s = 0; s < n; s++) {
+      const r = simulateGame(spec, makeRng('buzzer', s), true);
+      const made = r.log!.filter((e) => e.period === LEAGUES.nba.periods && e.clockSec <= 1.5 && e.pts >= 2).length;
+      if (made) late++;
+      if (made >= 2) twice++;
+    }
+    // Two baskets in the last 1.5 seconds happened in 4.4% of games before the fix.
+    expect(twice / n).toBeLessThan(0.015);
+    // Leaders run out the clock, so most games don't end on a made basket.
+    expect(late / n).toBeLessThan(0.2);
+  });
+});
+
 describe('determinism', () => {
   it('replays the same game from the same seed and index', () => {
     const { spec } = buildSpec(demoGame(), base);

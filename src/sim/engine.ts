@@ -271,11 +271,12 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
       const late = finalPeriod && clock <= 120;
       const shotClock = segment === 0 ? lg.shotClock : lg.orebShotClock;
 
-      // Trailing defense fouls on purpose late: down 4+ to extend the game, or down 1-3 once the
-      // leader could simply run out the clock.
-      const foulToExtend = clock <= lg.intentionalFoulWindow && margin >= 4 && margin <= (lg.id === 'nba' ? 9 : 10);
+      // Trailing defense fouls on purpose late: down 1-3 once the leader could simply run out the
+      // clock, or further down to extend the game, giving up on it more often the bigger the gap.
+      const foulToExtend = clock <= lg.intentionalFoulWindow && margin >= 4 && margin <= (lg.id === 'nba' ? 10 : 11);
       const foulToStop = clock <= lg.shotClock && clock > 2 && margin >= 1 && margin <= 3;
-      if (finalPeriod && segment === 0 && (foulToExtend || foulToStop) && rng() < 0.8) {
+      const foulRate = margin <= 3 ? 0.8 : clamp(0.85 - 0.11 * (margin - 4), 0.1, 0.85);
+      if (finalPeriod && segment === 0 && (foulToExtend || foulToStop) && rng() < foulRate) {
         const dur = Math.min(clock, uniform(rng, 1, 5));
         advance(dur);
         const fouled = pickOnCourt(os, (p) => p.usage * p.ft ** 6);
@@ -290,22 +291,30 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
         return;
       }
 
-      // Segment duration.
+      // Otherwise a team ahead with the shot clock off runs out the game instead of shooting.
+      if (finalPeriod && margin > 0 && clock <= shotClock) {
+        advance(clock);
+        return;
+      }
+
+      // Segment duration. In the last three seconds of a period there's time for one rushed shot.
+      const left = clock;
       let dur: number;
-      if (segment === 0) {
+      if (left <= 3) dur = left;
+      else if (segment === 0) {
         dur = clamp(gammaInt(rng, 4, segMean / 4), 2.5, shotClock - 0.5);
         if (transitionBoost) dur *= 0.55;
         if (late && margin > 0) dur = Math.min(shotClock - 1, dur * 1.5);
         else if (late && margin < 0) dur *= 0.6;
         // Tied or down one to three with the shot clock off: hold for the last shot.
-        if (finalPeriod && margin <= 0 && margin >= -3 && clock <= shotClock) dur = Math.max(0.5, clock - 1.5);
+        if (finalPeriod && margin <= 0 && margin >= -3 && clock <= shotClock) dur = Math.max(0.5, clock - uniform(rng, 1, 3));
       } else {
         dur = clamp(gammaInt(rng, 2, 3.2), 1, shotClock - 0.5);
       }
       let heave = false;
       if (dur >= clock) {
         dur = clock;
-        heave = clock < 3;
+        heave = left <= 3;
       }
       advance(dur);
 
@@ -363,7 +372,8 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
       const trailing3 = finalPeriod && clock <= 20 && margin === -3;
       const needTwo = finalPeriod && clock <= 20 && (margin === -2 || margin === -1) && !putback;
       const chasing = finalPeriod && clock <= 90 && margin <= -4 && margin >= -12;
-      const zone = heave ? AB3 : needTwo && rng() < 0.75 ? (rng() < 0.65 ? RIM : rng() < 0.5 ? PAINT : 2) : pickZone(a, putback, trailing3, chasing);
+      // At the buzzer a two is enough when tied or down one or two; otherwise it's a three.
+      const zone = heave ? (finalPeriod && margin <= 0 && margin >= -2 ? 2 : AB3) : needTwo && rng() < 0.75 ? (rng() < 0.65 ? RIM : rng() < 0.5 ? PAINT : 2) : pickZone(a, putback, trailing3, chasing);
       const pts = zone >= C3 ? 3 : 2;
       // Score effects: big leads breed a little complacency, deficits a little urgency.
       const scoreEffect = 1 - TUNING.scoreEffect * clamp(margin, -20, 20);
@@ -373,7 +383,8 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
         pMake *= clamp(1 - 0.05 * (blkRatio - 1), 0.93, 1.05);
         if (transitionBoost || putback) pMake *= 1.06;
       }
-      if (heave) pMake = clock > 1.5 ? pMake * 0.6 : 0.05;
+      // A rushed shot: decent with a couple of seconds to catch and shoot, a heave with less.
+      if (heave) pMake *= left >= 2 ? 0.55 : left >= 1 ? 0.4 : left >= 0.4 ? 0.2 : 0.05;
       pMake = clamp(pMake, 0.02, 0.92);
 
       // Shooting foul: and-one or free throws.
