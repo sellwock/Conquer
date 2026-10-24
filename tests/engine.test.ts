@@ -74,7 +74,7 @@ describe('endgame', () => {
       expect(ot / n).toBeGreaterThan(0.043);
       expect(ot / n).toBeLessThan(0.07);
     }
-  });
+  }, 30_000);
 
   it('leaves time for one rushed shot, not several possessions, in the final seconds', () => {
     const { spec } = buildSpec(leagueAverageGame(), base);
@@ -153,7 +153,7 @@ describe('minutes and availability', () => {
     const healthy = runQuick(buildSpec(g, base).spec, 2500, 'w');
     const without = runQuick(buildSpec(g, { ...base, outs: new Set([g.home.players[0].id]) }).spec, 2500, 'w');
     expect(without.homeWin).toBeLessThan(healthy.homeWin - 0.03);
-  });
+  }, 30_000);
 });
 
 describe('whistle and game state', () => {

@@ -38,9 +38,12 @@ export interface JobReport {
   errors: string[];
 }
 
-const FIRST_SNAPSHOT_MIN = 12 * 60;
-const REFRESH_WITHIN_MIN = 90;
-const REFRESH_AFTER_MIN = 25;
+// GitHub runs scheduled jobs far less often than asked on quiet repos (hours apart, not every 15
+// minutes), so the windows are wide: any run in the day before a game saves it, and any run in
+// the last three hours refreshes it with the latest injuries and line.
+const FIRST_SNAPSHOT_MIN = 30 * 60;
+const REFRESH_WITHIN_MIN = 180;
+const REFRESH_AFTER_MIN = 45;
 const GRADE_AFTER_MIN = 120;
 const GIVE_UP_AFTER_MIN = 72 * 60;
 
