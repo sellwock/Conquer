@@ -114,6 +114,8 @@ export interface TeamProfile {
   players: PlayerProfile[];
   sample: TeamSample | null;
   source: string;
+  /** Days since the previous game; b2b is the second night of a back-to-back. */
+  rest?: { days: number | null; b2b: boolean };
 }
 
 export type GamePhase = 'pre' | 'in' | 'post';

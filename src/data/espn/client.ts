@@ -1,17 +1,60 @@
-// Thin fetch layer over ESPN's public JSON API, with in-memory de-duplication, a small
-// localStorage cache for immutable responses, and an optional proxy prefix.
+// Thin fetch layer over ESPN's public JSON API, with in-memory de-duplication, a small persistent
+// cache for immutable responses, retries, and an optional proxy prefix. Runs in the browser and,
+// for the forward-log job, under Node (which swaps in its own store with setStore).
 import type { LeagueId } from '../../model/types';
 import { LEAGUES } from '../../model/leagues';
 
 const SITE = 'https://site.api.espn.com';
 const WEB = 'https://site.web.api.espn.com';
 
-let proxyPrefix = '';
-try {
-  proxyPrefix = localStorage.getItem('conquer.proxy') ?? '';
-} catch {
-  /* storage unavailable */
+// --- Pluggable storage and fetch --------------------------------------------------------------
+
+export interface KeyValueStore {
+  get(key: string): string | null;
+  set(key: string, value: string): void;
+  /** Drops every key with this prefix (used when the store is full). */
+  clearPrefix(prefix: string): void;
 }
+
+const browserStore: KeyValueStore = {
+  get(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(key, value) {
+    localStorage.setItem(key, value);
+  },
+  clearPrefix(prefix) {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k?.startsWith(prefix)) localStorage.removeItem(k);
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  },
+};
+
+let store: KeyValueStore = browserStore;
+let fetchImpl: typeof fetch = (...args) => fetch(...args);
+let requests = 0;
+
+export function setStore(s: KeyValueStore) {
+  store = s;
+}
+export function setFetch(f: typeof fetch) {
+  fetchImpl = f;
+}
+/** Network requests made so far (the forward-log job budgets these). */
+export const requestCount = () => requests;
+
+// --- Proxy ------------------------------------------------------------------------------------
+
+let proxyPrefix = store.get('conquer.proxy') ?? '';
 
 export function setProxy(prefix: string) {
   proxyPrefix = prefix.trim();
@@ -25,7 +68,8 @@ export function setProxy(prefix: string) {
 export const getProxy = () => proxyPrefix;
 
 function resolve(host: 'site' | 'web', path: string): string {
-  if (import.meta.env?.DEV && !proxyPrefix) return `/espn-${host}${path}`;
+  // Vite's dev server proxies ESPN; only a browser page served by it can use that path.
+  if (import.meta.env?.DEV && typeof window !== 'undefined' && !proxyPrefix) return `/espn-${host}${path}`;
   const url = (host === 'site' ? SITE : WEB) + path;
   if (!proxyPrefix) return url;
   return proxyPrefix.includes('{url}') ? proxyPrefix.replace('{url}', encodeURIComponent(url)) : proxyPrefix + url;
@@ -37,13 +81,30 @@ export class DataError extends Error {
   }
 }
 
+export interface GetOptions {
+  signal?: AbortSignal;
+  cacheKey?: string;
+  /** Skip HTTP caches (live refresh). */
+  noStore?: boolean;
+}
+
 const inflight = new Map<string, Promise<unknown>>();
+const RETRY_DELAYS = [600, 1800];
+
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    const t = setTimeout(resolve, ms);
+    signal?.addEventListener('abort', () => {
+      clearTimeout(t);
+      reject(new DOMException('Aborted', 'AbortError'));
+    });
+  });
 
 /**
  * GET a JSON document. `site` paths fall back to ESPN's mirror host (site.web.api.espn.com
  * serves the same /apis/site/v2 paths) when the primary host can't be reached.
  */
-export async function getJson<T = any>(host: 'site' | 'web', path: string, opts: { signal?: AbortSignal; cacheKey?: string } = {}): Promise<T> {
+export async function getJson<T = any>(host: 'site' | 'web', path: string, opts: GetOptions = {}): Promise<T> {
   try {
     return await getJsonFrom<T>(host, path, opts);
   } catch (e) {
@@ -52,35 +113,43 @@ export async function getJson<T = any>(host: 'site' | 'web', path: string, opts:
   }
 }
 
-async function getJsonFrom<T>(host: 'site' | 'web', path: string, opts: { signal?: AbortSignal; cacheKey?: string }): Promise<T> {
+async function getJsonFrom<T>(host: 'site' | 'web', path: string, opts: GetOptions): Promise<T> {
   const url = resolve(host, path);
   if (opts.cacheKey) {
     const hit = readCache<T>(opts.cacheKey);
     if (hit !== undefined) return hit;
   }
-  const existing = inflight.get(url);
+  const key = opts.noStore ? `${url}#live` : url;
+  const existing = inflight.get(key);
   if (existing) return existing as Promise<T>;
   const p = (async () => {
-    let res: Response;
-    try {
-      res = await fetch(url, { signal: opts.signal });
-    } catch (e) {
-      if ((e as Error)?.name === 'AbortError') throw e;
-      throw new DataError('Could not reach ESPN. Check your connection, or set a data proxy under Data connection at the bottom of the page.');
+    for (let attempt = 0; ; attempt++) {
+      let res: Response;
+      try {
+        requests++;
+        res = await fetchImpl(url, { signal: opts.signal, cache: opts.noStore ? 'no-store' : undefined });
+      } catch (e) {
+        if ((e as Error)?.name === 'AbortError') throw e;
+        throw new DataError('Could not reach ESPN. Check your connection, or set a data proxy under Data connection at the bottom of the page.');
+      }
+      // Vite's dev proxy answers 5xx when it can't reach ESPN at all: treat that as offline.
+      if (!res.ok && url.startsWith('/espn-') && res.status >= 500) {
+        throw new DataError('Could not reach ESPN from the dev server. Check your connection, or set a data proxy under Data connection at the bottom of the page.');
+      }
+      // Rate limits and server hiccups get a couple of spaced retries.
+      if ((res.status === 429 || res.status >= 500) && attempt < RETRY_DELAYS.length) {
+        await sleep(RETRY_DELAYS[attempt] * (1 + Math.random() * 0.3), opts.signal);
+        continue;
+      }
+      if (!res.ok) throw new DataError(`ESPN returned ${res.status} for ${path}`, res.status);
+      return (await res.json()) as T;
     }
-    // Vite's dev proxy answers 5xx when it can't reach ESPN at all: treat that as offline.
-    if (!res.ok && url.startsWith('/espn-') && res.status >= 500) {
-      throw new DataError('Could not reach ESPN from the dev server. Check your connection, or set a data proxy under Data connection at the bottom of the page.');
-    }
-    if (!res.ok) throw new DataError(`ESPN returned ${res.status} for ${path}`, res.status);
-    return (await res.json()) as T;
   })();
-  inflight.set(url, p);
+  inflight.set(key, p);
   try {
-    const v = await p;
-    return v;
+    return await p;
   } finally {
-    inflight.delete(url);
+    inflight.delete(key);
   }
 }
 
@@ -92,7 +161,7 @@ const CACHE_PREFIX = 'conquer.c1.';
 
 export function readCache<T>(key: string): T | undefined {
   try {
-    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    const raw = store.get(CACHE_PREFIX + key);
     return raw ? (JSON.parse(raw) as T) : undefined;
   } catch {
     return undefined;
@@ -100,16 +169,14 @@ export function readCache<T>(key: string): T | undefined {
 }
 
 export function writeCache(key: string, value: unknown) {
+  const raw = JSON.stringify(value);
   try {
-    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(value));
+    store.set(CACHE_PREFIX + key, raw);
   } catch {
     // Quota exceeded: drop our old entries and try once more.
     try {
-      for (let i = localStorage.length - 1; i >= 0; i--) {
-        const k = localStorage.key(i);
-        if (k?.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
-      }
-      localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(value));
+      store.clearPrefix(CACHE_PREFIX);
+      store.set(CACHE_PREFIX + key, raw);
     } catch {
       /* give up silently */
     }
