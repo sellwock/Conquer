@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { requestCount, setFetch, setStore, type KeyValueStore } from '../src/data/espn/client';
-import { applySummary, combineSeasons, loadGame, parseGamelog, pregameView, restOf } from '../src/data/espn/load';
+import { applySummary, combineSeasons, loadGame, parseGamelog, pregameView, refreshGame, restOf } from '../src/data/espn/load';
 import { buildSpec } from '../src/model/build';
 import { runSims } from '../src/sim/run';
 
@@ -101,6 +101,22 @@ describe('loadGame under Node', () => {
     expect(patched.homeScore).toBeGreaterThan(0);
     expect(patched.plays.length).toBeGreaterThan(0);
     expect(g.phase).toBe('pre'); // original untouched
+  });
+
+  it('refreshes with one uncached summary request each time', async () => {
+    mockEspn({ '/summary': fx('synthetic-nba-summary-pregame.json') });
+    const g = await loadGame('nba', '401810131', { sampleGames: 3 });
+    const inits: (RequestInit | undefined)[] = [];
+    setFetch((async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(String(input)).toContain('/summary?event=401810131');
+      inits.push(init);
+      return new Response(JSON.stringify(fx('synthetic-nba-summary-pregame.json')), { status: 200 });
+    }) as typeof fetch);
+    const a = await refreshGame(g);
+    await refreshGame(a);
+    expect(inits).toHaveLength(2);
+    expect(inits.every((i) => i?.cache === 'no-store')).toBe(true);
+    expect(a.home.players).toHaveLength(g.home.players.length);
   });
 });
 

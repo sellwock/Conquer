@@ -11,7 +11,7 @@ It rebuilds the "simulate" tool on Runs & Whistles (`/simulate/#game=â€¦&date=â€
 | Typical game | RotoBot: summary | full box score, line score and play-by-play with scoring runs flagged |
 | Market | RotoBot: win % vs book | moneyline (no-vig), spread cover %, over/under %, fair odds for each |
 | Finished games | n/a | how likely the actual result was; re-simulate with as-played minutes |
-| Live games | n/a | simulate the rest of the game from the current score, clock, fouls and minutes |
+| Live games | n/a | simulate the rest of the game from the current score, clock, fouls and minutes; refreshes from ESPN every 30 seconds while the tab is open |
 | Any moment | n/a | tap the real win-probability chart to simulate from that play |
 | Who matters | n/a | ranks every rotation player by how much his team's win chance drops without him |
 | Officials | Runs & Whistles: ref studies | whistle slider that changes foul calls, bonus free throws, foul trouble and rotations |

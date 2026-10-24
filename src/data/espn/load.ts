@@ -431,6 +431,12 @@ export function pregameView(g: GameData): GameData {
 }
 
 /** Patches the live parts of a game (status, score, box, plays, win probability) from a fresh summary. */
+/** One uncached summary request, patched onto the loaded game (live refresh). */
+export async function refreshGame(g: GameData, signal?: AbortSignal): Promise<GameData> {
+  const summary = await getJson('site', sitePath(g.league, `/summary?event=${g.id}`), { signal, noStore: true });
+  return applySummary(g, summary);
+}
+
 export function applySummary(g: GameData, summary: J): GameData {
   const comp = summary?.header?.competitions?.[0];
   if (!comp) return g;

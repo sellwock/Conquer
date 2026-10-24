@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { buildSpec, type BuildOptions, type BuiltSpec } from '../model/build';
 import type { GameData, GameSnapshot, ScoreboardGame } from '../model/types';
-import { loadGame, loadScoreboard, snapshotAtPlay, snapshotFromGame } from '../data/espn/load';
+import { loadGame, loadScoreboard, refreshGame, snapshotAtPlay, snapshotFromGame } from '../data/espn/load';
 import { DataError, getProxy, setProxy } from '../data/espn/client';
 import { demoGame } from '../data/demo';
 import { CancelledError, runInBackground, runQuickInBackground, type Job } from '../sim/client';
@@ -10,7 +10,8 @@ import { DEFAULTS, parseHash, toHash, type Tab, type UrlState } from './state';
 import { yyyymmdd } from './format';
 import { prefersDark, teamPair } from './colors';
 import { TopBar, GameStrip } from './header';
-import { Scoreboard } from './scoreboard';
+import { Scoreboard, type LiveState } from './scoreboard';
+import { Poller } from './live';
 import { Sheet } from './sheet';
 import { Outlook } from './outlook';
 import { TypicalGame } from './typical';
@@ -39,6 +40,8 @@ export interface Palette {
 }
 
 const SAMPLE_GAMES = 10;
+/** Start polling an upcoming game this long before tip. */
+const LIVE_LEAD_MS = 15 * 60_000;
 export const IMPACT_SIMS = 2000;
 const NO_GAMES: ScoreboardGame[] = [];
 
@@ -139,6 +142,46 @@ export function App() {
 
   const data = game.status === 'ok' ? game.data : undefined;
 
+  // --- Live refresh -----------------------------------------------------------------------------
+  // Live games, and games about to tip, re-read ESPN's summary every 30 seconds.
+  const [live, setLive] = useState<LiveState | undefined>();
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const [, wake] = useState(0);
+  const tipIn = data?.phase === 'pre' ? Date.parse(data.date) - Date.now() : Infinity;
+  const pollable = url.view === 'game' && !!data && !data.demo && (data.phase === 'in' || tipIn < LIVE_LEAD_MS);
+  useEffect(() => {
+    // Wake up when an upcoming game gets close enough to tip to start polling.
+    if (pollable || !(tipIn > 0 && tipIn < 12 * 3_600_000)) return;
+    const t = setTimeout(() => wake((x) => x + 1), tipIn - LIVE_LEAD_MS + 1000);
+    return () => clearTimeout(t);
+  }, [data?.id, pollable]);
+  useEffect(() => {
+    setLive(undefined);
+    if (!pollable) return;
+    const id = data!.id;
+    setLive({});
+    const p = new Poller({
+      tick: async (signal) => {
+        const cur = dataRef.current;
+        if (!cur || cur.id !== id) return false;
+        const next = await refreshGame(cur, signal);
+        setGame((g) => (g.data?.id === id ? { ...g, data: next } : g));
+        setLive({ updatedAt: Date.now() });
+        return next.phase !== 'post';
+      },
+      onError: () => setLive((l) => ({ ...l, failing: true })),
+    });
+    p.start();
+    return () => p.stop();
+  }, [data?.id, pollable]);
+
+  // A refresh replaces the game object; the simulation only re-runs when it reads what changed:
+  // the live state (simulating from now, or as-played minutes) or the game starting or ending.
+  const readsLive = !!data && data.phase !== 'pre' && (url.from === 'now' || url.mode === 'actual');
+  const simKey = data ? [data.id, data.phase, readsLive ? [data.period, data.clockSec, data.homeScore, data.awayScore].join(':') : ''].join('|') : '';
+  const simData = useMemo(() => data, [simKey]);
+
   // Ids in the link that match nobody on either roster (e.g. NBA.com ids from another site).
   const unknownOuts = useMemo(() => {
     if (!data) return [];
@@ -148,15 +191,15 @@ export function App() {
 
   // --- Simulation -------------------------------------------------------------------------------
   const start = useMemo((): GameSnapshot | undefined => {
-    if (!data) return undefined;
-    if (url.from === 'now') return snapshotFromGame(data);
+    if (!simData) return undefined;
+    if (url.from === 'now') return snapshotFromGame(simData);
     const seq = Number(url.from);
-    if (url.from !== 'tip' && Number.isFinite(seq)) return snapshotAtPlay(data, seq);
+    if (url.from !== 'tip' && Number.isFinite(seq)) return snapshotAtPlay(simData, seq);
     return undefined;
-  }, [data, url.from]);
+  }, [simData, url.from]);
 
   useEffect(() => {
-    if (!data) return;
+    if (!simData) return;
     const timer = setTimeout(() => {
       cancelJobs();
       const options: BuildOptions = {
@@ -164,15 +207,15 @@ export function App() {
         ins: new Set(url.ins),
         whistle: url.whistle,
         homeCourt: url.hca,
-        minutesMode: data.phase === 'pre' ? 'projected' : url.mode,
+        minutesMode: simData.phase === 'pre' ? 'projected' : url.mode,
         start,
       };
       let built: BuiltSpec;
       let base: BuiltSpec | undefined;
       try {
-        built = buildSpec(data, options);
+        built = buildSpec(simData, options);
         const anyOut = [...built.plans.home.unavailable, ...built.plans.away.unavailable].length > 0;
-        if (anyOut && options.minutesMode === 'projected') base = buildSpec(data, { ...options, healthy: true });
+        if (anyOut && options.minutesMode === 'projected') base = buildSpec(simData, { ...options, healthy: true });
       } catch (e) {
         setSim({ status: 'error', progress: 0, error: (e as Error).message });
         return;
@@ -191,7 +234,7 @@ export function App() {
               url.whistle !== 1 ? 'custom whistle' : '',
               !url.hca ? 'no home court' : '',
             ].filter(Boolean);
-            const m = marketFrom(data, scenario.outcomes, tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined);
+            const m = marketFrom(simData, scenario.outcomes, tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined);
             if (m) slate.put(m);
           }
         })
@@ -201,22 +244,22 @@ export function App() {
         });
     }, 180);
     return () => clearTimeout(timer);
-  }, [data, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);
+  }, [simData, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);
 
   useEffect(() => () => cancelJobs(), []);
-  useEffect(() => setImpact({ status: 'idle', rows: [] }), [data, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);
+  useEffect(() => setImpact({ status: 'idle', rows: [] }), [simData, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);
 
   const runImpact = useCallback(() => {
-    if (!data || !sim.built || !sim.options) return;
+    if (!simData || !sim.built || !sim.options) return;
     const opts = sim.options;
-    const cand = [data.home, data.away].flatMap((t, side) =>
+    const cand = [simData.home, simData.away].flatMap((t, side) =>
       t.players
         .filter((p) => (side === 0 ? sim.built!.plans.home : sim.built!.plans.away).minutes[p.id] >= 14)
         .sort((a, b) => (side === 0 ? sim.built!.plans.home : sim.built!.plans.away).minutes[b.id] - (side === 0 ? sim.built!.plans.home : sim.built!.plans.away).minutes[a.id])
         .slice(0, 8)
         .map((p) => ({ p, side: side as 0 | 1 })),
     );
-    const specs = [buildSpec(data, opts).spec, ...cand.map(({ p }) => buildSpec(data, { ...opts, outs: new Set([...opts.outs, p.id]) }).spec)];
+    const specs = [buildSpec(simData, opts).spec, ...cand.map(({ p }) => buildSpec(simData, { ...opts, outs: new Set([...opts.outs, p.id]) }).spec)];
     setImpact({ status: 'running', rows: [] });
     const n = IMPACT_SIMS;
     const chunks = Math.min(4, Math.max(1, (navigator.hardwareConcurrency || 4) - 1));
@@ -238,7 +281,7 @@ export function App() {
         setImpact({ status: 'done', rows });
       })
       .catch(() => setImpact({ status: 'idle', rows: [] }));
-  }, [data, sim.built, sim.options, url.seed]);
+  }, [simData, sim.built, sim.options, url.seed]);
 
   // --- Theme colors -----------------------------------------------------------------------------
   const palette: Palette | undefined = useMemo(() => {
@@ -306,7 +349,7 @@ export function App() {
       {!url.game && board.status === 'ok' && !board.games.length && <div class="empty-panel">No games on this date. Pick another day.</div>}
       {data && palette && (
         <>
-          <Scoreboard game={data} sim={sim} palette={palette} start={start} />
+          <Scoreboard game={data} sim={sim} palette={palette} start={start} live={live} />
           <main class="workspace">
             <Sheet
               game={data}
