@@ -16,6 +16,8 @@ export interface LeagueConfig {
   rosterMinutes: number; // 5 * regulation minutes
   playerMinCap: number;
   homeAdvPts: number;
+  /** Points a team gives up on the second night of a back-to-back. */
+  backToBackPts: number;
   pace: number; // possessions per team per regulation game
   /** Plays (FGA + 0.44 FTA + TOV) per possession; offensive rebounds make it exceed 1. */
   playsPerPoss: number;
@@ -57,6 +59,7 @@ export const LEAGUES: Record<LeagueId, LeagueConfig> = {
     rosterMinutes: 240,
     playerMinCap: 40,
     homeAdvPts: 2.2,
+    backToBackPts: 1.5,
     pace: 99.5,
     playsPerPoss: 1.12,
     ppp: 1.145,
@@ -92,6 +95,7 @@ export const LEAGUES: Record<LeagueId, LeagueConfig> = {
     rosterMinutes: 200,
     playerMinCap: 38,
     homeAdvPts: 3.0,
+    backToBackPts: 0.5,
     pace: 68,
     playsPerPoss: 1.16,
     ppp: 1.04,

@@ -11,20 +11,24 @@ export function Method(props: { game: GameData }) {
         Each simulation plays the game one possession at a time, about {Math.round(lg.pace)} per team in {lg.label === 'NBA' ? 'an NBA' : 'a college'} game. On every trip, one
         of the five players on the floor ends the possession, chosen by usage rate. He turns it over, draws a shooting foul, or takes a shot from one of five zones: the
         restricted area, the rest of the paint, mid-range, the corners, or above the break. His make rate in that zone is adjusted for the defense's record against that
-        zone, home court, and how stretched his lineup is for shot creation.
+        zone, home court, rest, and how stretched his lineup is for shot creation.
       </p>
       <h3>Where the numbers come from</h3>
       <ul>
         <li>
           <b>Player tendencies</b> come from each team's last {g.demo ? 'several' : 'ten'} completed games on ESPN. The box scores give minutes, usage, turnovers, free
           throws, rebounding, assists, steals, blocks and fouls. The play-by-play gives every shot's location and who assisted whom. Players new to a team use their season
-          averages. Everything is shrunk toward league norms by sample size, so a hot week doesn't become a superstar.
+          averages. Recent games count more: a game's weight halves every six games back. Everything is shrunk toward league norms by sample size, so a hot week doesn't become a
+          superstar.
         </li>
         <li>
           <b>Team defense</b> is the opponents' shooting by zone and turnover rate in those same games, shrunk heavily toward league average.
         </li>
         <li>
           <b>Pace</b> blends both teams' recent possessions per game.
+        </li>
+        <li>
+          <b>Rest</b>: a team on the second night of a back-to-back gives up {lg.backToBackPts} point{lg.backToBackPts === 1 ? '' : 's'}, applied the same way as home court.
         </li>
         <li>
           <b>Injuries</b> come from ESPN's injury report. Anyone listed as out starts on the bench; flip the switch to clear him.

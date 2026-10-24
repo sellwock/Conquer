@@ -167,6 +167,13 @@ export function Sheet(props: {
             <input id="hca" type="checkbox" checked={url.hca && !g.neutral} disabled={g.neutral} onChange={(e) => props.onChange({ hca: (e.currentTarget as HTMLInputElement).checked })} />
             Home court ({g.neutral ? 'neutral site' : `+${lg.homeAdvPts} pts`})
           </label>
+          {[g.away, g.home]
+            .filter((t) => t.rest?.b2b && lg.backToBackPts > 0)
+            .map((t) => (
+              <span key={t.id} class="muted small">
+                {t.abbr} on a back-to-back (−{lg.backToBackPts} pts)
+              </span>
+            ))}
           <label class="seed">
             <span class="ctl-label">Seed</span>
             <input id="seed" type="text" value={url.seed} maxLength={24} spellcheck={false} onChange={(e) => props.onChange({ seed: (e.currentTarget as HTMLInputElement).value.trim() || 'tipoff' })} />

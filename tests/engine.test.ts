@@ -93,6 +93,19 @@ describe('endgame', () => {
   });
 });
 
+describe('rest', () => {
+  it('charges the team on a back-to-back, unless rest is switched off', () => {
+    const rested = leagueAverageGame();
+    const tired = { ...rested, home: { ...rested.home, rest: { days: 0, b2b: true } } };
+    const a = runQuick(buildSpec(rested, base).spec, 4000, 'rest');
+    const b = runQuick(buildSpec(tired, base).spec, 4000, 'rest');
+    const c = runQuick(buildSpec(tired, { ...base, rest: false }).spec, 4000, 'rest');
+    expect(a.margin - b.margin).toBeGreaterThan(0.6);
+    expect(a.margin - b.margin).toBeLessThan(2.6);
+    expect(c.margin).toBeCloseTo(a.margin, 6);
+  });
+});
+
 describe('determinism', () => {
   it('replays the same game from the same seed and index', () => {
     const { spec } = buildSpec(demoGame(), base);

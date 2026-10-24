@@ -18,6 +18,8 @@ export interface BuildOptions {
   start?: GameSnapshot;
   /** Ignore every injury and user out (the "healthy" counterfactual). */
   healthy?: boolean;
+  /** Charge a team on the second night of a back-to-back (on unless false). */
+  rest?: boolean;
 }
 
 export interface MinutesPlan {
@@ -289,15 +291,21 @@ export interface BuiltSpec {
   plans: { home: MinutesPlan; away: MinutesPlan };
 }
 
+/** Points a team gives up for being on the second night of a back-to-back. */
+export function restPenalty(t: TeamProfile, lg: LeagueConfig, opts: Pick<BuildOptions, 'rest'>): number {
+  return opts.rest !== false && t.rest?.b2b ? lg.backToBackPts : 0;
+}
+
 export function buildSpec(game: GameData, opts: BuildOptions): BuiltSpec {
   const lg = LEAGUES[game.league];
   const homePlan = planMinutes(game.home, lg, opts);
   const awayPlan = planMinutes(game.away, lg, opts);
   const pace = (teamPace(game.home, lg) * teamPace(game.away, lg)) / lg.pace;
   const useHome = opts.homeCourt && !game.neutral;
-  // Home court as a make-probability edge. Makes carry only part of scoring and score effects pull
-  // margins back toward zero, so the edge is scaled up (calibrated with `npm run calibrate`).
-  const delta = useHome ? lg.homeAdvPts / 2 / (pace * lg.ppp) / 0.62 : 0;
+  // Home court and rest as a make-probability edge. Makes carry only part of scoring and score
+  // effects pull margins back toward zero, so the edge is scaled up (calibrated with `npm run calibrate`).
+  const edgePts = (useHome ? lg.homeAdvPts : 0) + restPenalty(game.away, lg, opts) - restPenalty(game.home, lg, opts);
+  const delta = edgePts / 2 / (pace * lg.ppp) / 0.62;
   const home = buildTeam(game.home, lg, homePlan, 1 + delta, opts.start);
   const away = buildTeam(game.away, lg, awayPlan, 1 - delta, opts.start);
   const spec: SimSpec = {
