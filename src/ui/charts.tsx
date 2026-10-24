@@ -278,3 +278,49 @@ export function DeltaBars(props: { rows: { label: string; value: number; note?: 
     </div>
   );
 }
+
+/** Predicted probability (x) vs how often it happened (y); dots sized by sample, diagonal = perfect. */
+export function Reliability(props: { bins: { lo: number; hi: number; n: number; meanP: number; rate: number }[]; color: string }) {
+  const [ref, width] = useWidth<HTMLDivElement>(360);
+  const [hover, setHover] = useState<number | null>(null);
+  const size = Math.min(width, 420);
+  const pad = 36;
+  const inner = size - pad - 12;
+  const X = (p: number) => pad + p * inner;
+  const Y = (p: number) => 12 + (1 - p) * inner;
+  const maxN = Math.max(1, ...props.bins.map((b) => b.n));
+  const shown = props.bins.map((b, i) => ({ ...b, i })).filter((b) => b.n > 0);
+  const hb = hover != null ? props.bins[hover] : undefined;
+  return (
+    <div class="chart reliability" ref={ref}>
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} role="img" aria-label="Calibration: predicted win chance against how often the home team actually won">
+        {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+          <g key={t}>
+            <line class="grid" x1={X(0)} x2={X(1)} y1={Y(t)} y2={Y(t)} />
+            <text class="tick" x={pad - 6} y={Y(t) + 4} text-anchor="end">{Math.round(t * 100)}</text>
+            <text class="tick" x={X(t)} y={size - 2} text-anchor="middle">{Math.round(t * 100)}</text>
+          </g>
+        ))}
+        <line class="axis diag" x1={X(0)} y1={Y(0)} x2={X(1)} y2={Y(1)} />
+        {shown.map((b) => (
+          <circle
+            key={b.i}
+            cx={X(b.meanP)}
+            cy={Y(b.rate)}
+            r={4 + 8 * Math.sqrt(b.n / maxN)}
+            fill={props.color}
+            fill-opacity={hover == null || hover === b.i ? 0.85 : 0.35}
+            class="dot"
+            onPointerEnter={() => setHover(b.i)}
+            onPointerLeave={() => setHover(null)}
+          />
+        ))}
+      </svg>
+      {hb && (
+        <div class="tooltip" style={{ left: `${(X(hb.meanP) / size) * 100}%` }}>
+          Predicted {Math.round(hb.meanP * 100)}% · happened {Math.round(hb.rate * 100)}% · {hb.n} game{hb.n === 1 ? '' : 's'}
+        </div>
+      )}
+    </div>
+  );
+}

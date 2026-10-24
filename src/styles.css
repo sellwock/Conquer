@@ -91,6 +91,9 @@ select {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+[hidden] {
+  display: none !important;
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1428,6 +1431,59 @@ table.box + table.box,
   margin: 0;
   font-size: 12px;
   color: var(--muted);
+}
+
+/* Track record */
+.record {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.record > .card > p {
+  margin: 0 0 8px;
+  max-width: 80ch;
+}
+.verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.verdict strong {
+  font: 800 24px/1.15 var(--font-display);
+}
+.verdict strong.pos {
+  color: var(--pos);
+}
+.verdict strong.neg {
+  color: var(--neg);
+}
+.model-filter {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.model-filter select {
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  padding: 0 10px;
+}
+.chart .diag {
+  stroke-dasharray: 4 4;
+}
+.reliability {
+  max-width: 420px;
+}
+td .pos {
+  color: var(--pos);
+  font-weight: 600;
+}
+td .neg {
+  color: var(--neg);
+  font-weight: 600;
 }
 
 /* Flow */

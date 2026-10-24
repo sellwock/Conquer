@@ -10,6 +10,7 @@ import { getJson, requestCount, sitePath } from '../data/espn/client';
 import { loadGame, loadScoreboard } from '../data/espn/load';
 import { num, parseOdds, phaseOf, seasonYear } from '../data/espn/parse';
 import { predictionFrom } from './predict';
+import { easternYmd } from './dates';
 import type { Entry, LogFile } from './types';
 
 export interface LogIO {
@@ -43,12 +44,7 @@ const REFRESH_AFTER_MIN = 25;
 const GRADE_AFTER_MIN = 120;
 const GIVE_UP_AFTER_MIN = 72 * 60;
 
-/** yyyymmdd of an instant in US Eastern time, which is how ESPN's scoreboard splits days. */
-export function easternYmd(d: Date): string {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
-  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
-  return `${get('year')}${get('month')}${get('day')}`;
-}
+export { easternYmd };
 
 export const logPath = (league: LeagueId, season: number, ymd: string) => `${league}/${season}/${ymd.slice(0, 4)}-${ymd.slice(4, 6)}.json`;
 export const resultsPath = (league: LeagueId, season: number) => `results/${league}/${season}.json`;
