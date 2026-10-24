@@ -1,16 +1,13 @@
 // Re-runs the model on finished games as they looked before tip-off ("known availability":
 // who dressed comes from the box score, everything else stops at tip). Results are cached per
 // model version, so re-running a range only simulates new games.
-import { LEAGUES } from '../model/leagues';
-import { buildSpec } from '../model/build';
 import type { LeagueId, ScoreboardGame } from '../model/types';
 import { MODEL_VERSION } from '../model/version';
 import { mapLimit, readCache, writeCache } from '../data/espn/client';
-import { loadGame, loadScoreboard, pregameView } from '../data/espn/load';
-import { seasonYear } from '../data/espn/parse';
+import { loadScoreboard } from '../data/espn/load';
 import { runOutcomesInBackground } from '../sim/client';
 import { daysBefore } from './dates';
-import { predictionFromOutcomes } from './predict';
+import { rebuildGame } from './rebuild';
 import type { Entry } from './types';
 
 export interface BacktestProgress {
@@ -48,7 +45,7 @@ export async function runBacktest(o: BacktestOptions): Promise<{ entries: Entry[
     if (cached) entries.push(cached);
     else {
       try {
-        const e = await backtestGame(o.league, g, o.sims ?? 2000, o.signal);
+        const e = await rebuildGame(o.league, g, o.sims ?? 2000, (spec, n, seed) => runOutcomesInBackground(spec, n, seed).promise, o.signal);
         if (e) {
           writeCache(backtestKey(o.league, g.id), e);
           entries.push(e);
@@ -62,26 +59,4 @@ export async function runBacktest(o: BacktestOptions): Promise<{ entries: Entry[
   });
   entries.sort((a, b) => Date.parse(b.tip) - Date.parse(a.tip));
   return { entries, failed };
-}
-
-async function backtestGame(league: LeagueId, game: ScoreboardGame, sims: number, signal?: AbortSignal): Promise<Entry | null> {
-  const id = game.id;
-  // As of tip-off, so season stats can't see later games.
-  const g = await loadGame(league, id, { sampleGames: 10, signal, asOf: game.date });
-  if (g.homeScore == null || g.awayScore == null) return null;
-  const built = buildSpec(pregameView(g), { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
-  const outcomes = await runOutcomesInBackground(built.spec, sims, id).promise;
-  return {
-    id,
-    league,
-    season: seasonYear(g.date, league),
-    tip: g.date,
-    home: { id: g.home.id, abbr: g.home.abbr },
-    away: { id: g.away.id, abbr: g.away.abbr },
-    neutral: g.neutral,
-    status: 'final',
-    pred: predictionFromOutcomes(outcomes, built, g.date, g.date),
-    line: g.odds ? { ...g.odds, fetchedAt: '' } : undefined,
-    result: { home: g.homeScore, away: g.awayScore, ot: g.period > LEAGUES[league].periods, gradedAt: '' },
-  };
 }

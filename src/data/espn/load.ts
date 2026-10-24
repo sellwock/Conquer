@@ -84,7 +84,8 @@ export async function fetchAthleteSeason(league: LeagueId, athleteId: string, si
     const before = parseAthleteStats(json, { beforeSeason: seasonYear(asOf, league) });
     let current: PlayerSample | null = null;
     try {
-      const log = await getJson('web', webPath(league, `/athletes/${athleteId}/gamelog`), { signal });
+      // The game log defaults to the current season; ask for the one the date falls in.
+      const log = await getJson('web', webPath(league, `/athletes/${athleteId}/gamelog?season=${seasonYear(asOf, league)}`), { signal });
       current = parseGamelog(log, asOf);
     } catch (e) {
       if ((e as Error)?.name === 'AbortError') throw e;
