@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
-import { DEFAULT_JUICE, HIT_FLOOR, MAX_PRICE, suggestParlays, type GameMarket, type Parlay } from '../model/parlays';
-import type { GameData } from '../model/types';
+import { DEFAULT_JUICE, HIT_FLOOR, MAX_PRICE, MODEL_WEIGHT, modelHasSay, suggestParlays, type BlendWeights, type GameMarket, type LegKind, type Parlay } from '../model/parlays';
+import { LEAGUES } from '../model/leagues';
+import type { GameData, LeagueId } from '../model/types';
 import { fmtAmerican } from '../lib/stats';
 import { pct, perHundred, tipTime } from './format';
 
@@ -13,6 +14,33 @@ export interface ScanState {
 }
 
 const SIZE_TITLE: Record<1 | 2 | 3, string> = { 1: 'Singles', 2: '2-leg parlays', 3: '3-leg parlays' };
+
+const KIND_WORDS: Record<LegKind, string> = { ml: 'moneylines', spread: 'spreads', total: 'totals' };
+
+/** "moneylines use the market's no-vig odds alone; spreads and totals blend 25% simulation with 75% market" */
+export function blendText(w: BlendWeights): string {
+  const byWeight = new Map<number, string[]>();
+  for (const k of ['ml', 'spread', 'total'] as LegKind[]) byWeight.set(w[k], [...(byWeight.get(w[k]) ?? []), KIND_WORDS[k]]);
+  const list = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}` : xs[0]);
+  return [...byWeight]
+    .map(([x, kinds]) => `${list(kinds)} ${x === 0 ? "use the market's no-vig odds alone" : `blend ${Math.round(x * 100)}% simulation with ${Math.round((1 - x) * 100)}% market`}`)
+    .join('; ');
+}
+
+/** Shown instead of suggestions when the market alone ranks every bet in a league. */
+export function NoEdgeNote(props: { league: LeagueId }) {
+  const label = LEAGUES[props.league].label;
+  return (
+    <>
+      <p>
+        No suggestions for {label} games. In backtests the model hasn't beaten the betting market on any {label} bet, so blending it in can't find value the market missed.
+      </p>
+      <p class="muted small">
+        Suggestions come back when a model version beats the market in the backtest. <a href={`#view=record&league=${props.league}`}>See the track record</a>.
+      </p>
+    </>
+  );
+}
 
 function ParlayCard(props: { p: Parlay; showGame: boolean; markets: Record<string, GameMarket>; onOpen: (id: string) => void }) {
   const { p } = props;
@@ -83,6 +111,7 @@ export function Parlays(props: {
   onOpen: (id: string) => void;
 }) {
   const { game: g, markets } = props;
+  const hasSay = modelHasSay(g.league);
   const ids = Object.keys(markets);
   const [scope, setScope] = useState<'game' | 'slate'>(ids.length > 1 ? 'slate' : 'game');
   const pool = useMemo(() => (scope === 'game' ? (markets[g.id] ? [markets[g.id]] : []) : Object.values(markets)), [scope, markets, g.id]);
@@ -99,6 +128,16 @@ export function Parlays(props: {
         </p>
       </section>
 
+      {!hasSay && (
+        <section class="card">
+          <header class="card-head">
+            <h2>Suggested parlays</h2>
+          </header>
+          <NoEdgeNote league={g.league} />
+        </section>
+      )}
+
+      {hasSay && (
       <section class="card">
         <header class="card-head">
           <h2>Suggested parlays</h2>
@@ -112,8 +151,8 @@ export function Parlays(props: {
           </div>
         </header>
         <p class="muted small">
-          One to three legs from moneylines, spreads and totals. A pick needs positive expected value after blending the simulation 50/50 with the market's no-vig odds. It
-          also needs a hit chance of at least {pct(HIT_FLOOR[1], 0)}, {pct(HIT_FLOOR[2], 0)} or {pct(HIT_FLOOR[3], 0)} and a price no longer than {fmtAmerican(MAX_PRICE[1])},{' '}
+          One to three legs from moneylines, spreads and totals. A pick needs positive expected value after weighting the simulation against the market by how it did in
+          backtests: {blendText(MODEL_WEIGHT[g.league])}. It also needs a hit chance of at least {pct(HIT_FLOOR[1], 0)}, {pct(HIT_FLOOR[2], 0)} or {pct(HIT_FLOOR[3], 0)} and a price no longer than {fmtAmerican(MAX_PRICE[1])},{' '}
           {fmtAmerican(MAX_PRICE[2])} or {fmtAmerican(MAX_PRICE[3])} for one, two or three legs. Same-game legs are scored together from the simulations; legs from different games
           are treated as independent.
         </p>
@@ -159,8 +198,10 @@ export function Parlays(props: {
           </p>
         )}
       </section>
+      )}
 
-      {pool.length > 0 &&
+      {hasSay &&
+        pool.length > 0 &&
         ([1, 2, 3] as const).map((size) => (
           <section class="card" key={size}>
             <header class="card-head">
@@ -180,7 +221,7 @@ export function Parlays(props: {
           </section>
         ))}
 
-      {scope === 'slate' && pool.length > 0 && (
+      {hasSay && scope === 'slate' && pool.length > 0 && (
         <section class="card">
           <header class="card-head">
             <h2>Games included</h2>

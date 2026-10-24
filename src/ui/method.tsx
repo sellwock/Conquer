@@ -1,5 +1,7 @@
 import { LEAGUES } from '../model/leagues';
+import { MODEL_WEIGHT, modelHasSay } from '../model/parlays';
 import type { GameData } from '../model/types';
+import { blendText } from './parlays';
 
 export function Method(props: { game: GameData }) {
   const g = props.game;
@@ -63,8 +65,10 @@ export function Method(props: { game: GameData }) {
       <h3>Suggested parlays</h3>
       <p>
         Parlays use only legs with a posted price: moneylines, spreads and totals. Legs from the same game are scored together from that game's simulations, so legs that tend to
-        win together are priced that way. Legs from different games are treated as independent. Model chances are blended evenly with the market's no-vig odds before ranking,
-        and a suggestion needs positive expected value, a minimum hit chance and a capped price. These are suggestions from a model, not advice.
+        win together are priced that way. Legs from different games are treated as independent. Model chances are weighted against the market's no-vig odds by how much the
+        model earned in backtests on last season's games, where the market alone did best on most bets. For {lg.label} games, {blendText(MODEL_WEIGHT[g.league])}
+        {modelHasSay(g.league) ? '' : ', so no suggestion can beat the vig and the tab shows none'}. A suggestion needs positive expected value, a minimum hit chance and a
+        capped price. These are suggestions from a model, not advice.
       </p>
       <h3>Limits</h3>
       <ul>

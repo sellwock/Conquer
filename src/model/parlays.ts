@@ -3,13 +3,14 @@
 // Legs in the same game are scored jointly from that game's simulations, so correlation (a
 // favorite covering and the game going over, say) comes from the sims rather than an assumption.
 // Legs from different games are independent. Model probabilities are blended with the market's
-// no-vig probabilities before ranking, because a model that disagrees sharply with a liquid
-// market is usually the one that is wrong.
+// no-vig probabilities before ranking, weighted by how much the model has earned in backtests,
+// because a model that disagrees sharply with a liquid market is usually the one that is wrong.
 import { impliedFromAmerican } from '../lib/stats';
-import type { Odds } from './types';
+import type { LeagueId, Odds } from './types';
 
 export interface GameMarket {
   gameId: string;
+  league: LeagueId;
   /** e.g. "MIL @ WSH" */
   label: string;
   home: string;
@@ -65,7 +66,24 @@ export interface Parlay {
 }
 
 export const DEFAULT_JUICE = -110;
-const MODEL_WEIGHT = 0.5;
+
+export type BlendWeights = Record<LegKind, number>;
+
+/**
+ * How much the simulation counts next to the market's no-vig odds, by league and bet type. Fitted
+ * with the backtest's "Best model weight" rows (scripts/backtest.ts, model 1.1.0, 600 games per
+ * league): the market alone scored best on every NBA bet and on college moneylines, while college
+ * spreads and totals did slightly better with a quarter of the model mixed in. Refit whenever
+ * MODEL_VERSION changes.
+ */
+export const MODEL_WEIGHT: Record<LeagueId, BlendWeights> = {
+  nba: { ml: 0, spread: 0, total: 0 },
+  ncaam: { ml: 0, spread: 0.25, total: 0.25 },
+};
+
+/** False when the market alone ranks every bet in this league, so no leg can beat the vig. */
+export const modelHasSay = (league: LeagueId) => Object.values(MODEL_WEIGHT[league]).some((w) => w > 0);
+
 /** Minimum blended hit chance and maximum price by number of legs: no longshots. */
 export const HIT_FLOOR: Record<number, number> = { 1: 0.4, 2: 0.25, 3: 0.15 };
 export const MAX_PRICE: Record<number, number> = { 1: 200, 2: 400, 3: 700 };
@@ -82,7 +100,7 @@ function fmtLine(x: number) {
   return x > 0 ? `+${x}` : `${x}`;
 }
 
-export function legsForGame(g: GameMarket): Leg[] {
+export function legsForGame(g: GameMarket, weights: BlendWeights = MODEL_WEIGHT[g.league]): Leg[] {
   const o = g.odds;
   const n = g.margin.length;
   const legs: Leg[] = [];
@@ -98,7 +116,7 @@ export function legsForGame(g: GameMarket): Leg[] {
     const decided = n - push;
     const pModel = decided > 0 ? win / decided : 0;
     const pPush = n > 0 ? push / n : 0;
-    const pBlend = MODEL_WEIGHT * pModel + (1 - MODEL_WEIGHT) * pFairRaw;
+    const pBlend = weights[kind] * pModel + (1 - weights[kind]) * pFairRaw;
     const decimal = toDecimal(price);
     const ev = pPush + (1 - pPush) * pBlend * decimal - 1;
     legs.push({ key: `${g.gameId}:${kind}:${side}`, gameId: g.gameId, game: g.label, kind, side, label, price, decimal, pModel, pPush, pFair: pFairRaw, pBlend, ev, outcome });
@@ -205,8 +223,8 @@ export interface Suggestions {
 }
 
 /** Best positive-value parlays of 1, 2 and 3 legs, each clearing a minimum hit chance. */
-export function suggestParlays(games: GameMarket[], perSize = 3): Suggestions {
-  const legs = games.flatMap(legsForGame);
+export function suggestParlays(games: GameMarket[], perSize = 3, weights?: BlendWeights): Suggestions {
+  const legs = games.flatMap((g) => legsForGame(g, weights));
   const pool = legs
     .filter((l) => l.pBlend >= 0.3 && l.ev > -0.06)
     .sort((a, b) => b.ev - a.ev)

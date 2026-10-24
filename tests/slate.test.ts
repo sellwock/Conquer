@@ -4,13 +4,15 @@ import { legsForGame, suggestParlays, type GameMarket } from '../src/model/parla
 import { leagueAverageGame } from './helpers';
 import { buildSpec } from '../src/model/build';
 import { runOutcomes } from '../src/sim/quick';
+import type { LeagueId } from '../src/model/types';
 
-function market(): GameMarket {
+function market(league: LeagueId = 'ncaam'): GameMarket {
   const g = leagueAverageGame();
   const built = buildSpec(g, { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
   const o = runOutcomes(built.spec, 2000, 'slate');
   return {
     gameId: 'g1',
+    league,
     label: 'AWY @ HOM',
     home: 'HOM',
     away: 'AWY',
@@ -32,6 +34,10 @@ describe('slate board', () => {
     expect(r.fairHome!).toBeLessThan(0.4);
     expect(r.pHome).toBeGreaterThan(0.5); // a league-average home team
     expect(r.modelMargin).toBeGreaterThan(0);
+  });
+
+  it('shows no best single where the model has no say', () => {
+    expect(boardRow(market('nba')).best).toBeUndefined();
   });
 
   it('shows the same best single as the parlays tab', () => {
