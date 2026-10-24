@@ -131,6 +131,28 @@ describe('forward log job', () => {
     expect((files.get(path) as LogFile)['401810123'].status).toBe('void');
   });
 
+  it('counts overtime from the line score, since final summaries leave status.period out', async () => {
+    const { io, files } = memoryIO();
+    const path = logPath('nba', 2026, '20260114');
+    const open: Entry = {
+      id: '401810123',
+      league: 'nba',
+      season: 2026,
+      tip: '2026-01-15T00:30:00Z',
+      home: { id: '2', abbr: 'BOS' },
+      away: { id: '13', abbr: 'LAL' },
+      neutral: false,
+      status: 'open',
+    };
+    files.set(path, { [open.id]: open });
+    const ot = fx('synthetic-nba-summary-final.json');
+    expect(ot.header.competitions[0].status.period).toBeUndefined();
+    ot.header.competitions[0].competitors.forEach((c: { linescores: unknown[] }) => c.linescores.push({ displayValue: '9' }));
+    summaryOverride['401810123'] = ot;
+    await run(io, '2026-01-15T04:00:00Z');
+    expect((files.get(path) as LogFile)['401810123'].result).toMatchObject({ ot: true });
+  });
+
   it('records yesterday\'s finals once and writes a heartbeat', async () => {
     const { io, files } = memoryIO();
     await run(io, '2026-01-16T15:00:00Z'); // yesterday (Eastern) = Jan 15; the fixture's final counts
