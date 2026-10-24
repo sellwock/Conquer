@@ -12,9 +12,12 @@ import {
   parseShotText,
   parseStatLine,
   clockToSec,
+  periodOf,
   seasonYear,
 } from '../src/data/espn/parse';
 import { parseAthleteStats } from '../src/data/espn/load';
+import { evenly, finalsToGrade } from '../src/track/rebuild';
+import type { ScoreboardGame } from '../src/model/types';
 
 // Fixtures are synthetic payloads in ESPN's documented shapes (names, ids and scores invented).
 const fx = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/espn/${name}`, import.meta.url), 'utf8'));
@@ -122,5 +125,37 @@ describe('summary pieces', () => {
     expect(clockToSec('45.2')).toBeCloseTo(45.2);
     expect(seasonYear('2026-10-20T23:00Z', 'nba')).toBe(2027);
     expect(seasonYear('2027-03-01T23:00Z', 'ncaam')).toBe(2027);
+  });
+});
+
+describe('periods played', () => {
+  const line = (n: number) => Array.from({ length: n }, () => ({ displayValue: '20' }));
+  it('reads status.period, then line scores, then the status text', () => {
+    expect(periodOf({ status: { period: 3 } }, 4)).toBe(3);
+    // Finished-game summaries leave status.period out.
+    expect(periodOf({ status: { type: { detail: 'Final' } }, competitors: [{ linescores: line(5) }, { linescores: line(5) }] }, 4)).toBe(5);
+    expect(periodOf({ status: { type: { detail: 'Final' } }, competitors: [{ linescores: line(4) }, { linescores: line(4) }] }, 4)).toBe(4);
+    expect(periodOf({ status: { type: { detail: 'Final/OT' } } }, 4)).toBe(5);
+    expect(periodOf({ status: { type: { detail: 'Final/2OT' } } }, 2)).toBe(4);
+    expect(periodOf({ status: { type: { detail: 'Final' } } }, 4)).toBe(0);
+  });
+
+  it('knows a final summary went to overtime', async () => {
+    const s = fx('synthetic-nba-summary-final.json');
+    const comp = s.header.competitions[0];
+    expect(comp.status.period).toBeUndefined();
+    expect(periodOf(comp, 4)).toBe(4);
+    comp.competitors.forEach((c: { linescores: unknown[] }) => c.linescores.push({ displayValue: '9' }));
+    expect(periodOf(comp, 4)).toBe(5);
+  });
+});
+
+describe('finals to grade', () => {
+  const g = (id: string, odds?: string) => ({ id, date: '', phase: 'post', statusText: 'Final', neutral: false, odds, home: { id: 'h', abbr: 'H', name: '', color: '', score: 70 }, away: { id: 'a', abbr: 'A', name: '', color: '', score: 60 } }) as ScoreboardGame;
+  it('prefers lined college games but keeps all finals when the board has no lines', () => {
+    expect(finalsToGrade([g('1', 'X -3'), g('2')], 'ncaam').map((x) => x.id)).toEqual(['1']);
+    expect(finalsToGrade([g('1'), g('2')], 'ncaam').map((x) => x.id)).toEqual(['1', '2']);
+    expect(finalsToGrade([g('1'), g('2')], 'nba').map((x) => x.id)).toEqual(['1', '2']);
+    expect(evenly([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 4)).toEqual([1, 3, 6, 8]);
   });
 });

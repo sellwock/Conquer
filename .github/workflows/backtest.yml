@@ -1,0 +1,71 @@
+name: Backtest
+
+# Grades a model change against its base on the same fixed set of past games. Runs when a pull
+# request carries the "backtest" label (on labeling and on each push after), or by hand from main.
+on:
+  pull_request:
+    types: [labeled, synchronize]
+  workflow_dispatch:
+    inputs:
+      max:
+        description: Games per league
+        default: '600'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backtest-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backtest:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'backtest')
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        league: [nba, ncaam]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: head
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: head/package-lock.json
+      - run: npm ci
+        working-directory: head
+      # Its own key prefix, so the forward log's "espn-" restore never picks up this larger cache.
+      - uses: actions/cache@v4
+        with:
+          path: bt-cache
+          key: bt-espn-${{ matrix.league }}-${{ github.run_id }}
+          restore-keys: bt-espn-${{ matrix.league }}-
+      - name: Branch
+        working-directory: head
+        run: npx tsx scripts/backtest.ts run --league ${{ matrix.league }} --max ${{ inputs.max || '600' }} --cache ../bt-cache --out ../head.json
+      # The base's model, on exactly the branch's games, with the branch's harness.
+      - name: Base
+        if: github.event_name == 'pull_request'
+        working-directory: head
+        run: npx tsx scripts/backtest.ts run --league ${{ matrix.league }} --games ../head.json --root ../base --cache ../bt-cache --out ../base.json
+      - name: Compare
+        working-directory: head
+        run: npx tsx scripts/backtest.ts compare --head ../head.json --base ../base.json --title ${{ matrix.league == 'nba' && 'NBA' || 'College' }} --out ../summary.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backtest-${{ matrix.league }}
+          path: |
+            head.json
+            base.json
+            summary.md
+          if-no-files-found: ignore

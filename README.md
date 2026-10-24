@@ -56,6 +56,14 @@ Completed-game extracts are cached in `localStorage`. If a host blocks direct ca
 
 `v1/index.json` lists the log files, since the site can't list folders on raw.githubusercontent.com. To run the job by hand (dry run writes nothing): Actions → Forward log → Run workflow.
 
+**Judging model changes.** Any change to simulation output bumps `MODEL_VERSION` (`tests/model-version.test.ts` fails otherwise). Label the pull request `backtest` and `.github/workflows/backtest.yml` runs `scripts/backtest.ts`:
+
+- About 600 NBA and 600 college games from last season are rebuilt as of tip-off (`src/track/rebuild.ts`).
+- They run once with the branch's model and once with the base's model, on the same games.
+- The job summary (`src/track/compare.ts`) gives the paired Brier and log-loss differences with bootstrap intervals, plus the against-the-spread and over/under records, margin and total errors, total bias and overtime rate.
+
+Merge a model change only when nothing gets significantly worse and the metric it targets improves.
+
 ## Model
 
 `src/sim/engine.ts` plays one game a possession at a time:
