@@ -1,6 +1,7 @@
 // Assembles everything the simulator needs for one game from ESPN: header, rosters, injuries,
 // odds, officials, and per-player samples built from each team's recent completed games.
 import { addBox, emptyBox, emptyZones, ZONES, type BoxLine, type GameData, type GameSnapshot, type LeagueId, type Play, type PlayerProfile, type PlayerSample, type ScoreboardGame, type TeamProfile, type TeamSample, type ZoneTable } from '../../model/types';
+import { LEAGUES } from '../../model/leagues';
 import { DataError, getJson, mapLimit, readCache, sitePath, webPath, writeCache } from './client';
 import {
   clockToSec,
@@ -17,6 +18,7 @@ import {
   parseScheduleEvents,
   parseScoreboard,
   parseWinProb,
+  periodOf,
   phaseOf,
   posGroup,
   seasonYear,
@@ -388,7 +390,7 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
     name: `${away.t.name} at ${home.t.name}`,
     phase,
     statusText: status?.type?.detail ?? status?.type?.shortDetail ?? '',
-    period: num(status?.period),
+    period: periodOf(comp, LEAGUES[league].periods),
     clockSec: clockToSec(status?.displayClock ?? status?.clock),
     home: home.t,
     away: away.t,
@@ -466,7 +468,7 @@ export function applySummary(g: GameData, summary: J): GameData {
     ...g,
     phase,
     statusText: status?.type?.detail ?? status?.type?.shortDetail ?? g.statusText,
-    period: num(status?.period, g.period),
+    period: periodOf(comp, LEAGUES[g.league].periods) || g.period,
     clockSec: clockToSec(status?.displayClock ?? status?.clock),
     homeScore: score(g.home.id) ?? g.homeScore,
     awayScore: score(g.away.id) ?? g.awayScore,

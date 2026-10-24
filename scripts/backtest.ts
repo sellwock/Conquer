@@ -14,6 +14,7 @@ import { pathToFileURL } from 'node:url';
 import type { LeagueId, ScoreboardGame } from '../src/model/types';
 import type { Entry } from '../src/track/types';
 import { compareRuns, comparisonMarkdown } from '../src/track/compare';
+import { evenly, finalsToGrade } from '../src/track/rebuild';
 import { args, fileStore } from './cli';
 
 /** Last season's regular season by default: big enough to settle a Brier difference. */
@@ -44,12 +45,6 @@ function days(from: string, to: string): string[] {
   return out;
 }
 
-/** Evenly spaced, so the set is the same on every run and spans the whole range. */
-function spread<T>(xs: T[], max: number): T[] {
-  if (xs.length <= max) return xs;
-  return Array.from({ length: max }, (_, i) => xs[Math.floor((i * xs.length) / max)]);
-}
-
 async function run(a: Record<string, string | boolean>) {
   const root = resolve(String(a.root ?? '.'));
   if (!existsSync(join(root, 'src/track/rebuild.ts'))) {
@@ -75,15 +70,13 @@ async function run(a: Record<string, string | boolean>) {
     await client.mapLimit(days(from, to), 3, async (ymd: string) => {
       try {
         const board: ScoreboardGame[] = await load.loadScoreboard(league, ymd);
-        // Graded games need a line; college sticks to games the scoreboard shows one for.
-        for (const g of board)
-          if (g.phase === 'post' && g.home.score != null && g.away.score != null && (league === 'nba' || g.odds)) found.set(g.id, { id: g.id, date: g.date });
+        for (const g of finalsToGrade(board, league)) found.set(g.id, { id: g.id, date: g.date });
       } catch (e) {
         console.log(`scoreboard ${ymd}: ${(e as Error).message}`);
       }
     });
     const all = [...found.values()].sort((x, y) => x.date.localeCompare(y.date) || x.id.localeCompare(y.id));
-    games = spread(all, Number(a.max ?? 600));
+    games = evenly(all, Number(a.max ?? 600));
     console.log(`${league}: ${all.length} finished games from ${from} to ${to}; using ${games.length}.`);
   }
 
