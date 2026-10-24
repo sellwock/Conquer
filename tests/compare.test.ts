@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compareRuns, comparisonMarkdown, verdict } from '../src/track/compare';
+import { compareRuns, comparisonMarkdown, fitBlend, verdict } from '../src/track/compare';
 import type { Entry } from '../src/track/types';
 
 let seed = 11;
@@ -50,5 +50,24 @@ describe('backtest comparison', () => {
     expect(one).not.toContain('Paired on');
     const two = comparisonMarkdown('NBA', compareRuns(run(0.05, '2.0.0'), run(0.6, '1.0.0')));
     expect(two).toMatch(/\| Brier \| −?-?0\.\d{4} \| .* \| better \|/);
+  });
+
+  it('fits how much weight the model earns next to the market', () => {
+    seed = 3;
+    const games = Array.from({ length: 4000 }, () => {
+      const truth = 0.15 + 0.7 * rnd();
+      return { truth, won: (rnd() < truth ? 1 : 0) as 0 | 1, noise: rnd() - 0.5, noise2: rnd() - 0.5 };
+    });
+    const clip = (p: number) => Math.min(0.99, Math.max(0.01, p));
+    // A model that is pure noise against a sharp market earns nothing.
+    const noise = fitBlend(games.map((g) => ({ model: clip(0.5 + g.noise), market: g.truth, won: g.won })))!;
+    expect(noise.best).toBeLessThanOrEqual(0.05);
+    expect(noise.brier.market).toBeLessThan(noise.brier.half);
+    // A sharp model against a noisy market earns most of the weight.
+    const sharp = fitBlend(games.map((g) => ({ model: g.truth, market: clip(g.truth + 0.6 * g.noise2), won: g.won })))!;
+    expect(sharp.best).toBeGreaterThanOrEqual(0.7);
+    expect(fitBlend([])).toBeUndefined();
+    const md = comparisonMarkdown('NBA', compareRuns(run(0.3, '1.0.0')));
+    expect(md).toContain('| Best model weight: spread |');
   });
 });

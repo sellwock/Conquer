@@ -13,6 +13,43 @@ export interface RunStats {
   /** Predicted overtime chance vs how often games went to overtime. */
   otPredicted: number;
   otActual: number;
+  /** How much weight the model's probabilities earn next to the market's, by bet type. */
+  blend: { ml?: BlendFit; spread?: BlendFit; total?: BlendFit };
+}
+
+export interface BlendFit {
+  n: number;
+  /** Weight on the model that minimises the Brier score of model·w + market·(1−w), on a 0.05 grid. */
+  best: number;
+  brier: { best: number; half: number; market: number };
+}
+
+interface Outcome {
+  model: number;
+  market: number;
+  won: 0 | 1;
+}
+
+/** The Brier-best weight on the model when its probability is blended with the market's. */
+export function fitBlend(xs: Outcome[]): BlendFit | undefined {
+  if (!xs.length) return undefined;
+  const brierAt = (w: number) => mean(xs.map((x) => (w * x.model + (1 - w) * x.market - x.won) ** 2));
+  let best = 0, bestBrier = Infinity;
+  for (let i = 0; i <= 20; i++) {
+    const b = brierAt(i / 20);
+    if (b < bestBrier - 1e-12) [best, bestBrier] = [i / 20, b];
+  }
+  return { n: xs.length, best, brier: { best: bestBrier, half: brierAt(0.5), market: brierAt(0) } };
+}
+
+/** Moneylines against the no-vig price; spreads and totals against an even market, pushes left out. */
+function blendFits(graded: Graded[]): RunStats['blend'] {
+  const decided = (r: string) => r !== 'push';
+  return {
+    ml: fitBlend(graded.filter((g) => g.pMarket != null).map((g) => ({ model: g.pHome, market: g.pMarket!, won: g.homeWon }))),
+    spread: fitBlend(graded.filter((g) => g.ats && decided(g.ats.result)).map((g) => ({ model: g.ats!.pCover, market: 0.5, won: g.ats!.result === 'win' ? 1 : 0 }))),
+    total: fitBlend(graded.filter((g) => g.ou && decided(g.ou.result)).map((g) => ({ model: g.ou!.pOver, market: 0.5, won: g.ou!.result === 'win' ? 1 : 0 }))),
+  };
 }
 
 export interface PairedDiff {
@@ -43,6 +80,7 @@ export function runStats(entries: Entry[]): RunStats {
     marginBias: mean(finals.map((e) => e.pred!.meanMargin - (e.result!.home - e.result!.away))),
     otPredicted: mean(finals.map((e) => e.pred!.otPct)),
     otActual: mean(finals.map((e) => (e.result!.ot ? 1 : 0))),
+    blend: blendFits(graded),
   };
 }
 
@@ -76,6 +114,9 @@ const f1 = (x: number) => x.toFixed(1);
 const signed = (x: number, d: number) => `${x > 0 ? '+' : ''}${x.toFixed(d)}`;
 const rec = (r: { win: number; loss: number; push: number }) => `${r.win}-${r.loss}${r.push ? `-${r.push}` : ''} (${r.win + r.loss ? ((100 * r.win) / (r.win + r.loss)).toFixed(1) : '–'}%)`;
 
+const blendText = (b?: BlendFit) =>
+  b ? `${b.best.toFixed(2)} (Brier ${b.brier.best.toFixed(4)}; at 0.50 ${b.brier.half.toFixed(4)}; market alone ${b.brier.market.toFixed(4)}; ${b.n} games)` : '–';
+
 export function comparisonMarkdown(title: string, c: Comparison): string {
   const runs = [['Branch', c.head], ...(c.base ? [['Base', c.base]] : [])] as [string, RunStats][];
   const rows: [string, (s: RunStats) => string][] = [
@@ -90,6 +131,9 @@ export function comparisonMarkdown(title: string, c: Comparison): string {
     ['Total error (MAE)', (s) => f1(s.summary.totalMAE)],
     ['Total bias', (s) => signed(s.totalBias, 1)],
     ['Overtime: predicted vs actual', (s) => `${(100 * s.otPredicted).toFixed(1)}% vs ${(100 * s.otActual).toFixed(1)}%`],
+    ['Best model weight: moneyline', (s) => blendText(s.blend.ml)],
+    ['Best model weight: spread', (s) => blendText(s.blend.spread)],
+    ['Best model weight: total', (s) => blendText(s.blend.total)],
   ];
   const lines = [`### ${title}`, '', `| | ${runs.map(([n]) => n).join(' | ')} |`, `|---|${runs.map(() => '---').join('|')}|`];
   for (const [label, f] of rows) lines.push(`| ${label} | ${runs.map(([, s]) => f(s)).join(' | ')} |`);
