@@ -10,6 +10,17 @@ import { MODEL_VERSION } from '../src/model/version';
 const fx = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/espn/${name}`, import.meta.url), 'utf8'));
 
 let summaryOverride: Record<string, unknown> = {};
+let noLines = false;
+
+type Payload = { events?: { competitions?: { odds?: unknown }[] }[]; pickcenter?: unknown; odds?: unknown };
+
+/** The fixtures as they look before the book posts a line. */
+function stripLines(body: Payload) {
+  for (const ev of body.events ?? []) for (const c of ev.competitions ?? []) delete c.odds;
+  delete body.pickcenter;
+  delete body.odds;
+  return body;
+}
 
 function mockEspn() {
   setFetch((async (input: RequestInfo | URL) => {
@@ -28,6 +39,7 @@ function mockEspn() {
     } else if (u.pathname.endsWith('/gamelog')) body = fx('synthetic-nba-athlete-gamelog-v3.json');
     else if (u.pathname.endsWith('/stats')) body = fx('synthetic-nba-athlete-stats-v3.json');
     if (body === undefined) return new Response('{}', { status: 404 });
+    if (noLines) body = stripLines(body as Payload);
     return new Response(JSON.stringify(body), { status: 200 });
   }) as typeof fetch);
 }
@@ -48,6 +60,7 @@ const PRE_PATH = logPath('nba', 2026, '20260116');
 
 beforeEach(() => {
   summaryOverride = {};
+  noLines = false;
   const mem = new Map<string, string>();
   setStore({ get: (k) => mem.get(k) ?? null, set: (k, v) => void mem.set(k, v), clearPrefix: () => mem.clear() });
   mockEspn();
@@ -94,6 +107,30 @@ describe('forward log job', () => {
     r = await run(io, '2026-01-17T01:00:00Z');
     expect(r.snapshots + r.refreshed).toBe(0);
     expect(JSON.stringify(files.get(PRE_PATH))).toBe(before);
+  });
+
+  it('redoes a snapshot taken before the line was posted once the line appears', async () => {
+    const { io, files } = memoryIO();
+    noLines = true;
+    let r = await run(io, '2026-01-16T04:30:00Z');
+    expect(r.snapshots).toBe(1);
+    expect((files.get(PRE_PATH) as LogFile)['401810131'].line).toBeUndefined();
+
+    // Still no line an hour later: left alone.
+    r = await run(io, '2026-01-16T05:30:00Z');
+    expect(r.refreshed + r.snapshots).toBe(0);
+
+    // The line is up, far outside the three-hour window: refreshed with it.
+    noLines = false;
+    r = await run(io, '2026-01-16T06:30:00Z');
+    expect(r.refreshed).toBe(1);
+    const e = (files.get(PRE_PATH) as LogFile)['401810131'];
+    expect(e.line?.spread).toBeDefined();
+    expect(e.pred!.minsToTip).toBe(1080);
+
+    // With the line saved, the usual windows apply again.
+    r = await run(io, '2026-01-16T08:30:00Z');
+    expect(r.refreshed + r.snapshots).toBe(0);
   });
 
   it('grades finals with the reported line, leaves live games open and voids the stuck', async () => {

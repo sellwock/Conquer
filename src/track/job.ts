@@ -95,7 +95,10 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
       const path = logPath(league, seasonYear(g.date, league), ymd);
       const prev = file(path)[g.id];
       const first = !prev?.pred && mins <= FIRST_SNAPSHOT_MIN;
-      const refresh = !!prev?.pred && mins <= REFRESH_WITHIN_MIN && (o.now.getTime() - Date.parse(prev.pred.takenAt)) / 60000 > REFRESH_AFTER_MIN;
+      // A snapshot taken before the book posted a line is redone as soon as one appears, so the
+      // entry can be graded against the market even if no run lands in the last three hours.
+      const lineArrived = !prev?.line && !!g.odds;
+      const refresh = !!prev?.pred && (mins <= REFRESH_WITHIN_MIN || lineArrived) && (o.now.getTime() - Date.parse(prev.pred.takenAt)) / 60000 > REFRESH_AFTER_MIN;
       if (!first && !refresh) continue;
       if (requestCount() > o.budget) {
         report.errors.push(`${league}: request budget reached; ${g.away.abbr} @ ${g.home.abbr} skipped`);

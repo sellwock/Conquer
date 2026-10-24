@@ -50,7 +50,7 @@ Completed-game extracts are cached in `localStorage`. If a host blocks direct ca
 
 - NBA games are logged, plus college games with a posted line.
 - The workflow asks to run every 15 minutes, but GitHub drops many scheduled runs on quiet repos (on the first day they came hours apart), so the windows are wide.
-- The first snapshot comes within 30 hours of tip (within the next Eastern day's slate). It's refreshed within 3 hours of tip if it's more than 45 minutes old. Each prediction records when it was taken (`takenAt`, `minsToTip`).
+- The first snapshot comes within 30 hours of tip (within the next Eastern day's slate). It's refreshed within 3 hours of tip if it's more than 45 minutes old, and at any point before tip if it was taken before the book posted a line and one has since appeared. Each prediction records when it was taken (`takenAt`, `minsToTip`).
 - Nothing is written after tip and nothing is backfilled, so the record has no hindsight.
 - Each prediction stores the model version (`src/model/version.ts`), the line at that moment, and the full margin and total distributions.
 - `src/track/grade.ts` derives the record from those entries: winners, against the spread, over/under, Brier score vs the market's no-vig odds with a bootstrap interval, calibration and closing-line value.
