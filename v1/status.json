@@ -1,11 +1,11 @@
 {
-"lastRun": "2026-10-26T00:08:14.931Z",
+"lastRun": "2026-10-26T04:58:14.939Z",
 "model": "1.1.0",
-"requests": 120,
+"requests": 83,
 "snapshots": 0,
-"refreshed": 6,
-"graded": 1,
+"refreshed": 4,
+"graded": 6,
 "voided": 0,
-"results": 0,
+"results": 7,
 "errors": []
 }
