@@ -67,8 +67,11 @@ export function Method(props: { game: GameData }) {
         Parlays use only legs with a posted price: moneylines, spreads and totals. Legs from the same game are scored together from that game's simulations, so legs that tend to
         win together are priced that way. Legs from different games are treated as independent. Model chances are weighted against the market's no-vig odds by how much the
         model earned in backtests on last season's games, where the market alone did best on most bets. For {lg.label} games, {blendText(MODEL_WEIGHT[g.league])}
-        {modelHasSay(g.league) ? '' : ', so no suggestion can beat the vig and the tab shows none'}. A suggestion needs positive expected value, a minimum hit chance and a
-        capped price. These are suggestions from a model, not advice.
+        {modelHasSay(g.league)
+          ? '.'
+          : ", so no weighted suggestion can beat the vig. The tab therefore opens on the simulation's own picks, ranked by its chances alone and labeled as such; their expected returns are likely overstated."}{' '}
+        A switch on the tab moves between the two rankings. A suggestion needs positive expected value, a minimum hit chance and a capped price. These are suggestions from a
+        model, not advice.
       </p>
       <h3>Limits</h3>
       <ul>

@@ -2,7 +2,7 @@
 // plus the best single the parlays tab would suggest for it. Also packs a game's simulated
 // outcomes small enough to cache in the browser.
 import { impliedFromAmerican } from '../lib/stats';
-import { suggestParlays, type GameMarket, type Parlay } from './parlays';
+import { defaultPickMode, suggestParlays, weightsFor, type BlendWeights, type GameMarket, type Parlay } from './parlays';
 
 export interface BoardRow {
   /** Home margin and game total, averaged over the simulations. */
@@ -13,11 +13,11 @@ export interface BoardRow {
   fairHome?: number;
   marketMargin?: number;
   marketTotal?: number;
-  /** The top suggested single for this game, exactly as the parlays tab ranks it. */
+  /** The top suggested single for this game, exactly as the parlays tab ranks it by default. */
   best?: Parlay;
 }
 
-export function boardRow(m: GameMarket): BoardRow {
+export function boardRow(m: GameMarket, weights: BlendWeights = weightsFor(m.league, defaultPickMode(m.league))): BoardRow {
   const n = Math.max(1, m.margin.length);
   let margin = 0, total = 0, wins = 0;
   for (let i = 0; i < m.margin.length; i++) {
@@ -38,7 +38,7 @@ export function boardRow(m: GameMarket): BoardRow {
     fairHome,
     marketMargin: o.spread != null ? -o.spread : undefined,
     marketTotal: o.total,
-    best: suggestParlays([m], 1).bySize[1][0],
+    best: suggestParlays([m], 1, weights).bySize[1][0],
   };
 }
 

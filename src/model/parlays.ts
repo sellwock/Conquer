@@ -5,6 +5,8 @@
 // Legs from different games are independent. Model probabilities are blended with the market's
 // no-vig probabilities before ranking, weighted by how much the model has earned in backtests,
 // because a model that disagrees sharply with a liquid market is usually the one that is wrong.
+// Where that leaves the market alone on every bet (NBA), picks can be ranked by the simulation
+// alone instead, labeled as such.
 import { impliedFromAmerican } from '../lib/stats';
 import type { LeagueId, Odds } from './types';
 
@@ -83,6 +85,17 @@ export const MODEL_WEIGHT: Record<LeagueId, BlendWeights> = {
 
 /** False when the market alone ranks every bet in this league, so no leg can beat the vig. */
 export const modelHasSay = (league: LeagueId) => Object.values(MODEL_WEIGHT[league]).some((w) => w > 0);
+
+/** The simulation's chances alone, ignoring the market: its own picks, unproven against the market. */
+export const SIM_ONLY: BlendWeights = { ml: 1, spread: 1, total: 1 };
+
+/** "blend" ranks by the backtested weights; "sim" by the simulation alone. */
+export type PickMode = 'blend' | 'sim';
+
+export const weightsFor = (league: LeagueId, mode: PickMode): BlendWeights => (mode === 'sim' ? SIM_ONLY : MODEL_WEIGHT[league]);
+
+/** The blend where it can find anything, else the simulation's own picks. */
+export const defaultPickMode = (league: LeagueId): PickMode => (modelHasSay(league) ? 'blend' : 'sim');
 
 /** Minimum blended hit chance and maximum price by number of legs: no longshots. */
 export const HIT_FLOOR: Record<number, number> = { 1: 0.4, 2: 0.25, 3: 0.15 };

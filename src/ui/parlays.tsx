@@ -1,5 +1,19 @@
-import { useMemo, useState } from 'preact/hooks';
-import { DEFAULT_JUICE, HIT_FLOOR, MAX_PRICE, MODEL_WEIGHT, modelHasSay, suggestParlays, type BlendWeights, type GameMarket, type LegKind, type Parlay } from '../model/parlays';
+import { useEffect, useMemo, useState } from 'preact/hooks';
+import {
+  DEFAULT_JUICE,
+  HIT_FLOOR,
+  MAX_PRICE,
+  MODEL_WEIGHT,
+  defaultPickMode,
+  modelHasSay,
+  suggestParlays,
+  weightsFor,
+  type BlendWeights,
+  type GameMarket,
+  type LegKind,
+  type Parlay,
+  type PickMode,
+} from '../model/parlays';
 import { LEAGUES } from '../model/leagues';
 import type { GameData, LeagueId } from '../model/types';
 import { fmtAmerican } from '../lib/stats';
@@ -27,23 +41,41 @@ export function blendText(w: BlendWeights): string {
     .join('; ');
 }
 
-/** Shown instead of suggestions when the market alone ranks every bet in a league. */
-export function NoEdgeNote(props: { league: LeagueId }) {
+/** Shown in place of blended suggestions when the market alone ranks every bet in a league. */
+export function NoEdgeNote(props: { league: LeagueId; onSim?: () => void }) {
   const label = LEAGUES[props.league].label;
   return (
     <>
       <p>
-        No suggestions for {label} games. In backtests the model hasn't beaten the betting market on any {label} bet, so blending it in can't find value the market missed.
+        No backtest-weighted suggestions for {label} games. In backtests the model hasn't beaten the betting market on any {label} bet, so blending it in can't find value the
+        market missed.
       </p>
+      {props.onSim && (
+        <p>
+          <button type="button" class="btn" onClick={props.onSim}>
+            Show the simulation's picks
+          </button>
+        </p>
+      )}
       <p class="muted small">
-        Suggestions come back when a model version beats the market in the backtest. <a href={`#view=record&league=${props.league}`}>See the track record</a>.
+        Weighted suggestions come back when a model version beats the market in the backtest. <a href={`#view=record&league=${props.league}`}>See the track record</a>.
       </p>
     </>
   );
 }
 
-function ParlayCard(props: { p: Parlay; showGame: boolean; markets: Record<string, GameMarket>; onOpen: (id: string) => void }) {
+/** Why simulation-only picks deserve less trust than their numbers suggest. */
+export function simOnlyText(league: LeagueId): string {
+  const label = LEAGUES[league].label;
+  return `Ranked by the simulation alone: its chances replace the market's entirely. In backtests the market's odds were more accurate than the simulation's on ${label} games, so read these expected returns as the simulation's opinion, and expect them to be overstated.`;
+}
+
+const barText = () =>
+  `It also needs a hit chance of at least ${pct(HIT_FLOOR[1], 0)}, ${pct(HIT_FLOOR[2], 0)} or ${pct(HIT_FLOOR[3], 0)} and a price no longer than ${fmtAmerican(MAX_PRICE[1])}, ${fmtAmerican(MAX_PRICE[2])} or ${fmtAmerican(MAX_PRICE[3])} for one, two or three legs. Same-game legs are scored together from the simulations; legs from different games are treated as independent.`;
+
+function ParlayCard(props: { p: Parlay; mode: PickMode; showGame: boolean; markets: Record<string, GameMarket>; onOpen: (id: string) => void }) {
   const { p } = props;
+  const sim = props.mode === 'sim';
   const assumed = p.legs.some((l) => {
     const o = props.markets[l.gameId]?.odds;
     if (!o) return false;
@@ -57,6 +89,7 @@ function ParlayCard(props: { p: Parlay; showGame: boolean; markets: Record<strin
         <strong class="p-price">{fmtAmerican(p.price)}</strong>
         <span class="chip">{p.legs.length === 1 ? 'Single' : `${p.legs.length} legs`}</span>
         {p.sameGame && <span class="chip">{p.maxFromOneGame === p.legs.length ? 'Same game' : `${p.maxFromOneGame} from one game`}</span>}
+        {sim && <span class="chip warn">Sim only</span>}
       </header>
       <ol class="p-legs">
         {p.legs.map((l) => (
@@ -73,19 +106,26 @@ function ParlayCard(props: { p: Parlay; showGame: boolean; markets: Record<strin
       </ol>
       <dl class="p-metrics">
         <div>
-          <dt>Hit chance</dt>
+          <dt>{sim ? 'Sim hit chance' : 'Hit chance'}</dt>
           <dd>{pct(p.pHit, 0)}</dd>
         </div>
         <div>
           <dt>Price implies</dt>
           <dd>{pct(p.pImplied, 0)}</dd>
         </div>
+        {sim ? (
+          <div title="The market's no-vig chance of each leg, multiplied together. For legs from one game this ignores how they move together.">
+            <dt>Market (no-vig)</dt>
+            <dd>{pct(p.legs.reduce((k, l) => k * l.pFair, 1), 0)}</dd>
+          </div>
+        ) : (
+          <div>
+            <dt>Model alone</dt>
+            <dd>{pct(p.pModel, 0)}</dd>
+          </div>
+        )}
         <div>
-          <dt>Model alone</dt>
-          <dd>{pct(p.pModel, 0)}</dd>
-        </div>
-        <div>
-          <dt>Expected return</dt>
+          <dt>{sim ? 'Sim expected return' : 'Expected return'}</dt>
           <dd class={p.ev > 0 ? 'pos' : 'neg'}>{perHundred(p.ev)}</dd>
         </div>
       </dl>
@@ -112,10 +152,14 @@ export function Parlays(props: {
 }) {
   const { game: g, markets } = props;
   const hasSay = modelHasSay(g.league);
+  const [mode, setMode] = useState<PickMode>(defaultPickMode(g.league));
+  useEffect(() => setMode(defaultPickMode(g.league)), [g.league]);
+  // Blended picks can't beat the vig where the model has no say, so there's nothing to list.
+  const showPicks = mode === 'sim' || hasSay;
   const ids = Object.keys(markets);
   const [scope, setScope] = useState<'game' | 'slate'>(ids.length > 1 ? 'slate' : 'game');
   const pool = useMemo(() => (scope === 'game' ? (markets[g.id] ? [markets[g.id]] : []) : Object.values(markets)), [scope, markets, g.id]);
-  const s = useMemo(() => suggestParlays(pool), [pool]);
+  const s = useMemo(() => suggestParlays(pool, 3, weightsFor(g.league, mode)), [pool, g.league, mode]);
   const changed = pool.filter((m) => m.note);
 
   return (
@@ -128,35 +172,45 @@ export function Parlays(props: {
         </p>
       </section>
 
-      {!hasSay && (
-        <section class="card">
-          <header class="card-head">
-            <h2>Suggested parlays</h2>
-          </header>
-          <NoEdgeNote league={g.league} />
-        </section>
-      )}
-
-      {hasSay && (
       <section class="card">
         <header class="card-head">
           <h2>Suggested parlays</h2>
-          <div class="seg small" role="radiogroup" aria-label="Which games">
-            <button type="button" role="radio" aria-checked={scope === 'game'} class={scope === 'game' ? 'on' : ''} onClick={() => setScope('game')}>
-              This game
+          {showPicks && (
+            <div class="seg small" role="radiogroup" aria-label="Which games">
+              <button type="button" role="radio" aria-checked={scope === 'game'} class={scope === 'game' ? 'on' : ''} onClick={() => setScope('game')}>
+                This game
+              </button>
+              <button type="button" role="radio" aria-checked={scope === 'slate'} class={scope === 'slate' ? 'on' : ''} onClick={() => setScope('slate')}>
+                Across the slate ({ids.length} {ids.length === 1 ? 'game' : 'games'})
+              </button>
+            </div>
+          )}
+        </header>
+        <div class="pick-mode">
+          <span class="muted small">Ranked by</span>
+          <div class="seg small" role="radiogroup" aria-label="How picks are ranked">
+            <button type="button" role="radio" aria-checked={mode === 'blend'} class={mode === 'blend' ? 'on' : ''} onClick={() => setMode('blend')}>
+              Backtest blend
             </button>
-            <button type="button" role="radio" aria-checked={scope === 'slate'} class={scope === 'slate' ? 'on' : ''} onClick={() => setScope('slate')}>
-              Across the slate ({ids.length} {ids.length === 1 ? 'game' : 'games'})
+            <button type="button" role="radio" aria-checked={mode === 'sim'} class={mode === 'sim' ? 'on' : ''} onClick={() => setMode('sim')}>
+              Simulation only
             </button>
           </div>
-        </header>
-        <p class="muted small">
-          One to three legs from moneylines, spreads and totals. A pick needs positive expected value after weighting the simulation against the market by how it did in
-          backtests: {blendText(MODEL_WEIGHT[g.league])}. It also needs a hit chance of at least {pct(HIT_FLOOR[1], 0)}, {pct(HIT_FLOOR[2], 0)} or {pct(HIT_FLOOR[3], 0)} and a price no longer than {fmtAmerican(MAX_PRICE[1])},{' '}
-          {fmtAmerican(MAX_PRICE[2])} or {fmtAmerican(MAX_PRICE[3])} for one, two or three legs. Same-game legs are scored together from the simulations; legs from different games
-          are treated as independent.
-        </p>
-        {scope === 'slate' && (
+        </div>
+        {!showPicks ? (
+          <NoEdgeNote league={g.league} onSim={() => setMode('sim')} />
+        ) : mode === 'sim' ? (
+          <>
+            <p class="note caution">{simOnlyText(g.league)}</p>
+            <p class="muted small">One to three legs from moneylines, spreads and totals. A pick needs positive expected value by the simulation's own chances. {barText()}</p>
+          </>
+        ) : (
+          <p class="muted small">
+            One to three legs from moneylines, spreads and totals. A pick needs positive expected value after weighting the simulation against the market by how it did in
+            backtests: {blendText(MODEL_WEIGHT[g.league])}. {barText()}
+          </p>
+        )}
+        {showPicks && scope === 'slate' && (
           <div class="scan">
             {props.scan.status === 'running' ? (
               <>
@@ -183,7 +237,7 @@ export function Parlays(props: {
             {props.scan.failed > 0 && <span class="muted small">{props.scan.failed} couldn't be loaded and were skipped.</span>}
           </div>
         )}
-        {scope === 'game' && !markets[g.id] && (
+        {showPicks && scope === 'game' && !markets[g.id] && (
           <p class="note">
             {g.phase !== 'pre'
               ? 'This game has already started, so its pre-game lines are no longer available. Switch to the slate or pick an upcoming game.'
@@ -192,15 +246,14 @@ export function Parlays(props: {
                 : 'No betting line is posted for this game yet.'}
           </p>
         )}
-        {changed.length > 0 && (
+        {showPicks && changed.length > 0 && (
           <p class="note">
             {changed.map((m) => `${m.label}: ${m.note}`).join(' · ')}. Lines may already reflect news your scenario adds or removes.
           </p>
         )}
       </section>
-      )}
 
-      {hasSay &&
+      {showPicks &&
         pool.length > 0 &&
         ([1, 2, 3] as const).map((size) => (
           <section class="card" key={size}>
@@ -210,7 +263,7 @@ export function Parlays(props: {
             {s.bySize[size].length ? (
               <div class="parlay-grid">
                 {s.bySize[size].map((p) => (
-                  <ParlayCard key={p.legs.map((l) => l.key).join('|')} p={p} showGame={scope === 'slate'} markets={markets} onOpen={props.onOpen} />
+                  <ParlayCard key={p.legs.map((l) => l.key).join('|')} p={p} mode={mode} showGame={scope === 'slate'} markets={markets} onOpen={props.onOpen} />
                 ))}
               </div>
             ) : (
@@ -221,7 +274,7 @@ export function Parlays(props: {
           </section>
         ))}
 
-      {hasSay && scope === 'slate' && pool.length > 0 && (
+      {showPicks && scope === 'slate' && pool.length > 0 && (
         <section class="card">
           <header class="card-head">
             <h2>Games included</h2>
