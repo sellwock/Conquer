@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { boardRow, packMarket, unpackMarket } from '../src/model/slate';
-import { legsForGame, suggestParlays, type GameMarket } from '../src/model/parlays';
+import { legsForGame, suggestParlays, SIM_ONLY, type GameMarket } from '../src/model/parlays';
 import { leagueAverageGame } from './helpers';
 import { buildSpec } from '../src/model/build';
 import { runOutcomes } from '../src/sim/quick';
@@ -36,8 +36,13 @@ describe('slate board', () => {
     expect(r.modelMargin).toBeGreaterThan(0);
   });
 
-  it('shows no best single where the model has no say', () => {
-    expect(boardRow(market('nba')).best).toBeUndefined();
+  it("shows the simulation's own pick where the blend finds nothing", () => {
+    const nba = market('nba');
+    const r = boardRow(nba);
+    const single = suggestParlays([nba], 1, SIM_ONLY).bySize[1][0];
+    expect(r.best).toBeDefined();
+    expect(r.best!.legs.map((l) => l.key)).toEqual(single.legs.map((l) => l.key));
+    expect(r.best!.pHit).toBe(r.best!.pModel);
   });
 
   it('shows the same best single as the parlays tab', () => {

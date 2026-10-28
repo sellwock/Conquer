@@ -1322,6 +1322,23 @@ table.box + table.box,
 }
 
 /* Parlays */
+.pick-mode {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 10px;
+}
+.note.caution {
+  color: var(--out);
+  background: var(--out-bg);
+  margin-bottom: 8px;
+}
+.chip.warn {
+  color: var(--out);
+  border-color: var(--out);
+  background: var(--out-bg);
+}
 .disclaimer {
   border-color: var(--out);
   background: var(--out-bg);

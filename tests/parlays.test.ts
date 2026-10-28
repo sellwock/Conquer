@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluate, legsForGame, modelHasSay, suggestParlays, toAmerican, toDecimal, HIT_FLOOR, MAX_PRICE, type GameMarket } from '../src/model/parlays';
+import { defaultPickMode, evaluate, legsForGame, modelHasSay, suggestParlays, toAmerican, toDecimal, weightsFor, HIT_FLOOR, MAX_PRICE, SIM_ONLY, type GameMarket } from '../src/model/parlays';
 import { makeRng } from '../src/lib/rng';
 import type { LeagueId } from '../src/model/types';
 
@@ -100,5 +100,23 @@ describe('parlay math', () => {
     }
     const s = suggestParlays([g, market('2', Array(100).fill(-10), Array(100).fill(260), evenOdds, 'nba')]);
     expect(s.bySize[1].length + s.bySize[2].length + s.bySize[3].length).toBe(0);
+  });
+
+  it("ranks by the simulation alone on request, and by default where the blend finds nothing", () => {
+    expect(defaultPickMode('nba')).toBe('sim');
+    expect(defaultPickMode('ncaam')).toBe('blend');
+    expect(weightsFor('nba', 'sim')).toEqual(SIM_ONLY);
+    expect(weightsFor('ncaam', 'blend')).toEqual({ ml: 0, spread: 0.25, total: 0.25 });
+
+    // Home wins and covers in every sim; the market says a coin flip.
+    const g = market('1', Array(100).fill(10), Array(100).fill(200), evenOdds, 'nba');
+    for (const l of legsForGame(g, SIM_ONLY)) expect(l.pBlend).toBe(l.pModel);
+    const s = suggestParlays([g], 3, SIM_ONLY);
+    expect(s.bySize[1].length).toBeGreaterThan(0);
+    for (const p of s.bySize[1]) {
+      expect(p.ev).toBeGreaterThan(0);
+      expect(p.pHit).toBe(p.pModel);
+    }
+    expect(s.bySize[1][0].legs[0].key).toMatch(/:(ml|spread):home$/);
   });
 });

@@ -1,6 +1,7 @@
 // The day's games in one table: the model's line, total and win chance next to the market's, and
-// the best single the parlays tab would suggest. Games that have started show what the forward
-// log saved before tip-off.
+// the best single the parlays tab suggests by default (the simulation's own pick where the
+// backtest blend finds nothing). Games that have started show what the forward log saved before
+// tip-off.
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { LeagueId, ScoreboardGame } from '../model/types';
 import { boardRow } from '../model/slate';
@@ -127,7 +128,7 @@ export function SlateBoard(props: {
           Model numbers come from 2,000 simulations per game with everyone available (the open game uses your settings).{' '}
           {hasSay
             ? `Best singles weight the simulation against the market by how it did in backtests (${blendText(MODEL_WEIGHT[props.league])}) and clear the same bar as the parlays tab. Suggestions, not advice.`
-            : `No best singles for ${LEAGUES[props.league].label} games: in backtests the model hasn't beaten the betting market on any ${LEAGUES[props.league].label} bet.`}
+            : `Sim's picks rank by the simulation alone and clear the same bar as the parlays tab. In backtests the market's odds were more accurate than the simulation's on ${LEAGUES[props.league].label} games, so treat them as the simulation's leans. Suggestions, not advice.`}
         </p>
         <div class="scan">
           {slate.scan.status === 'running' ? (
@@ -177,7 +178,7 @@ export function SlateBoard(props: {
                   </th>
                   <Th k="total" label="Total" num />
                   <Th k="win" label="Home win" num />
-                  {hasSay ? <Th k="edge" label="Best single" /> : <th scope="col">Result</th>}
+                  <Th k="edge" label={hasSay ? 'Best single' : 'Sim’s pick'} />
                 </tr>
               </thead>
               <tbody>
@@ -185,7 +186,6 @@ export function SlateBoard(props: {
                   <BoardRowView
                     key={r.g.id}
                     r={r}
-                    hasSay={hasSay}
                     queued={pendingIds.has(r.g.id)}
                     scanning={slate.scan.status === 'running'}
                     open={r.g.id === props.openGame}
@@ -204,7 +204,7 @@ export function SlateBoard(props: {
   );
 }
 
-function BoardRowView(props: { r: Row; hasSay: boolean; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
+function BoardRowView(props: { r: Row; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
   const { g, n, best, logged } = props.r;
   const pre = g.phase === 'pre';
   const waiting = pre && !n;
@@ -245,7 +245,7 @@ function BoardRowView(props: { r: Row; hasSay: boolean; queued: boolean; scannin
           {pre ? placeholder : 'No saved prediction'}
         </td>
       )}
-      <td>{!pre ? <ResultCell g={g} logged={logged} /> : props.hasSay ? <BestCell best={best} waiting={waiting} /> : <span class="muted">–</span>}</td>
+      <td>{!pre ? <ResultCell g={g} logged={logged} /> : <BestCell best={best} waiting={waiting} />}</td>
     </tr>
   );
 }
