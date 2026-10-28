@@ -482,12 +482,29 @@ export function parseRoster(json: J): RosterAthlete[] {
   });
 }
 
-export function parseScheduleEvents(json: J): { id: string; date: string; completed: boolean }[] {
+export interface ScheduleEvent {
+  id: string;
+  date: string;
+  completed: boolean;
+  /** With a team id: the opponent's abbreviation and whether the team was at home. */
+  opp?: string;
+  home?: boolean;
+}
+
+export function parseScheduleEvents(json: J, teamId?: string): ScheduleEvent[] {
   const evs: J[] = Array.isArray(json?.events) ? json.events : [];
   return evs.map((e) => {
     const comp = e?.competitions?.[0] ?? {};
     const st = comp?.status?.type ?? e?.status?.type ?? {};
-    return { id: String(e?.id ?? comp?.id), date: e?.date ?? comp?.date ?? '', completed: !!st.completed || st.state === 'post' };
+    const ev: ScheduleEvent = { id: String(e?.id ?? comp?.id), date: e?.date ?? comp?.date ?? '', completed: !!st.completed || st.state === 'post' };
+    const sides: J[] = Array.isArray(comp?.competitors) ? comp.competitors : [];
+    const us = teamId ? sides.find((c) => String(c?.team?.id ?? c?.id) === teamId) : undefined;
+    if (us) {
+      ev.home = us.homeAway === 'home';
+      const opp = sides.find((c) => c !== us)?.team?.abbreviation;
+      if (opp) ev.opp = String(opp);
+    }
+    return ev;
   });
 }
 

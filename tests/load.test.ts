@@ -62,6 +62,21 @@ describe('loadGame under Node', () => {
     expect(requestCount()).toBeGreaterThan(5);
   });
 
+  it("keeps each player's recent game lines, newest first, with the opponent from the schedule", async () => {
+    const g = await loadGame('nba', '401810123', { sampleGames: 5 });
+    const withLines = g.home.players.filter((p) => p.recent?.length);
+    expect(withLines.length).toBeGreaterThan(5);
+    for (const p of [...g.home.players, ...g.away.players]) {
+      const r = p.recent ?? [];
+      expect(r.length).toBeLessThanOrEqual(5);
+      for (const l of r) expect(l.box.min).toBeGreaterThan(0);
+      for (let i = 1; i < r.length; i++) expect(Date.parse(r[i - 1].date)).toBeGreaterThanOrEqual(Date.parse(r[i].date));
+    }
+    // The one earlier game on the schedule: BOS at home against LAL.
+    expect(withLines[0].recent![0]).toMatchObject({ eventId: '401800001', opp: 'LAL', home: true });
+    expect(g.away.players.find((p) => p.recent?.length)!.recent![0]).toMatchObject({ opp: 'BOS', home: false });
+  });
+
   it('as of tip-off: no roster or injury report, starters from the sample, no future season stats', async () => {
     const g = await loadGame('nba', '401810123', { sampleGames: 5, asOf: '2026-01-15T00:30Z' });
     expect(seen.some((p) => p.includes('/roster'))).toBe(false);

@@ -1,6 +1,6 @@
 // Assembles everything the simulator needs for one game from ESPN: header, rosters, injuries,
 // odds, officials, and per-player samples built from each team's recent completed games.
-import { addBox, emptyBox, emptyZones, ZONES, type BoxLine, type GameData, type GameSnapshot, type LeagueId, type Play, type PlayerProfile, type PlayerSample, type ScoreboardGame, type TeamProfile, type TeamSample, type ZoneTable } from '../../model/types';
+import { addBox, emptyBox, emptyZones, ZONES, type BoxLine, type GameData, type GameLogLine, type GameSnapshot, type LeagueId, type Play, type PlayerProfile, type PlayerSample, type ScoreboardGame, type TeamProfile, type TeamSample, type ZoneTable } from '../../model/types';
 import { LEAGUES } from '../../model/leagues';
 import { DataError, getJson, mapLimit, readCache, sitePath, webPath, writeCache } from './client';
 import {
@@ -24,6 +24,7 @@ import {
   seasonYear,
   type GameExtract,
   type RosterAthlete,
+  type ScheduleEvent,
 } from './parse';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -58,12 +59,12 @@ async function loadExtract(league: LeagueId, eventId: string, signal?: AbortSign
 }
 
 async function recentCompleted(league: LeagueId, teamId: string, before: string, season: number, n: number, signal?: AbortSignal) {
-  const found: { id: string; date: string }[] = [];
+  const found: ScheduleEvent[] = [];
   for (const yr of [season, season - 1]) {
     if (found.length >= n) break;
     try {
       const json = await getJson('site', sitePath(league, `/teams/${teamId}/schedule?season=${yr}`), { signal });
-      const evs = parseScheduleEvents(json)
+      const evs = parseScheduleEvents(json, teamId)
         .filter((e) => e.completed && Date.parse(e.date) < Date.parse(before))
         .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
       for (const e of evs) if (found.length < n && !found.some((f) => f.id === e.id)) found.push(e);
@@ -255,6 +256,24 @@ function buildSamples(teamId: string, extracts: GameExtract[]): { players: Map<s
 
 const zonesHaveData = (z?: ZoneTable) => !!z && ZONES.some((k) => z[k].att > 0);
 
+/** Each player's last `n` games played for the team, newest first, from the recent games' box scores. */
+export function recentLines(teamId: string, recent: ScheduleEvent[], extracts: Map<string, GameExtract>, n = 5): Map<string, GameLogLine[]> {
+  const out = new Map<string, GameLogLine[]>();
+  const newestFirst = [...recent].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+  for (const ev of newestFirst) {
+    const t = extracts.get(ev.id)?.teams[teamId];
+    if (!t) continue;
+    for (const [pid, p] of Object.entries(t.players)) {
+      if (p.box.min <= 0) continue;
+      const lines = out.get(pid) ?? [];
+      if (lines.length >= n) continue;
+      lines.push({ eventId: ev.id, date: ev.date, opp: ev.opp, home: ev.home, starter: p.starter, box: p.box });
+      out.set(pid, lines);
+    }
+  }
+  return out;
+}
+
 export async function loadGame(league: LeagueId, eventId: string, opts: LoadOptions): Promise<GameData> {
   const { signal, onStatus } = opts;
   onStatus?.('Loading game');
@@ -331,9 +350,10 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
     onStatus?.(`Reading play-by-play ${++done}/${allIds.length}`);
   });
 
-  const finishTeam = async (side: { t: TeamProfile; roster: RosterAthlete[] }, recent: { id: string; date: string }[]) => {
+  const finishTeam = async (side: { t: TeamProfile; roster: RosterAthlete[] }, recent: ScheduleEvent[]) => {
     const exs = recent.map((r) => extracts.get(r.id)).filter((x): x is GameExtract => !!x);
     const { players, team } = buildSamples(side.t.id, exs);
+    const lines = recentLines(side.t.id, recent, extracts);
     side.t.sample = team;
     const withPbp = exs.some((e) => zonesHaveData(e.teams[side.t.id]?.oppZones));
     side.t.source = exs.length ? `${exs.length} recent game${exs.length === 1 ? '' : 's'}${withPbp ? ' with play-by-play' : ''}` : 'League averages';
@@ -371,6 +391,7 @@ export async function loadGame(league: LeagueId, eventId: string, opts: LoadOpti
         sample,
         source,
         actual: b && phase !== 'pre' ? { ...b.box, played: b.played, starter: b.starter } : undefined,
+        recent: lines.get(a.id),
       };
     });
   };

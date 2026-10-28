@@ -1670,3 +1670,34 @@ td .neg {
     transition: none !important;
   }
 }
+
+/* Last 5 */
+.recent-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+}
+.recent-table tr.open th:first-child,
+.recent-table tr.sub th:first-child {
+  background: var(--surface-2);
+}
+.recent-table tbody th .pill {
+  margin-left: 6px;
+}
+.recent-table tr.open > * {
+  background: var(--surface-2);
+}
+.recent-table tr.sub > * {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface-2);
+}
+.recent-table tr.sub th {
+  font-weight: 400;
+  padding-left: 18px;
+}
+.recent-table tr.sub.sim > * {
+  color: var(--ink);
+  font-weight: 600;
+}
