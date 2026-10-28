@@ -1,0 +1,32 @@
+name: Probe prop lines (temporary)
+on:
+  push:
+    branches: [claude/probe-props]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ESPN odds and prop bets
+        run: |
+          set +e
+          B=https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba
+          for EV in 401909892 401909893; do
+            echo "===== event $EV"
+            curl -s "$B/events/$EV/competitions/$EV/odds?lang=en&region=us" > odds.json
+            jq -c '{count, items: [.items[]? | {id: .provider.id, name: .provider.name, keys: (keys), propBets: .propBets}]}' odds.json | head -c 3000; echo
+            for P in $(jq -r '.items[]?.provider.id' odds.json) 58 100 40 1002; do
+              U="$B/events/$EV/competitions/$EV/odds/$P/propBets?lang=en&region=us&limit=1000"
+              code=$(curl -s -o props.json -w '%{http_code}' "$U")
+              n=$(jq '.items | length' props.json 2>/dev/null)
+              echo "--- provider $P: HTTP $code, items $n, count $(jq .count props.json 2>/dev/null), pageCount $(jq .pageCount props.json 2>/dev/null)"
+              if [ "${n:-0}" -gt 0 ]; then
+                jq -c '.items[0:2]' props.json | head -c 2500; echo
+                echo "types:"; jq -r '[.items[] | (.type.name // .type // "?")] | group_by(.) | map("\(.[0]) x\(length)") | .[]' props.json | head -40
+                echo "keys of item:"; jq -c '.items[0] | keys' props.json
+              fi
+            done
+            echo "--- CORS on core API:"
+            curl -s -D - -o /dev/null -H 'Origin: https://sellwock.github.io' "$B/events/$EV/competitions/$EV/odds" | grep -i -E 'access-control|^HTTP'
+          done
+          echo "===== summary pickcenter keys"
+          curl -s "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=401909892" | jq -c '{keys: keys, pickcenter: [.pickcenter[]? | keys]}' | head -c 2000; echo
