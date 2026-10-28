@@ -16,6 +16,7 @@ import { Sheet } from './sheet';
 import { Outlook } from './outlook';
 import { TypicalGame } from './typical';
 import { Players, type ImpactRow } from './players';
+import { Recent } from './recent';
 import { Flow } from './flow';
 import { Method } from './method';
 import { Parlays } from './parlays';
@@ -368,6 +369,7 @@ export function App() {
                     ['outlook', 'Outlook'],
                     ['typical', 'Typical game'],
                     ['players', 'Players'],
+                    ['recent', 'Last 5'],
                     ['parlays', 'Parlays'],
                     ['flow', data.phase === 'pre' ? 'Runs' : 'Game flow'],
                     ['method', 'Method'],
@@ -378,9 +380,14 @@ export function App() {
                   </button>
                 ))}
               </nav>
-              {sim.status === 'error' && <div class="error-panel" role="alert">The simulation failed: {sim.error}</div>}
-              {!sim.scenario && sim.status !== 'error' && <div class="loading-panel"><span class="spinner" aria-hidden="true" />Simulating {url.n.toLocaleString()} games…</div>}
-              {sim.scenario && sim.built && (
+              {url.tab === 'recent' && (
+                <div class="tabpanel" role="tabpanel">
+                  <Recent game={data} summary={sim.scenario} palette={palette} />
+                </div>
+              )}
+              {url.tab !== 'recent' && sim.status === 'error' && <div class="error-panel" role="alert">The simulation failed: {sim.error}</div>}
+              {url.tab !== 'recent' && !sim.scenario && sim.status !== 'error' && <div class="loading-panel"><span class="spinner" aria-hidden="true" />Simulating {url.n.toLocaleString()} games…</div>}
+              {url.tab !== 'recent' && sim.scenario && sim.built && (
                 <div class={sim.status === 'running' ? 'tabpanel stale' : 'tabpanel'} role="tabpanel">
                   {url.tab === 'outlook' && <Outlook game={data} sim={sim as Required<SimState>} palette={palette} start={start} />}
                   {url.tab === 'typical' && <TypicalGame game={data} summary={sim.scenario} built={sim.built} palette={palette} />}

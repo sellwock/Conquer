@@ -68,6 +68,16 @@ export interface PlayerSample {
   assistsTo?: Record<string, number>;
 }
 
+/** One game a player appeared in for the team, from that game's box score. */
+export interface GameLogLine {
+  eventId: string;
+  date: string;
+  opp?: string;
+  home?: boolean;
+  starter: boolean;
+  box: BoxLine;
+}
+
 export interface Injury {
   status: string; // "Out", "Day-To-Day", "Questionable", ...
   detail?: string;
@@ -90,6 +100,8 @@ export interface PlayerProfile {
   source: string;
   /** Box score in this game when it has started (actual result). */
   actual?: BoxLine & { played: boolean; starter: boolean };
+  /** The last games played for this team before this one, newest first (up to five). */
+  recent?: GameLogLine[];
 }
 
 export interface TeamSample {
