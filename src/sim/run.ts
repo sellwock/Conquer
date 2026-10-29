@@ -4,6 +4,9 @@ import { makeRng } from '../lib/rng';
 import { Hist } from '../lib/stats';
 import { simulateGame } from './engine';
 import { BF, NBF, type GameResult, type SimSpec } from './types';
+import { PlayerRecorder, type PlayerOutcomes } from './players';
+
+export type { PlayerOutcomes } from './players';
 
 type HistJSON = ReturnType<Hist['toJSON']>;
 
@@ -50,16 +53,6 @@ export interface SimSummary {
   elapsedMs: number;
 }
 
-/** Each player's line in every simulation, for player props scored jointly with the game. */
-export interface PlayerOutcomes {
-  /** Home players, then away, in spec order. Stat arrays are indexed [sim * ids.length + player]. */
-  ids: string[];
-  pts: Uint8Array;
-  reb: Uint8Array;
-  ast: Uint8Array;
-  tpm: Uint8Array;
-}
-
 export type SerializedResult = Omit<GameResult, 'box'> & { box: [number[], number[]] };
 
 export function serializeResult(r: GameResult): SerializedResult {
@@ -88,14 +81,7 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
   const simMargin = new Int16Array(n);
   const simTotal = new Int16Array(n);
   const simPts = new Int16Array(n * (np[0] + np[1]));
-  const P = np[0] + np[1];
-  const po: PlayerOutcomes = {
-    ids: [...teams[0].players, ...teams[1].players].map((p) => p.id),
-    pts: new Uint8Array(n * P),
-    reb: new Uint8Array(n * P),
-    ast: new Uint8Array(n * P),
-    tpm: new Uint8Array(n * P),
-  };
+  const recorder = new PlayerRecorder(spec, n);
 
   for (let s = 0; s < n; s++) {
     const r = simulateGame(spec, makeRng(seed, s));
@@ -136,14 +122,10 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
         h.ast.add(ast);
         h.tpm.add(box[o + BF.tpm]);
         h.pra.add(pts + reb + ast);
-        const j = s * P + (t === 0 ? i : np[0] + i);
-        simPts[j] = pts;
-        po.pts[j] = Math.min(255, pts);
-        po.reb[j] = Math.min(255, reb);
-        po.ast[j] = Math.min(255, ast);
-        po.tpm[j] = Math.min(255, box[o + BF.tpm]);
+        simPts[s * (np[0] + np[1]) + (t === 0 ? i : np[0] + i)] = pts;
       }
     }
+    recorder.add(s, r);
     if (onProgress && (s + 1) % 250 === 0) onProgress(s + 1);
   }
 
@@ -201,7 +183,7 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
     possessions: possSum / n,
     players,
     typical: { index: typicalIndex, result: serializeResult(typical) },
-    outcomes: { margin: simMargin, total: simTotal, players: po },
+    outcomes: { margin: simMargin, total: simTotal, players: recorder.finish() },
     elapsedMs: Date.now() - t0,
   };
 }

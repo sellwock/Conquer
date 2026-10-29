@@ -245,7 +245,7 @@ function BoardRowView(props: { r: Row; queued: boolean; scanning: boolean; open:
           {pre ? placeholder : 'No saved prediction'}
         </td>
       )}
-      <td>{!pre ? <ResultCell g={g} logged={logged} /> : <BestCell best={best} waiting={waiting} />}</td>
+      <td class="best">{!pre ? <ResultCell g={g} logged={logged} /> : <BestCell best={best} waiting={waiting} />}</td>
     </tr>
   );
 }

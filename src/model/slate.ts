@@ -1,8 +1,8 @@
 // One row of the slate board: the model's numbers next to the market's for a game with a line,
 // plus the best single the parlays tab would suggest for it. Also packs a game's simulated
-// outcomes small enough to cache in the browser.
+// outcomes, props included, small enough to cache in the browser.
 import { impliedFromAmerican } from '../lib/stats';
-import { defaultPickMode, suggestParlays, weightsFor, type BlendWeights, type GameMarket, type Parlay } from './parlays';
+import { defaultPickMode, suggestParlays, weightsFor, type BlendWeights, type GameMarket, type Parlay, type PropMarket } from './parlays';
 
 export interface BoardRow {
   /** Home margin and game total, averaged over the simulations. */
@@ -42,33 +42,58 @@ export function boardRow(m: GameMarket, weights: BlendWeights = weightsFor(m.lea
   };
 }
 
+export interface PackedProp extends Omit<PropMarket, 'hits'> {
+  /** The over's result per simulation, 2 bits each, base64. */
+  hits: string;
+}
+
 export interface PackedMarket extends Omit<GameMarket, 'margin' | 'total' | 'props'> {
   at: number;
   margin: string;
   total: string;
+  props?: PackedProp[];
 }
 
-/** Props stay out of the cache: they're per-sim player lines, far too big for local storage. */
+/** Props keep only each simulation's result (2 bits), so a game's ~80 lines fit in about 55 KB. */
 export function packMarket(m: GameMarket, at: number): PackedMarket {
-  const { props: _props, ...rest } = m;
-  return { ...rest, at, margin: toBase64(m.margin), total: toBase64(m.total) };
+  const { props, ...rest } = m;
+  const packed: PackedMarket = { ...rest, at, margin: toBase64(bytesOf(m.margin)), total: toBase64(bytesOf(m.total)) };
+  if (props?.length) packed.props = props.map((p) => ({ ...p, hits: toBase64(pack2(p.hits)) }));
+  return packed;
 }
 
 export function unpackMarket(p: PackedMarket): GameMarket {
-  const { at: _at, ...rest } = p;
-  return { ...rest, margin: fromBase64(p.margin), total: fromBase64(p.total) };
+  const { at: _at, props, ...rest } = p;
+  const margin = new Int16Array(fromBase64(p.margin).buffer);
+  const m: GameMarket = { ...rest, margin, total: new Int16Array(fromBase64(p.total).buffer) };
+  if (props?.length) m.props = props.map((x) => ({ ...x, hits: unpack2(fromBase64(x.hits), margin.length) }));
+  return m;
 }
 
-function toBase64(a: Int16Array): string {
-  const bytes = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+/** Values 0-3, four to a byte. */
+export function pack2(a: Uint8Array): Uint8Array {
+  const out = new Uint8Array(Math.ceil(a.length / 4));
+  for (let i = 0; i < a.length; i++) out[i >> 2] |= (a[i] & 3) << ((i & 3) * 2);
+  return out;
+}
+
+export function unpack2(b: Uint8Array, n: number): Uint8Array {
+  const out = new Uint8Array(n);
+  for (let i = 0; i < n; i++) out[i] = (b[i >> 2] >> ((i & 3) * 2)) & 3;
+  return out;
+}
+
+const bytesOf = (a: Int16Array) => new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+
+function toBase64(bytes: Uint8Array): string {
   let s = '';
   for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return btoa(s);
 }
 
-function fromBase64(s: string): Int16Array {
+function fromBase64(s: string): Uint8Array {
   const bin = atob(s);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new Int16Array(bytes.buffer);
+  return bytes;
 }

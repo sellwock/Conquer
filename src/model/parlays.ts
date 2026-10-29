@@ -23,8 +23,11 @@ export interface GameMarket {
   odds: Odds;
   margin: Int16Array;
   total: Int16Array;
-  /** Posted player props, each with the player's stat in every simulation (open game only). */
+  /** Posted player props, each scored in every simulation. */
   props?: PropMarket[];
+  /** When the prop lines were fetched, and from which book. */
+  propsAt?: number;
+  propsProvider?: string;
 }
 
 export interface PropMarket {
@@ -36,8 +39,8 @@ export interface PropMarket {
   /** American prices. */
   over: number;
   under: number;
-  /** The player's stat in each simulation, aligned with margin and total. */
-  values: Uint8Array;
+  /** The over's result in each simulation, aligned with margin and total: 0 loss, 1 win, 2 push. */
+  hits: Uint8Array;
   /** Simulated average. */
   mean: number;
 }
@@ -177,12 +180,13 @@ export function legsForGame(g: GameMarket, weights: BlendWeights = MODEL_WEIGHT[
     add('total', 'under', `Under ${T}`, up, pu, (_m, t) => sign(T - t));
   }
   for (const pm of g.props ?? []) {
-    if (pm.values.length !== n) continue;
+    if (pm.hits.length !== n) continue;
     const [po, pu] = noVig(pm.over, pm.under);
     const info = { athleteId: pm.athleteId, player: pm.player, stat: pm.stat, line: pm.line, mean: pm.mean };
     const what = `${pm.line} ${PROP_WORDS[pm.stat]}`;
-    add('prop', 'over', `${pm.player} over ${what}`, pm.over, po, (_m, _t, s) => sign(pm.values[s] - pm.line), info);
-    add('prop', 'under', `${pm.player} under ${what}`, pm.under, pu, (_m, _t, s) => sign(pm.line - pm.values[s]), info);
+    const h = pm.hits;
+    add('prop', 'over', `${pm.player} over ${what}`, pm.over, po, (_m, _t, s) => h[s], info);
+    add('prop', 'under', `${pm.player} under ${what}`, pm.under, pu, (_m, _t, s) => (h[s] === 2 ? 2 : 1 - h[s]), info);
   }
   return legs;
 }

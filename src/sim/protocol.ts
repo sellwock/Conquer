@@ -5,7 +5,7 @@ import type { SimSpec } from './types';
 export type WorkerRequest =
   | { id: number; kind: 'run'; spec: SimSpec; n: number; seed: string }
   | { id: number; kind: 'quick'; specs: SimSpec[]; n: number; seed: string }
-  | { id: number; kind: 'outcomes'; spec: SimSpec; n: number; seed: string };
+  | { id: number; kind: 'outcomes'; spec: SimSpec; n: number; seed: string; players?: boolean };
 
 export type WorkerResponse =
   | { id: number; kind: 'progress'; done: number }

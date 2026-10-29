@@ -9,6 +9,8 @@ import { packMarket, unpackMarket, type PackedMarket } from '../model/slate';
 import type { GameMarket, PropMarket } from '../model/parlays';
 import { mapLimit, readCache, writeCache } from '../data/espn/client';
 import { loadGame } from '../data/espn/load';
+import { loadProps } from '../data/espn/props';
+import { propMarkets, rosterNames } from '../model/props';
 import { CancelledError, runOutcomesInBackground } from '../sim/client';
 import type { ScanState } from './parlays';
 
@@ -17,8 +19,8 @@ const SAMPLE_GAMES = 10;
 const FRESH_MS = 30 * 60_000;
 const CONCURRENCY = 2;
 
-// v2: markets carry their league.
-const cacheKey = (league: LeagueId, id: string) => `slate2.${MODEL_VERSION}.${league}.${id}`;
+// v2: markets carry their league. v3: and their player props.
+const cacheKey = (league: LeagueId, id: string) => `slate3.${MODEL_VERSION}.${league}.${id}`;
 
 export function marketFrom(g: GameData, o: { margin: Int16Array; total: Int16Array }, note?: string, props?: PropMarket[]): GameMarket | undefined {
   if (g.phase !== 'pre' || !g.odds) return undefined;
@@ -89,15 +91,20 @@ export function useSlate(league: LeagueId, date: string, games: ScoreboardGame[]
       running.add(label);
       report();
       try {
+        // Prop lines load alongside the game; a game without them is still priced.
+        const lines = loadProps(league, t.id, ac.signal).catch(() => undefined);
         const gd = await loadGame(league, t.id, { sampleGames: SAMPLE_GAMES, signal: ac.signal });
         if (!gd.odds) setNoLine((n) => ({ ...n, [t.id]: true }));
         else if (gd.phase === 'pre') {
+          const board = await lines;
           const built = buildSpec(gd, { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
-          const job = runOutcomesInBackground(built.spec, SLATE_SIMS, seed);
+          const job = runOutcomesInBackground(built.spec, SLATE_SIMS, seed, { players: !!board?.lines.length });
           const onAbort = () => job.cancel();
           ac.signal.addEventListener('abort', onAbort);
           const o = await job.promise.finally(() => ac.signal.removeEventListener('abort', onAbort));
-          const m = marketFrom(gd, o);
+          const props = board && o.players ? propMarkets(board.lines, o.players, rosterNames(gd)) : undefined;
+          const m = marketFrom(gd, o, undefined, props?.length ? props : undefined);
+          if (m?.props) Object.assign(m, { propsAt: board!.fetchedAt, propsProvider: board!.provider });
           if (m && !ac.signal.aborted) {
             writeCache(cacheKey(league, m.gameId), packMarket(m, Date.now()));
             setMarkets((ms) => ({ ...ms, [m.gameId]: ms[m.gameId] ?? m }));

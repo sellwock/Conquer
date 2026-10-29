@@ -1724,3 +1724,7 @@ td .neg {
   white-space: normal;
   min-width: 9em;
 }
+table.board td.best {
+  white-space: normal;
+  min-width: 12em;
+}
