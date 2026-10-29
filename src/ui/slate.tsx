@@ -1,7 +1,7 @@
-// The day's games in one table: the model's line, total and win chance next to the market's, and
-// the best single the parlays tab suggests by default (the simulation's own pick where the
-// backtest blend finds nothing). Games that have started show what the forward log saved before
-// tip-off.
+// The day's games in one table: the model's line, total and win chance next to the market's, the
+// best single on the game's lines and the best player prop, ranked as the parlays tab does by
+// default (the simulation's own picks where the backtest blend finds nothing). Games that have
+// started show what the forward log saved before tip-off.
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { LeagueId, ScoreboardGame } from '../model/types';
 import { boardRow } from '../model/slate';
@@ -15,7 +15,7 @@ import { dateLabel, lineText, pct, perHundred, tipTime } from './format';
 import type { Slate } from './useSlate';
 import { blendText } from './parlays';
 
-type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge';
+type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge' | 'prop';
 
 interface Numbers {
   modelMargin: number;
@@ -31,6 +31,8 @@ interface Row {
   /** Upcoming game: from the slate scan. Started game: from the forward log. */
   n?: Numbers;
   best?: Parlay;
+  bestProp?: Parlay;
+  hasProps?: boolean;
   note?: string;
   logged?: { e: Entry; graded: Graded | null };
 }
@@ -61,6 +63,7 @@ const SORTS: Record<SortKey, (r: Row) => number> = {
   total: (r) => gap(r.n?.modelTotal, r.n?.marketTotal),
   win: (r) => gap(r.n?.pHome, r.n?.fairHome),
   edge: (r) => r.best?.ev ?? -Infinity,
+  prop: (r) => r.bestProp?.ev ?? -Infinity,
 };
 
 export function SlateBoard(props: {
@@ -93,7 +96,7 @@ export function SlateBoard(props: {
       if (g.phase === 'pre') {
         if (!m) return { g };
         const r = boardRow(m);
-        return { g, n: r, best: r.best, note: m.note };
+        return { g, n: r, best: r.best, bestProp: r.bestProp, hasProps: r.hasProps, note: m.note };
       }
       const e = log[g.id];
       return { g, n: e && fromEntry(e), logged: e ? { e, graded: e.status === 'final' ? gradeEntry(e) : null } : undefined };
@@ -103,6 +106,8 @@ export function SlateBoard(props: {
   }, [board.games, slate.markets, log, sort]);
 
   const pendingIds = new Set(slate.pending.map((g) => g.id));
+  // The prop column appears once any game on the board has posted props priced.
+  const showProps = rows.some((r) => r.hasProps);
   const simulated = rows.filter((r) => r.g.phase === 'pre' && r.n).length;
   const upcoming = rows.filter((r) => r.g.phase === 'pre').length;
 
@@ -127,8 +132,13 @@ export function SlateBoard(props: {
         <p class="muted small">
           Model numbers come from 2,000 simulations per game with everyone available (the open game uses your settings).{' '}
           {hasSay
-            ? `Best singles weight the simulation against the market by how it did in backtests (${blendText(MODEL_WEIGHT[props.league])}) and clear the same bar as the parlays tab. Suggestions, not advice.`
-            : `Sim's picks rank by the simulation alone and clear the same bar as the parlays tab. In backtests the market's odds were more accurate than the simulation's on ${LEAGUES[props.league].label} games, so treat them as the simulation's leans. Suggestions, not advice.`}
+            ? `Line picks weight the simulation against the market by how it did in backtests (${blendText(MODEL_WEIGHT[props.league])}) and clear the same bar as the parlays tab's singles.`
+            : `Line picks rank by the simulation alone and clear the same bar as the parlays tab's singles. In backtests the market's odds were more accurate than the simulation's on ${LEAGUES[props.league].label} games, so treat them as the simulation's leans.`}
+          {showProps &&
+            (hasSay
+              ? ' Props have no backtest, so the blend leaves them to the market and the prop column passes; switch the parlays tab to Simulation only to see prop leans.'
+              : " Prop picks are the simulation's best player prop for each game, also unbacktested.")}{' '}
+          Suggestions, not advice.
         </p>
         <div class="scan">
           {slate.scan.status === 'running' ? (
@@ -178,7 +188,8 @@ export function SlateBoard(props: {
                   </th>
                   <Th k="total" label="Total" num />
                   <Th k="win" label="Home win" num />
-                  <Th k="edge" label={hasSay ? 'Best single' : 'Sim’s pick'} />
+                  <Th k="edge" label="Line pick" />
+                  {showProps && <Th k="prop" label="Prop pick" />}
                 </tr>
               </thead>
               <tbody>
@@ -186,6 +197,7 @@ export function SlateBoard(props: {
                   <BoardRowView
                     key={r.g.id}
                     r={r}
+                    showProps={showProps}
                     queued={pendingIds.has(r.g.id)}
                     scanning={slate.scan.status === 'running'}
                     open={r.g.id === props.openGame}
@@ -204,8 +216,8 @@ export function SlateBoard(props: {
   );
 }
 
-function BoardRowView(props: { r: Row; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
-  const { g, n, best, logged } = props.r;
+function BoardRowView(props: { r: Row; showProps: boolean; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
+  const { g, n, best, bestProp, logged } = props.r;
   const pre = g.phase === 'pre';
   const waiting = pre && !n;
   const placeholder = waiting ? (props.queued ? (props.scanning ? 'Queued' : '–') : props.open && g.odds ? 'Simulating' : 'No line') : '–';
@@ -246,6 +258,9 @@ function BoardRowView(props: { r: Row; queued: boolean; scanning: boolean; open:
         </td>
       )}
       <td class="best">{!pre ? <ResultCell g={g} logged={logged} /> : <BestCell best={best} waiting={waiting} />}</td>
+      {props.showProps && (
+        <td class="best">{!pre || (n && !props.r.hasProps) ? <span class="muted">–</span> : <BestCell best={bestProp} waiting={waiting} />}</td>
+      )}
     </tr>
   );
 }

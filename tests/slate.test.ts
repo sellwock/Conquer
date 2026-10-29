@@ -56,6 +56,21 @@ describe('slate board', () => {
     expect(r.best!.ev).toBeLessThanOrEqual(top.ev + 1e-9);
   });
 
+  it('picks the best line and the best prop separately', () => {
+    const nba = market('nba');
+    const n = nba.margin.length;
+    // The simulation has this player clearing the line in 90% of games; the book says a coin flip.
+    const hits = Uint8Array.from({ length: n }, (_, i) => (i % 10 === 0 ? 0 : 1));
+    const withProps: GameMarket = { ...nba, props: [{ athleteId: 'p1', player: 'A. Player', stat: 'pts', line: 20.5, over: -110, under: -110, hits, mean: 24 }] };
+    const r = boardRow(withProps);
+    expect(r.hasProps).toBe(true);
+    expect(r.best!.legs[0].prop).toBeUndefined();
+    expect(r.best!.legs.map((l) => l.key)).toEqual(boardRow(nba).best!.legs.map((l) => l.key));
+    expect(r.bestProp!.legs[0].label).toBe('A. Player over 20.5 points');
+    expect(r.bestProp!.pHit).toBeCloseTo(0.9, 2);
+    expect(boardRow(nba)).toMatchObject({ hasProps: false, bestProp: undefined });
+  });
+
   it('round-trips outcomes through the cache format', () => {
     const p = JSON.parse(JSON.stringify(packMarket(m, 123)));
     const back = unpackMarket(p);
