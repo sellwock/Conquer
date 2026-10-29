@@ -43,6 +43,8 @@ export interface PropMarket {
   hits: Uint8Array;
   /** Simulated average. */
   mean: number;
+  /** Live games: what the player has so far. */
+  now?: number;
 }
 
 export type LegKind = 'ml' | 'spread' | 'total' | 'prop';
@@ -68,7 +70,7 @@ export interface Leg {
   /** Per simulation: 0 lose, 1 win, 2 push. */
   outcome: Uint8Array;
   /** Player props only. */
-  prop?: { athleteId: string; player: string; stat: PropStat; line: number; mean: number };
+  prop?: { athleteId: string; player: string; stat: PropStat; line: number; mean: number; now?: number };
 }
 
 export interface Parlay {
@@ -182,7 +184,7 @@ export function legsForGame(g: GameMarket, weights: BlendWeights = MODEL_WEIGHT[
   for (const pm of g.props ?? []) {
     if (pm.hits.length !== n) continue;
     const [po, pu] = noVig(pm.over, pm.under);
-    const info = { athleteId: pm.athleteId, player: pm.player, stat: pm.stat, line: pm.line, mean: pm.mean };
+    const info = { athleteId: pm.athleteId, player: pm.player, stat: pm.stat, line: pm.line, mean: pm.mean, now: pm.now };
     const what = `${pm.line} ${PROP_WORDS[pm.stat]}`;
     const h = pm.hits;
     add('prop', 'over', `${pm.player} over ${what}`, pm.over, po, (_m, _t, s) => h[s], info);

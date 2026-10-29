@@ -73,7 +73,8 @@ export function Method(props: { game: GameData }) {
         A switch on the tab moves between the two rankings. A suggestion needs positive expected value, a minimum hit chance and a capped price. Player props use the
         book's posted lines from ESPN and each player's line in every simulation, so a prop and the game result are scored together. Props have no backtest, so only the
         simulation-only ranking can pick them, and players projected under 15 minutes are left out. Simulating the slate fetches every game's props too; lines for
-        games other than the open one are as of that game's simulation, cached for 30 minutes. These are suggestions from a model, not advice.
+        games other than the open one are as of that game's simulation, cached for 30 minutes. During a game simulated from now, the book's in-game prop
+        lines are read every two minutes and priced as each player's stats so far plus the simulated rest of the game. These are suggestions from a model, not advice.
       </p>
       <h3>Limits</h3>
       <ul>
