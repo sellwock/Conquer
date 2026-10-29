@@ -3,7 +3,7 @@ import { buildSpec, type BuildOptions, type BuiltSpec } from '../model/build';
 import type { GameData, GameSnapshot, ScoreboardGame } from '../model/types';
 import { loadGame, loadScoreboard, refreshGame, snapshotAtPlay, snapshotFromGame } from '../data/espn/load';
 import { loadProps, type PropBoard } from '../data/espn/props';
-import { propMarkets } from '../model/props';
+import { propMarkets, rosterNames } from '../model/props';
 import { DataError, getProxy, setProxy } from '../data/espn/client';
 import { demoGame } from '../data/demo';
 import { CancelledError, runInBackground, runQuickInBackground, type Job } from '../sim/client';
@@ -279,7 +279,8 @@ export function App() {
     if (!simData || !sc || !sim.market) return;
     const lines = props?.gameId === simData.id ? (props.board?.lines ?? []) : [];
     const po = sc.outcomes.players;
-    const m = marketFrom(simData, sc.outcomes, sim.market.note, po && lines.length ? propMarkets(lines, po, sc.players) : undefined);
+    const m = marketFrom(simData, sc.outcomes, sim.market.note, po && lines.length ? propMarkets(lines, po, rosterNames(simData)) : undefined);
+    if (m && props?.board && m.props) Object.assign(m, { propsAt: props.board.fetchedAt, propsProvider: props.board.provider });
     if (m) slate.put(m);
   }, [sim.scenario, sim.market, props]);
   useEffect(() => setImpact({ status: 'idle', rows: [] }), [simData, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);

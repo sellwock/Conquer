@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { americanOf, parsePropBets } from '../src/data/espn/props';
 import { propMarkets, MIN_MINUTES } from '../src/model/props';
 import { evaluate, legsForGame, suggestParlays, SIM_ONLY, type GameMarket } from '../src/model/parlays';
-import { packMarket } from '../src/model/slate';
+import { packMarket, unpackMarket } from '../src/model/slate';
+import { runOutcomes } from '../src/sim/quick';
 import { buildSpec } from '../src/model/build';
 import { runSims } from '../src/sim/run';
 import { leagueAverageGame } from './helpers';
@@ -69,7 +70,8 @@ describe('player props in parlays', () => {
     { athleteId: bench.id, stat: 'pts' as const, line: 0.5, over: -110, under: -110 },
     { athleteId: 'nobody', stat: 'pts' as const, line: 10.5, over: -110, under: -110 },
   ];
-  const props = propMarkets(lines, po, s.players);
+  const names = new Map(s.players.map((p) => [p.id, p.short]));
+  const props = propMarkets(lines, po, names);
   const market: GameMarket = {
     gameId: 'g1',
     league: 'nba',
@@ -120,7 +122,42 @@ describe('player props in parlays', () => {
       }
   });
 
-  it('keeps props out of the browser cache', () => {
-    expect('props' in packMarket(market, 1)).toBe(false);
+  it('scores integer lines as pushes, and the under as the over\'s complement', () => {
+    const [even] = propMarkets([{ athleteId: star.id, stat: 'pts', line: Math.round(star.pts), over: -110, under: -110 }], po, names);
+    const j = po.ids.indexOf(star.id);
+    let pushes = 0;
+    for (let k = 0; k < 2000; k++) {
+      const v = po.pts[k * po.ids.length + j];
+      expect(even.hits[k]).toBe(v > even.line ? 1 : v < even.line ? 0 : 2);
+      if (even.hits[k] === 2) pushes++;
+    }
+    expect(pushes).toBeGreaterThan(0);
+    const legs = legsForGame({ ...market, props: [even] }, SIM_ONLY).filter((l) => l.prop);
+    const [over, under] = [legs.find((l) => l.side === 'over')!, legs.find((l) => l.side === 'under')!];
+    for (let k = 0; k < 2000; k++) expect(under.outcome[k]).toBe(over.outcome[k] === 2 ? 2 : 1 - over.outcome[k]);
+    expect(over.pPush).toBeCloseTo(pushes / 2000);
+  });
+
+  it('caches props compactly and restores them exactly', () => {
+    const back = unpackMarket(JSON.parse(JSON.stringify(packMarket({ ...market, propsAt: 5, propsProvider: 'Book' }, 1))));
+    expect(back.props).toHaveLength(props.length);
+    back.props!.forEach((p, i) => {
+      const { hits, ...rest } = props[i];
+      expect(p).toMatchObject(rest);
+      expect(Array.from(p.hits)).toEqual(Array.from(hits));
+    });
+    expect(back).toMatchObject({ propsAt: 5, propsProvider: 'Book' });
+    // 2 bits per simulation: about 1.3 KB of base64 per line at 2,000 sims.
+    const size = JSON.stringify(packMarket(market, 1)).length - JSON.stringify(packMarket({ ...market, props: undefined }, 1)).length;
+    expect(size / props.length).toBeLessThan(1500);
+  });
+
+  it('the slate pass records the same player lines as the full simulation', () => {
+    const q = runOutcomes(built.spec, 2000, 'props', { players: true });
+    expect(q.players!.ids).toEqual(po.ids);
+    expect(Array.from(q.players!.pts)).toEqual(Array.from(po.pts));
+    expect(Array.from(q.players!.ast)).toEqual(Array.from(po.ast));
+    expect(Array.from(q.players!.min)).toEqual(Array.from(po.min));
+    expect(runOutcomes(built.spec, 50, 'props').players).toBeUndefined();
   });
 });

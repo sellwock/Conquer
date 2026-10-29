@@ -259,7 +259,9 @@ export function Parlays(props: {
         )}
       </section>
 
-      {g.phase === 'pre' && !g.demo && <PropPicks game={g} market={markets[g.id]} state={props.props} mode={mode} onSim={() => setMode('sim')} />}
+      {(scope === 'slate' ? pool.some((m) => m.props?.length) || (g.phase === 'pre' && !g.demo) : g.phase === 'pre' && !g.demo) && (
+        <PropPicks game={g} scope={scope} pool={pool} state={props.props} mode={mode} onSim={() => setMode('sim')} onOpen={props.onOpen} />
+      )}
 
       {showPicks &&
         pool.length > 0 &&
@@ -304,26 +306,50 @@ export function Parlays(props: {
   );
 }
 
-/** The open game's best player props by the current ranking, one bet each. */
-function PropPicks(props: { game: GameData; market?: GameMarket; state?: PropState; mode: PickMode; onSim: () => void }) {
-  const { market: m, state } = props;
-  const singles = useMemo(() => {
-    if (!m?.props?.length) return [];
-    return legsForGame(m, weightsFor(m.league, props.mode))
-      .filter((l) => l.prop)
-      .map((l) => evaluate([l]))
-      .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
-      .sort((a, b) => b.ev - a.ev)
-      .slice(0, 10);
-  }, [m, props.mode]);
-  const posted = state?.status === 'ok' ? state.board!.lines.length : 0;
-  const source = state?.board?.provider ? `${state.board.provider} lines via ESPN` : 'Lines via ESPN';
+/** The best player props by the current ranking, one bet each: the open game's, or the whole slate's. */
+function PropPicks(props: {
+  game: GameData;
+  scope: 'game' | 'slate';
+  pool: GameMarket[];
+  state?: PropState;
+  mode: PickMode;
+  onSim: () => void;
+  onOpen: (id: string) => void;
+}) {
+  const { game: g, scope, state } = props;
+  const slate = scope === 'slate';
+  const priced = props.pool.filter((m) => m.props?.length);
+  const singles = useMemo(
+    () =>
+      props.pool
+        .filter((m) => m.props?.length)
+        .flatMap((m) => legsForGame(m, weightsFor(m.league, props.mode)).filter((l) => l.prop))
+        .map((l) => evaluate([l]))
+        .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
+        .sort((a, b) => b.ev - a.ev)
+        .slice(0, slate ? 15 : 10),
+    [props.pool, props.mode, slate],
+  );
+  const open = props.pool.find((m) => m.gameId === g.id);
+  const posted = state?.gameId === g.id && state.status === 'ok' ? state.board!.lines.length : 0;
+  const provider = priced.find((m) => m.propsProvider)?.propsProvider ?? state?.board?.provider;
+  const oldest = Math.min(...priced.map((m) => m.propsAt ?? Infinity));
+  const time = (t: number) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const sourceText = slate
+    ? priced.length
+      ? `${provider ?? 'Book'} lines via ESPN · props for ${priced.length} of ${props.pool.length} game${props.pool.length === 1 ? '' : 's'}${Number.isFinite(oldest) ? ` · oldest ${time(oldest)}` : ''}`
+      : ''
+    : posted
+      ? `${provider ?? 'Book'} lines via ESPN, ${posted} posted${state?.board ? ` · ${time(state.board.fetchedAt)}` : ''}`
+      : '';
 
   let body;
-  if (!state || state.status === 'loading') body = <p class="muted">Loading player prop lines…</p>;
-  else if (state.status === 'error') body = <p class="muted">Couldn't load player prop lines from ESPN.</p>;
-  else if (!posted) body = <p class="muted">No player props are posted for this game yet.</p>;
-  else if (!m) body = <p class="muted">Waiting for this game's simulation to finish.</p>;
+  if (!slate && (!state || state.status === 'loading')) body = <p class="muted">Loading player prop lines…</p>;
+  else if (!slate && state!.status === 'error') body = <p class="muted">Couldn't load player prop lines from ESPN.</p>;
+  else if (!slate && !posted) body = <p class="muted">No player props are posted for this game yet.</p>;
+  else if (!slate && !open) body = <p class="muted">Waiting for this game's simulation to finish.</p>;
+  else if (slate && !priced.length)
+    body = <p class="muted">No props priced yet. Simulating the slate fetches each game's prop lines along with its simulations.</p>;
   else if (props.mode === 'blend')
     body = (
       <>
@@ -365,7 +391,17 @@ function PropPicks(props: { game: GameData; market?: GameMarket; state?: PropSta
               const l = p.legs[0];
               return (
                 <tr key={l.key}>
-                  <th scope="row">{l.label}</th>
+                  <th scope="row">
+                    {l.label}
+                    {slate && (
+                      <>
+                        <br />
+                        <button type="button" class="link p-game" onClick={() => props.onOpen(l.gameId)}>
+                          {l.game}
+                        </button>
+                      </>
+                    )}
+                  </th>
                   <td class="num">{fmtAmerican(l.price)}</td>
                   <td class="num">{one(l.prop!.mean)}</td>
                   <td class="num">{pct(p.pHit, 0)}</td>
@@ -383,16 +419,13 @@ function PropPicks(props: { game: GameData; market?: GameMarket; state?: PropSta
     <section class="card">
       <header class="card-head">
         <h2>Player props</h2>
-        {posted > 0 && (
-          <p class="muted small">
-            {source}, {posted} posted{state?.board ? ` · ${new Date(state.board.fetchedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''}
-          </p>
-        )}
+        {sourceText && <p class="muted small">{sourceText}</p>}
       </header>
-      {props.mode === 'sim' && posted > 0 && m && (
+      {props.mode === 'sim' && (slate ? priced.length > 0 : posted > 0 && !!open) && (
         <p class="note caution">
           Props are priced by the simulation alone and have never been backtested. Player minutes drive every prop, and the simulation's minutes are a projection, so treat these
           as leans. Players projected under 15 minutes are left out. Props also go into the parlays below when they clear the bar.
+          {slate && ' Lines for games other than the open one are as of when that game was simulated.'}
         </p>
       )}
       {body}
