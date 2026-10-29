@@ -13,6 +13,9 @@ export const ZONE_LABEL: Record<Zone, string> = {
 export const isThree = (z: Zone | number) => z === 'c3' || z === 'ab3' || z === 3 || z === 4;
 export type PosGroup = 'G' | 'F' | 'C';
 
+/** Player prop stats: single stats and the combos books post. */
+export type PropStat = 'pts' | 'reb' | 'ast' | 'tpm' | 'pra' | 'pr' | 'pa' | 'ar';
+
 /** Box-score totals over some sample (not averages). */
 export interface BoxLine {
   min: number;

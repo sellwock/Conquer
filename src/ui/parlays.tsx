@@ -5,6 +5,8 @@ import {
   MAX_PRICE,
   MODEL_WEIGHT,
   defaultPickMode,
+  evaluate,
+  legsForGame,
   modelHasSay,
   suggestParlays,
   weightsFor,
@@ -17,7 +19,8 @@ import {
 import { LEAGUES } from '../model/leagues';
 import type { GameData, LeagueId } from '../model/types';
 import { fmtAmerican } from '../lib/stats';
-import { pct, perHundred, tipTime } from './format';
+import { one, pct, perHundred, tipTime } from './format';
+import type { PropState } from './app';
 
 export interface ScanState {
   status: 'idle' | 'running' | 'done';
@@ -29,12 +32,12 @@ export interface ScanState {
 
 const SIZE_TITLE: Record<1 | 2 | 3, string> = { 1: 'Singles', 2: '2-leg parlays', 3: '3-leg parlays' };
 
-const KIND_WORDS: Record<LegKind, string> = { ml: 'moneylines', spread: 'spreads', total: 'totals' };
+const KIND_WORDS: Record<LegKind, string> = { ml: 'moneylines', spread: 'spreads', total: 'totals', prop: 'player props' };
 
 /** "moneylines use the market's no-vig odds alone; spreads and totals blend 25% simulation with 75% market" */
 export function blendText(w: BlendWeights): string {
   const byWeight = new Map<number, string[]>();
-  for (const k of ['ml', 'spread', 'total'] as LegKind[]) byWeight.set(w[k], [...(byWeight.get(w[k]) ?? []), KIND_WORDS[k]]);
+  for (const k of ['ml', 'spread', 'total', 'prop'] as LegKind[]) byWeight.set(w[k], [...(byWeight.get(w[k]) ?? []), KIND_WORDS[k]]);
   const list = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}` : xs[0]);
   return [...byWeight]
     .map(([x, kinds]) => `${list(kinds)} ${x === 0 ? "use the market's no-vig odds alone" : `blend ${Math.round(x * 100)}% simulation with ${Math.round((1 - x) * 100)}% market`}`)
@@ -149,6 +152,7 @@ export function Parlays(props: {
   onScan: () => void;
   onCancelScan: () => void;
   onOpen: (id: string) => void;
+  props?: PropState;
 }) {
   const { game: g, markets } = props;
   const hasSay = modelHasSay(g.league);
@@ -202,7 +206,9 @@ export function Parlays(props: {
         ) : mode === 'sim' ? (
           <>
             <p class="note caution">{simOnlyText(g.league)}</p>
-            <p class="muted small">One to three legs from moneylines, spreads and totals. A pick needs positive expected value by the simulation's own chances. {barText()}</p>
+            <p class="muted small">
+              One to three legs from moneylines, spreads, totals and this game's player props. A pick needs positive expected value by the simulation's own chances. {barText()}
+            </p>
           </>
         ) : (
           <p class="muted small">
@@ -253,6 +259,8 @@ export function Parlays(props: {
         )}
       </section>
 
+      {g.phase === 'pre' && !g.demo && <PropPicks game={g} market={markets[g.id]} state={props.props} mode={mode} onSim={() => setMode('sim')} />}
+
       {showPicks &&
         pool.length > 0 &&
         ([1, 2, 3] as const).map((size) => (
@@ -293,5 +301,101 @@ export function Parlays(props: {
         </section>
       )}
     </div>
+  );
+}
+
+/** The open game's best player props by the current ranking, one bet each. */
+function PropPicks(props: { game: GameData; market?: GameMarket; state?: PropState; mode: PickMode; onSim: () => void }) {
+  const { market: m, state } = props;
+  const singles = useMemo(() => {
+    if (!m?.props?.length) return [];
+    return legsForGame(m, weightsFor(m.league, props.mode))
+      .filter((l) => l.prop)
+      .map((l) => evaluate([l]))
+      .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
+      .sort((a, b) => b.ev - a.ev)
+      .slice(0, 10);
+  }, [m, props.mode]);
+  const posted = state?.status === 'ok' ? state.board!.lines.length : 0;
+  const source = state?.board?.provider ? `${state.board.provider} lines via ESPN` : 'Lines via ESPN';
+
+  let body;
+  if (!state || state.status === 'loading') body = <p class="muted">Loading player prop lines…</p>;
+  else if (state.status === 'error') body = <p class="muted">Couldn't load player prop lines from ESPN.</p>;
+  else if (!posted) body = <p class="muted">No player props are posted for this game yet.</p>;
+  else if (!m) body = <p class="muted">Waiting for this game's simulation to finish.</p>;
+  else if (props.mode === 'blend')
+    body = (
+      <>
+        <p>Player props have no backtest yet, so the backtest blend prices them at the market's own odds and none can beat the vig.</p>
+        <p>
+          <button type="button" class="btn" onClick={props.onSim}>
+            Show the simulation's prop picks
+          </button>
+        </p>
+      </>
+    );
+  else if (!singles.length) body = <p class="muted">No prop clears the bar. Passing is a fine choice.</p>;
+  else
+    body = (
+      <div class="table-wrap">
+        <table class="data props-table">
+          <thead>
+            <tr>
+              <th scope="col">Bet</th>
+              <th scope="col" class="num">
+                Price
+              </th>
+              <th scope="col" class="num" title="The player's average in the simulations">
+                Sim avg
+              </th>
+              <th scope="col" class="num">
+                Sim hit
+              </th>
+              <th scope="col" class="num" title="The book's no-vig chance">
+                Market
+              </th>
+              <th scope="col" class="num">
+                Sim return
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {singles.map((p) => {
+              const l = p.legs[0];
+              return (
+                <tr key={l.key}>
+                  <th scope="row">{l.label}</th>
+                  <td class="num">{fmtAmerican(l.price)}</td>
+                  <td class="num">{one(l.prop!.mean)}</td>
+                  <td class="num">{pct(p.pHit, 0)}</td>
+                  <td class="num">{pct(l.pFair, 0)}</td>
+                  <td class="num pos">{perHundred(p.ev)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+
+  return (
+    <section class="card">
+      <header class="card-head">
+        <h2>Player props</h2>
+        {posted > 0 && (
+          <p class="muted small">
+            {source}, {posted} posted{state?.board ? ` · ${new Date(state.board.fetchedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''}
+          </p>
+        )}
+      </header>
+      {props.mode === 'sim' && posted > 0 && m && (
+        <p class="note caution">
+          Props are priced by the simulation alone and have never been backtested. Player minutes drive every prop, and the simulation's minutes are a projection, so treat these
+          as leans. Players projected under 15 minutes are left out. Props also go into the parlays below when they clear the bar.
+        </p>
+      )}
+      {body}
+    </section>
   );
 }

@@ -46,8 +46,18 @@ export interface SimSummary {
   players: PlayerSummary[];
   typical: { index: number; result: SerializedResult };
   /** Every simulation's final margin (home minus away) and total, for joint probabilities. */
-  outcomes: { margin: Int16Array; total: Int16Array };
+  outcomes: { margin: Int16Array; total: Int16Array; players?: PlayerOutcomes };
   elapsedMs: number;
+}
+
+/** Each player's line in every simulation, for player props scored jointly with the game. */
+export interface PlayerOutcomes {
+  /** Home players, then away, in spec order. Stat arrays are indexed [sim * ids.length + player]. */
+  ids: string[];
+  pts: Uint8Array;
+  reb: Uint8Array;
+  ast: Uint8Array;
+  tpm: Uint8Array;
 }
 
 export type SerializedResult = Omit<GameResult, 'box'> & { box: [number[], number[]] };
@@ -78,6 +88,14 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
   const simMargin = new Int16Array(n);
   const simTotal = new Int16Array(n);
   const simPts = new Int16Array(n * (np[0] + np[1]));
+  const P = np[0] + np[1];
+  const po: PlayerOutcomes = {
+    ids: [...teams[0].players, ...teams[1].players].map((p) => p.id),
+    pts: new Uint8Array(n * P),
+    reb: new Uint8Array(n * P),
+    ast: new Uint8Array(n * P),
+    tpm: new Uint8Array(n * P),
+  };
 
   for (let s = 0; s < n; s++) {
     const r = simulateGame(spec, makeRng(seed, s));
@@ -118,7 +136,12 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
         h.ast.add(ast);
         h.tpm.add(box[o + BF.tpm]);
         h.pra.add(pts + reb + ast);
-        simPts[s * (np[0] + np[1]) + (t === 0 ? i : np[0] + i)] = pts;
+        const j = s * P + (t === 0 ? i : np[0] + i);
+        simPts[j] = pts;
+        po.pts[j] = Math.min(255, pts);
+        po.reb[j] = Math.min(255, reb);
+        po.ast[j] = Math.min(255, ast);
+        po.tpm[j] = Math.min(255, box[o + BF.tpm]);
       }
     }
     if (onProgress && (s + 1) % 250 === 0) onProgress(s + 1);
@@ -178,7 +201,7 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
     possessions: possSum / n,
     players,
     typical: { index: typicalIndex, result: serializeResult(typical) },
-    outcomes: { margin: simMargin, total: simTotal },
+    outcomes: { margin: simMargin, total: simTotal, players: po },
     elapsedMs: Date.now() - t0,
   };
 }

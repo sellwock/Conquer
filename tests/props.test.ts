@@ -1,0 +1,126 @@
+import { describe, expect, it } from 'vitest';
+import { americanOf, parsePropBets } from '../src/data/espn/props';
+import { propMarkets, MIN_MINUTES } from '../src/model/props';
+import { evaluate, legsForGame, suggestParlays, SIM_ONLY, type GameMarket } from '../src/model/parlays';
+import { packMarket } from '../src/model/slate';
+import { buildSpec } from '../src/model/build';
+import { runSims } from '../src/sim/run';
+import { leagueAverageGame } from './helpers';
+
+const ref = (id: string) => ({ $ref: `http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2027/athletes/${id}?lang=en&region=us` });
+const item = (athlete: string, typeId: string, name: string, line: number, american: string) => ({
+  athlete: ref(athlete),
+  type: { id: typeId, name },
+  odds: { american: { value: american }, total: { value: String(line) } },
+  current: { target: { value: line, displayValue: String(line) } },
+});
+
+describe('prop feed', () => {
+  it('pairs over (listed first) with under, keeping only props the simulation can price', () => {
+    const lines = parsePropBets([
+      item('5104157', '4', 'Total 3-Point Field Goals', 1.5, '-188'),
+      item('5104157', '4', 'Total 3-Point Field Goals', 1.5, '+142'),
+      item('5104157', '90', 'Total Points, Rebounds, and Assists', 39.5, '-116'),
+      item('5104157', '90', 'Total Points, Rebounds, and Assists', 39.5, 'EVEN'),
+      // A milestone ladder, a team prop and a lone item are left out.
+      item('5104157', '218', 'Points Milestones', 25, '-150'),
+      { type: { id: '98', name: 'Team Total Points' }, team: { $ref: 'x/teams/24' }, odds: { american: { value: '-110' } }, current: { target: { value: 110.5 } } },
+      item('6442', '1', 'Total Points', 20.5, '-113'),
+      // Mismatched lines can't be a pair.
+      item('4066457', '3', 'Total Rebounds', 3.5, '-144'),
+      item('4066457', '3', 'Total Rebounds', 4.5, '+110'),
+    ]);
+    expect(lines).toEqual([
+      { athleteId: '5104157', stat: 'tpm', line: 1.5, over: -188, under: 142 },
+      { athleteId: '5104157', stat: 'pra', line: 39.5, over: -116, under: 100 },
+    ]);
+    expect(americanOf('+131')).toBe(131);
+    expect(americanOf('-')).toBeUndefined();
+  });
+});
+
+describe('player props in parlays', () => {
+  const g = leagueAverageGame();
+  const built = buildSpec(g, { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
+  const s = runSims(built.spec, 2000, 'props');
+  const po = s.outcomes.players!;
+
+  it("keeps each player's line in every simulation", () => {
+    expect(po.ids.length).toBe(s.players.length);
+    expect(po.pts.length).toBe(2000 * po.ids.length);
+    for (const [j, id] of po.ids.entries()) {
+      const p = s.players.find((x) => x.id === id)!;
+      let pts = 0, reb = 0;
+      for (let k = 0; k < 2000; k++) {
+        pts += po.pts[k * po.ids.length + j];
+        reb += po.reb[k * po.ids.length + j];
+      }
+      expect(pts / 2000).toBeCloseTo(p.pts, 6);
+      expect(reb / 2000).toBeCloseTo(p.reb, 6);
+    }
+  });
+
+  const star = [...s.players].sort((a, b) => b.pts - a.pts)[0];
+  const bench = [...s.players].sort((a, b) => a.min - b.min)[0];
+  const lines = [
+    // A line far below the star's average: the simulation loves the over.
+    { athleteId: star.id, stat: 'pts' as const, line: Math.round(star.pts) - 8.5, over: -110, under: -110 },
+    { athleteId: star.id, stat: 'pra' as const, line: Math.round(star.pts + star.reb + star.ast) + 0.5, over: -110, under: -110 },
+    { athleteId: bench.id, stat: 'pts' as const, line: 0.5, over: -110, under: -110 },
+    { athleteId: 'nobody', stat: 'pts' as const, line: 10.5, over: -110, under: -110 },
+  ];
+  const props = propMarkets(lines, po, s.players);
+  const market: GameMarket = {
+    gameId: 'g1',
+    league: 'nba',
+    label: 'AWY @ HOM',
+    home: 'HOM',
+    away: 'AWY',
+    odds: { provider: 'Book', spread: -0.5, total: Math.round(s.homeScore + s.awayScore) + 0.5, homeML: -110, awayML: -110, homeSpreadOdds: -110, awaySpreadOdds: -110, overOdds: -110, underOdds: -110 },
+    margin: s.outcomes.margin,
+    total: s.outcomes.total,
+    props,
+  };
+
+  it('prices only rotation players, summing combo stats per simulation', () => {
+    expect(bench.min).toBeLessThan(MIN_MINUTES);
+    expect(props.map((p) => p.stat)).toEqual(['pts', 'pra']);
+    expect(props[0].mean).toBeCloseTo(star.pts, 6);
+    expect(props[1].mean).toBeCloseTo(star.pts + star.reb + star.ast, 6);
+  });
+
+  it('turns each prop into an over and an under leg, left to the market by the blend', () => {
+    const legs = legsForGame(market).filter((l) => l.prop);
+    expect(legs).toHaveLength(4);
+    expect(new Set(legs.map((l) => l.key)).size).toBe(4);
+    const over = legs.find((l) => l.prop!.stat === 'pts' && l.side === 'over')!;
+    expect(over.label).toBe(`${star.short} over ${props[0].line} points`);
+    expect(over.pModel).toBeGreaterThan(0.85);
+    expect(over.pFair).toBeCloseTo(0.5);
+    expect(over.pBlend).toBeCloseTo(0.5); // no backtest for props: the market alone
+    expect(over.ev).toBeLessThan(0);
+    const sim = legsForGame(market, SIM_ONLY).find((l) => l.key === over.key)!;
+    expect(sim.pBlend).toBe(sim.pModel);
+    expect(sim.ev).toBeGreaterThan(0.5);
+  });
+
+  it('scores a prop together with the game total, and never pairs two props on one player', () => {
+    const legs = legsForGame(market, SIM_ONLY);
+    const ptsOver = legs.find((l) => l.prop?.stat === 'pts' && l.side === 'over')!;
+    const praOver = legs.find((l) => l.prop?.stat === 'pra' && l.side === 'over')!;
+    const gameOver = legs.find((l) => l.kind === 'total' && l.side === 'over')!;
+    // The star scoring more and the game going over move together.
+    expect(evaluate([praOver, gameOver]).correlation!).toBeGreaterThan(0);
+    const sug = suggestParlays([market], 3, SIM_ONLY);
+    expect(sug.bySize[1].some((p) => p.legs[0].key === ptsOver.key)).toBe(true);
+    for (const size of [2, 3] as const)
+      for (const p of sug.bySize[size]) {
+        const ids = p.legs.filter((l) => l.prop).map((l) => l.prop!.athleteId);
+        expect(new Set(ids).size).toBe(ids.length);
+      }
+  });
+
+  it('keeps props out of the browser cache', () => {
+    expect('props' in packMarket(market, 1)).toBe(false);
+  });
+});

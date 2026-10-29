@@ -6,6 +6,9 @@ import { LEAGUES } from '../../model/leagues';
 
 const SITE = 'https://site.api.espn.com';
 const WEB = 'https://site.web.api.espn.com';
+const CORE = 'https://sports.core.api.espn.com';
+const HOSTS = { site: SITE, web: WEB, core: CORE };
+export type Host = keyof typeof HOSTS;
 
 // --- Pluggable storage and fetch --------------------------------------------------------------
 
@@ -67,10 +70,10 @@ export function setProxy(prefix: string) {
 }
 export const getProxy = () => proxyPrefix;
 
-function resolve(host: 'site' | 'web', path: string): string {
+function resolve(host: Host, path: string): string {
   // Vite's dev server proxies ESPN; only a browser page served by it can use that path.
   if (import.meta.env?.DEV && typeof window !== 'undefined' && !proxyPrefix) return `/espn-${host}${path}`;
-  const url = (host === 'site' ? SITE : WEB) + path;
+  const url = HOSTS[host] + path;
   if (!proxyPrefix) return url;
   return proxyPrefix.includes('{url}') ? proxyPrefix.replace('{url}', encodeURIComponent(url)) : proxyPrefix + url;
 }
@@ -104,7 +107,7 @@ const sleep = (ms: number, signal?: AbortSignal) =>
  * GET a JSON document. `site` paths fall back to ESPN's mirror host (site.web.api.espn.com
  * serves the same /apis/site/v2 paths) when the primary host can't be reached.
  */
-export async function getJson<T = any>(host: 'site' | 'web', path: string, opts: GetOptions = {}): Promise<T> {
+export async function getJson<T = any>(host: Host, path: string, opts: GetOptions = {}): Promise<T> {
   try {
     return await getJsonFrom<T>(host, path, opts);
   } catch (e) {
@@ -113,7 +116,7 @@ export async function getJson<T = any>(host: 'site' | 'web', path: string, opts:
   }
 }
 
-async function getJsonFrom<T>(host: 'site' | 'web', path: string, opts: GetOptions): Promise<T> {
+async function getJsonFrom<T>(host: Host, path: string, opts: GetOptions): Promise<T> {
   const url = resolve(host, path);
   if (opts.cacheKey) {
     const hit = readCache<T>(opts.cacheKey);
@@ -155,6 +158,7 @@ async function getJsonFrom<T>(host: 'site' | 'web', path: string, opts: GetOptio
 
 export const sitePath = (league: LeagueId, rest: string) => `/apis/site/v2/sports/basketball/${LEAGUES[league].espnPath}${rest}`;
 export const webPath = (league: LeagueId, rest: string) => `/apis/common/v3/sports/basketball/${LEAGUES[league].espnPath}${rest}`;
+export const corePath = (league: LeagueId, rest: string) => `/v2/sports/basketball/leagues/${LEAGUES[league].espnPath}${rest}`;
 
 // --- Small persistent cache for derived, immutable data (completed-game extracts) ---------------
 const CACHE_PREFIX = 'conquer.c1.';
