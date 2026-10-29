@@ -1,8 +1,9 @@
 // One row of the slate board: the model's numbers next to the market's for a game with a line,
-// plus the best single the parlays tab would suggest for it. Also packs a game's simulated
-// outcomes, props included, small enough to cache in the browser.
+// plus the best single bet on the game's lines and the best player prop, each clearing the
+// parlays tab's bar for singles. Also packs a game's simulated outcomes, props included, small
+// enough to cache in the browser.
 import { impliedFromAmerican } from '../lib/stats';
-import { defaultPickMode, suggestParlays, weightsFor, type BlendWeights, type GameMarket, type Parlay, type PropMarket } from './parlays';
+import { defaultPickMode, evaluate, legsForGame, weightsFor, HIT_FLOOR, MAX_PRICE, type BlendWeights, type GameMarket, type Leg, type Parlay, type PropMarket } from './parlays';
 
 export interface BoardRow {
   /** Home margin and game total, averaged over the simulations. */
@@ -13,8 +14,21 @@ export interface BoardRow {
   fairHome?: number;
   marketMargin?: number;
   marketTotal?: number;
-  /** The top suggested single for this game, exactly as the parlays tab ranks it by default. */
+  /** The top single on the game's own lines (moneyline, spread, total), as the parlays tab ranks it by default. */
   best?: Parlay;
+  /** The top single among the game's player props, when it has any. */
+  bestProp?: Parlay;
+  hasProps: boolean;
+}
+
+/** The best single among these legs that clears the parlays tab's bar, if any. */
+function topSingle(legs: Leg[]): Parlay | undefined {
+  let top: Parlay | undefined;
+  for (const l of legs) {
+    const p = evaluate([l]);
+    if (p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1] && (!top || p.ev > top.ev)) top = p;
+  }
+  return top;
 }
 
 export function boardRow(m: GameMarket, weights: BlendWeights = weightsFor(m.league, defaultPickMode(m.league))): BoardRow {
@@ -38,8 +52,13 @@ export function boardRow(m: GameMarket, weights: BlendWeights = weightsFor(m.lea
     fairHome,
     marketMargin: o.spread != null ? -o.spread : undefined,
     marketTotal: o.total,
-    best: suggestParlays([m], 1, weights).bySize[1][0],
+    ...picks(m, weights),
   };
+}
+
+function picks(m: GameMarket, weights: BlendWeights): Pick<BoardRow, 'best' | 'bestProp' | 'hasProps'> {
+  const legs = legsForGame(m, weights);
+  return { best: topSingle(legs.filter((l) => !l.prop)), bestProp: topSingle(legs.filter((l) => !!l.prop)), hasProps: !!m.props?.length };
 }
 
 export interface PackedProp extends Omit<PropMarket, 'hits'> {
