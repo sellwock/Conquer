@@ -6,23 +6,29 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: ESPN prop bets, all pages
+      - name: Which item in each pair is the over
         run: |
           set +e
           B=https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba
-          EV=401909892
-          for PG in 1 2; do curl -s "$B/events/$EV/competitions/$EV/odds/100/propBets?lang=en&region=us&limit=1000&page=$PG" > p$PG.json; done
-          jq -s '[.[].items[]]' p1.json p2.json > all.json
-          echo "total items: $(jq length all.json)"
-          echo "== all types"; jq -r 'group_by(.type.id) | map("\(.[0].type.id) \(.[0].type.name) x\(length)") | .[]' all.json
-          A=$(jq -r '.[0].athlete["$ref"]' all.json | sed -E 's#.*/athletes/([0-9]+).*#\1#')
-          echo "== every item for athlete $A, in feed order: type | target | american | open american | lastUpdated"
-          jq -r --arg a "/athletes/$A?" '.[] | select(.athlete["$ref"] | contains($a)) | "\(.type.name) | \(.current.target.value) | \(.odds.american.value) | \(.odds.american.open) | \(.odds.total.value // "-")"' all.json
-          echo "== first 30 Total-type pairs (type | athlete | target | american) in feed order"
-          jq -r '.[] | select(.type.name | test("^Total (Points|Rebounds|Assists|3-Point)")) | "\(.type.name) | \(.athlete["$ref"] | capture("athletes/(?<id>[0-9]+)").id) | \(.current.target.value) | \(.odds.american.value)"' all.json | head -60
-          echo "== any item with extra keys beyond the usual"
-          jq -c '[.[] | keys] | unique' all.json
-          echo "== full raw of items 0..3 of type id 1"
-          jq -c '[.[] | select(.type.id=="1")][0:4]' all.json | head -c 4000; echo
-          echo "== athlete ref sample"
-          curl -s "$(jq -r '.[0].athlete["$ref"]' all.json | sed 's#^http:#https:#')" | jq -c '{id, displayName, shortName, team: .team["$ref"]}'
+          for EV in 401909892 401909891 401909890; do
+            echo "===== event $EV"
+            for PG in 1 2; do curl -s "$B/events/$EV/competitions/$EV/odds/100/propBets?lang=en&region=us&limit=1000&page=$PG" > p$PG.json; done
+            jq -s '[.[].items[]?]' p1.json p2.json > all.json
+            echo "items: $(jq length all.json)"
+            jq -r '
+              def aid: ((.athlete["$ref"] // "") | (capture("athletes/(?<id>[0-9]+)").id? // ""));
+              def stat: {"1":"pts","2":"ast","3":"reb","4":"tpm","90":"pra","87":"pa","88":"pr","89":"ar","218":"pts","219":"ast","220":"reb","221":"tpm","225":"pra","226":"pa","227":"pr","327":"ar"}[.type.id];
+              def am: (.odds.american.value | sub("^\\+"; "") | tonumber);
+              (map(select(.type.id | IN("218","219","220","221","225","226","227","327")))
+                | map({key: "\(aid)|\(stat)|\(.current.target.value)", value: am}) | from_entries) as $m
+              | [ .[] | select(.type.id | IN("1","2","3","4","87","88","89","90")) ]
+              | group_by("\(aid)|\(.type.id)")
+              | map(select(length == 2) | {k: "\(.[0] | aid)|\(.[0] | stat)", line: .[0].current.target.value, a: (.[0] | am), b: (.[1] | am)})
+              | map(. + {ms: $m["\(.k)|\(.line + 0.5)"]})
+              | (.[] | "\(.k) \(.line): first \(.a) second \(.b) | \(.line + 0.5)+ milestone \(.ms // "none")"),
+                ( [ .[] | select(.ms != null)
+                    | def p(x): if x < 0 then (-x) / (100 - x) else 100 / (100 + x) end;
+                      (p(.a) - p(.ms) | fabs) < (p(.b) - p(.ms) | fabs) ] as $r
+                  | "SUMMARY first-is-over: \($r | map(select(.)) | length) of \($r | length) pairs with a milestone")
+            ' all.json | tail -45
+          done
