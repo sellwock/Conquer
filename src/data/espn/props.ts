@@ -22,6 +22,8 @@ export interface PropBoard {
   provider?: string;
   lines: PropLine[];
   fetchedAt: number;
+  /** Lines from the book's in-game feed. */
+  live?: boolean;
 }
 
 /** ESPN prop type ids for the over/under player props this app can simulate. */
@@ -59,11 +61,21 @@ export function parsePropBets(items: J[]): PropLine[] {
   return out;
 }
 
-/** The posted prop lines for one game; empty when the book hasn't posted any. */
-export async function loadProps(league: LeagueId, eventId: string, signal?: AbortSignal): Promise<PropBoard> {
+/**
+ * The book to read props from. During a game ESPN lists two: the frozen pre-game book
+ * ("DraftKings") and its in-game feed ("DraftKings - Live Odds"), whose lines move with the game.
+ */
+export function pickPropBook(items: J[], live: boolean): J | undefined {
+  const books = items.filter((it) => it?.propBets?.$ref);
+  const isLive = (it: J) => /live/i.test(String(it?.provider?.name ?? ''));
+  return (live ? books.find(isLive) : books.find((it) => !isLive(it))) ?? (live ? undefined : books[0]);
+}
+
+/** The posted prop lines for one game; empty when the book hasn't posted any. With `live`, the in-game lines. */
+export async function loadProps(league: LeagueId, eventId: string, signal?: AbortSignal, live = false): Promise<PropBoard> {
   const odds = await getJson('core', corePath(league, `/events/${eventId}/competitions/${eventId}/odds?lang=en&region=us`), { signal, noStore: true });
-  const withProps = (odds?.items ?? []).find((it: J) => it?.propBets?.$ref);
-  const board: PropBoard = { provider: withProps?.provider?.name, lines: [], fetchedAt: Date.now() };
+  const withProps = pickPropBook(odds?.items ?? [], live);
+  const board: PropBoard = { provider: withProps?.provider?.name, lines: [], fetchedAt: Date.now(), live };
   if (!withProps) return board;
   const ref = new URL(String(withProps.propBets.$ref));
   const items: J[] = [];

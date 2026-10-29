@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { americanOf, parsePropBets } from '../src/data/espn/props';
-import { propMarkets, MIN_MINUTES } from '../src/model/props';
+import { americanOf, parsePropBets, pickPropBook } from '../src/data/espn/props';
+import { propMarkets, MIN_MINUTES, type SoFar } from '../src/model/props';
 import { evaluate, legsForGame, suggestParlays, SIM_ONLY, type GameMarket } from '../src/model/parlays';
 import { packMarket, unpackMarket } from '../src/model/slate';
 import { runOutcomes } from '../src/sim/quick';
@@ -37,6 +37,17 @@ describe('prop feed', () => {
     ]);
     expect(americanOf('+131')).toBe(131);
     expect(americanOf('-')).toBeUndefined();
+  });
+});
+
+describe('prop books', () => {
+  const pre = { provider: { id: '100', name: 'DraftKings' }, propBets: { $ref: 'x/100/propBets' } };
+  const live = { provider: { id: '200', name: 'DraftKings - Live Odds' }, propBets: { $ref: 'x/200/propBets' } };
+  it('reads the pre-game book before tip-off and the in-game feed once the game is live', () => {
+    expect(pickPropBook([pre, live], false)).toBe(pre);
+    expect(pickPropBook([pre, live], true)).toBe(live);
+    expect(pickPropBook([pre], true)).toBeUndefined();
+    expect(pickPropBook([{ provider: { name: 'Other' } }, pre], false)).toBe(pre);
   });
 });
 
@@ -150,6 +161,38 @@ describe('player props in parlays', () => {
     // 2 bits per simulation: about 1.3 KB of base64 per line at 2,000 sims.
     const size = JSON.stringify(packMarket(market, 1)).length - JSON.stringify(packMarket({ ...market, props: undefined }, 1)).length;
     expect(size / props.length).toBeLessThan(1500);
+  });
+
+  it('prices live props from what each player has so far plus the simulated rest', () => {
+    const j = po.ids.indexOf(star.id);
+    const soFar = new Map<string, SoFar>([
+      [star.id, { pts: 10, reb: 2, ast: 1, tpm: 1, played: true }],
+      [bench.id, { pts: 0, reb: 0, ast: 0, tpm: 0, played: false }],
+    ]);
+    const live = propMarkets(
+      [
+        { athleteId: star.id, stat: 'pts', line: 30.5, over: -110, under: -110 },
+        // Already cleared: the over can't lose.
+        { athleteId: star.id, stat: 'ast', line: 0.5, over: -500, under: 350 },
+        { athleteId: bench.id, stat: 'pts', line: 0.5, over: -110, under: -110 },
+      ],
+      po,
+      names,
+      soFar,
+    );
+    const [pts, ast] = live;
+    expect(pts.now).toBe(10);
+    let sum = 0;
+    for (let k = 0; k < 2000; k++) {
+      const v = 10 + po.pts[k * po.ids.length + j];
+      sum += v;
+      expect(pts.hits[k]).toBe(v > 30.5 ? 1 : 0);
+    }
+    expect(pts.mean).toBeCloseTo(sum / 2000, 6);
+    expect(ast.hits.every((h) => h === 1)).toBe(true);
+    // A player who hasn't played yet is still priced live if the simulation gives them any minutes,
+    // because a live prop is settled on whatever they end with.
+    expect(live.some((p) => p.athleteId === bench.id)).toBe(po.min[po.ids.indexOf(bench.id)] >= 1);
   });
 
   it('the slate pass records the same player lines as the full simulation', () => {

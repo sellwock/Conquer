@@ -3,7 +3,8 @@ import { buildSpec, type BuildOptions, type BuiltSpec } from '../model/build';
 import type { GameData, GameSnapshot, ScoreboardGame } from '../model/types';
 import { loadGame, loadScoreboard, refreshGame, snapshotAtPlay, snapshotFromGame } from '../data/espn/load';
 import { loadProps, type PropBoard } from '../data/espn/props';
-import { propMarkets, rosterNames } from '../model/props';
+import { propMarkets, rosterNames, soFarOf } from '../model/props';
+import type { GameMarket } from '../model/parlays';
 import { DataError, getProxy, setProxy } from '../data/espn/client';
 import { demoGame } from '../data/demo';
 import { CancelledError, runInBackground, runQuickInBackground, type Job } from '../sim/client';
@@ -36,6 +37,8 @@ export interface SimState {
   error?: string;
   /** Set when this simulation prices the open game for the parlays tab (a pre-game run from tip). */
   market?: { note?: string };
+  /** A live game simulated from its current state: the game as it stood, for live props. */
+  liveFrom?: GameData;
 }
 
 /** The open game's posted player props. */
@@ -52,6 +55,8 @@ export interface Palette {
 }
 
 const SAMPLE_GAMES = 10;
+/** How often a live game's in-game prop lines are re-read while it's simulated from now. */
+const LIVE_PROPS_MS = 120_000;
 /** Start polling an upcoming game this long before tip. */
 const LIVE_LEAD_MS = 15 * 60_000;
 export const IMPACT_SIMS = 2000;
@@ -245,7 +250,8 @@ export function App() {
             !url.hca ? 'no home court' : '',
           ].filter(Boolean);
           const market = start ? undefined : { note: tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined };
-          setSim({ status: 'done', progress: 1, scenario, baseline, built, options, market });
+          const liveFrom = url.from === 'now' && simData.phase === 'in' ? simData : undefined;
+          setSim({ status: 'done', progress: 1, scenario, baseline, built, options, market, liveFrom });
         })
         .catch((e) => {
           if (e instanceof CancelledError) return;
@@ -257,21 +263,51 @@ export function App() {
 
   useEffect(() => () => cancelJobs(), []);
 
-  // Posted player props for the open game, fetched once per game before tip-off.
+  // Posted player props for the open game: once before tip-off, and while a game is live and
+  // simulated from now, the book's in-game lines every two minutes.
   const [props, setProps] = useState<PropState>();
-  const propGame = simData && simData.phase === 'pre' && !simData.demo ? simData : undefined;
+  const liveProps = !!simData && simData.phase === 'in' && url.from === 'now';
+  const propGame = simData && !simData.demo && (simData.phase === 'pre' || liveProps) ? simData : undefined;
   useEffect(() => {
     if (!propGame) return setProps(undefined);
     const ac = new AbortController();
     const gameId = propGame.id;
-    setProps({ gameId, status: 'loading' });
-    loadProps(propGame.league, gameId, ac.signal)
-      .then((board) => setProps({ gameId, status: 'ok', board }))
-      .catch((e) => {
-        if ((e as Error)?.name !== 'AbortError') setProps({ gameId, status: 'error' });
-      });
-    return () => ac.abort();
-  }, [propGame?.id, propGame?.league]);
+    const live = propGame.phase === 'in';
+    const fetchLines = (first: boolean) => {
+      if (first) setProps({ gameId, status: 'loading' });
+      loadProps(propGame.league, gameId, ac.signal, live)
+        .then((board) => setProps({ gameId, status: 'ok', board }))
+        .catch((e) => {
+          if ((e as Error)?.name !== 'AbortError' && first) setProps({ gameId, status: 'error' });
+        });
+    };
+    fetchLines(true);
+    const timer = live ? setInterval(() => fetchLines(false), LIVE_PROPS_MS) : undefined;
+    return () => {
+      ac.abort();
+      clearInterval(timer);
+    };
+  }, [propGame?.id, propGame?.league, propGame?.phase === 'in']);
+
+  // A live game's props, priced from what each player has so far plus the simulated rest.
+  const liveMarket = useMemo((): GameMarket | undefined => {
+    const sc = sim.scenario, g = sim.liveFrom;
+    const board = props?.board;
+    if (!g || !sc?.outcomes.players || !board?.live || props?.gameId !== g.id || !board.lines.length) return undefined;
+    return {
+      gameId: g.id,
+      league: g.league,
+      label: `${g.away.abbr} @ ${g.home.abbr}`,
+      home: g.home.abbr,
+      away: g.away.abbr,
+      odds: { provider: board.provider ?? '' },
+      margin: sc.outcomes.margin,
+      total: sc.outcomes.total,
+      props: propMarkets(board.lines, sc.outcomes.players, rosterNames(g), soFarOf(g)),
+      propsAt: board.fetchedAt,
+      propsProvider: board.provider,
+    };
+  }, [sim.scenario, sim.liveFrom, props]);
 
   // The open game's market for the parlays tab: the simulation's outcomes plus any props.
   useEffect(() => {
@@ -440,6 +476,9 @@ export function App() {
                       onCancelScan={slate.stop}
                       onOpen={(id) => update({ game: id, outs: [], ins: [], from: 'tip', mode: 'projected', tab: 'parlays' })}
                       props={props}
+                      liveMarket={liveMarket}
+                      simFromNow={url.from === 'now'}
+                      onFromNow={() => update({ from: 'now' })}
                     />
                   )}
                   {url.tab === 'method' && <Method game={data} />}
