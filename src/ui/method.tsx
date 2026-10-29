@@ -70,8 +70,9 @@ export function Method(props: { game: GameData }) {
         {modelHasSay(g.league)
           ? '.'
           : ", so no weighted suggestion can beat the vig. The tab therefore opens on the simulation's own picks, ranked by its chances alone and labeled as such; their expected returns are likely overstated."}{' '}
-        A switch on the tab moves between the two rankings. A suggestion needs positive expected value, a minimum hit chance and a capped price. These are suggestions from a
-        model, not advice.
+        A switch on the tab moves between the two rankings. A suggestion needs positive expected value, a minimum hit chance and a capped price. Player props use the
+        book's posted lines from ESPN and each player's line in every simulation, so a prop and the game result are scored together. Props have no backtest, so only the
+        simulation-only ranking can pick them, and players projected under 15 minutes are left out. These are suggestions from a model, not advice.
       </p>
       <h3>Limits</h3>
       <ul>

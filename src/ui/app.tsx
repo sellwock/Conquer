@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { buildSpec, type BuildOptions, type BuiltSpec } from '../model/build';
 import type { GameData, GameSnapshot, ScoreboardGame } from '../model/types';
 import { loadGame, loadScoreboard, refreshGame, snapshotAtPlay, snapshotFromGame } from '../data/espn/load';
+import { loadProps, type PropBoard } from '../data/espn/props';
+import { propMarkets } from '../model/props';
 import { DataError, getProxy, setProxy } from '../data/espn/client';
 import { demoGame } from '../data/demo';
 import { CancelledError, runInBackground, runQuickInBackground, type Job } from '../sim/client';
@@ -32,6 +34,15 @@ export interface SimState {
   built?: BuiltSpec;
   options?: BuildOptions;
   error?: string;
+  /** Set when this simulation prices the open game for the parlays tab (a pre-game run from tip). */
+  market?: { note?: string };
+}
+
+/** The open game's posted player props. */
+export interface PropState {
+  gameId: string;
+  status: 'loading' | 'ok' | 'error';
+  board?: PropBoard;
 }
 
 export interface Palette {
@@ -227,17 +238,14 @@ export function App() {
       jobs.current = [main, ...(bl ? [bl] : [])];
       Promise.all([main.promise, bl?.promise])
         .then(([scenario, baseline]) => {
-          setSim({ status: 'done', progress: 1, scenario, baseline, built, options });
-          if (!start) {
-            const tweaks = [
-              url.outs.length ? `${url.outs.length} ruled out by you` : '',
-              url.ins.length ? `${url.ins.length} injured player${url.ins.length > 1 ? 's' : ''} cleared` : '',
-              url.whistle !== 1 ? 'custom whistle' : '',
-              !url.hca ? 'no home court' : '',
-            ].filter(Boolean);
-            const m = marketFrom(simData, scenario.outcomes, tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined);
-            if (m) slate.put(m);
-          }
+          const tweaks = [
+            url.outs.length ? `${url.outs.length} ruled out by you` : '',
+            url.ins.length ? `${url.ins.length} injured player${url.ins.length > 1 ? 's' : ''} cleared` : '',
+            url.whistle !== 1 ? 'custom whistle' : '',
+            !url.hca ? 'no home court' : '',
+          ].filter(Boolean);
+          const market = start ? undefined : { note: tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined };
+          setSim({ status: 'done', progress: 1, scenario, baseline, built, options, market });
         })
         .catch((e) => {
           if (e instanceof CancelledError) return;
@@ -248,6 +256,32 @@ export function App() {
   }, [simData, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);
 
   useEffect(() => () => cancelJobs(), []);
+
+  // Posted player props for the open game, fetched once per game before tip-off.
+  const [props, setProps] = useState<PropState>();
+  const propGame = simData && simData.phase === 'pre' && !simData.demo ? simData : undefined;
+  useEffect(() => {
+    if (!propGame) return setProps(undefined);
+    const ac = new AbortController();
+    const gameId = propGame.id;
+    setProps({ gameId, status: 'loading' });
+    loadProps(propGame.league, gameId, ac.signal)
+      .then((board) => setProps({ gameId, status: 'ok', board }))
+      .catch((e) => {
+        if ((e as Error)?.name !== 'AbortError') setProps({ gameId, status: 'error' });
+      });
+    return () => ac.abort();
+  }, [propGame?.id, propGame?.league]);
+
+  // The open game's market for the parlays tab: the simulation's outcomes plus any props.
+  useEffect(() => {
+    const sc = sim.scenario;
+    if (!simData || !sc || !sim.market) return;
+    const lines = props?.gameId === simData.id ? (props.board?.lines ?? []) : [];
+    const po = sc.outcomes.players;
+    const m = marketFrom(simData, sc.outcomes, sim.market.note, po && lines.length ? propMarkets(lines, po, sc.players) : undefined);
+    if (m) slate.put(m);
+  }, [sim.scenario, sim.market, props]);
   useEffect(() => setImpact({ status: 'idle', rows: [] }), [simData, url.outs.join(), url.ins.join(), url.n, url.seed, url.whistle, url.hca, url.mode, start]);
 
   const runImpact = useCallback(() => {
@@ -404,6 +438,7 @@ export function App() {
                       onScan={slate.start}
                       onCancelScan={slate.stop}
                       onOpen={(id) => update({ game: id, outs: [], ins: [], from: 'tip', mode: 'projected', tab: 'parlays' })}
+                      props={props}
                     />
                   )}
                   {url.tab === 'method' && <Method game={data} />}

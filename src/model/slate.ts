@@ -42,14 +42,16 @@ export function boardRow(m: GameMarket, weights: BlendWeights = weightsFor(m.lea
   };
 }
 
-export interface PackedMarket extends Omit<GameMarket, 'margin' | 'total'> {
+export interface PackedMarket extends Omit<GameMarket, 'margin' | 'total' | 'props'> {
   at: number;
   margin: string;
   total: string;
 }
 
+/** Props stay out of the cache: they're per-sim player lines, far too big for local storage. */
 export function packMarket(m: GameMarket, at: number): PackedMarket {
-  return { ...m, at, margin: toBase64(m.margin), total: toBase64(m.total) };
+  const { props: _props, ...rest } = m;
+  return { ...rest, at, margin: toBase64(m.margin), total: toBase64(m.total) };
 }
 
 export function unpackMarket(p: PackedMarket): GameMarket {

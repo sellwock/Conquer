@@ -6,7 +6,7 @@ import { buildSpec } from '../model/build';
 import type { GameData, LeagueId, ScoreboardGame } from '../model/types';
 import { MODEL_VERSION } from '../model/version';
 import { packMarket, unpackMarket, type PackedMarket } from '../model/slate';
-import type { GameMarket } from '../model/parlays';
+import type { GameMarket, PropMarket } from '../model/parlays';
 import { mapLimit, readCache, writeCache } from '../data/espn/client';
 import { loadGame } from '../data/espn/load';
 import { CancelledError, runOutcomesInBackground } from '../sim/client';
@@ -20,9 +20,9 @@ const CONCURRENCY = 2;
 // v2: markets carry their league.
 const cacheKey = (league: LeagueId, id: string) => `slate2.${MODEL_VERSION}.${league}.${id}`;
 
-export function marketFrom(g: GameData, o: { margin: Int16Array; total: Int16Array }, note?: string): GameMarket | undefined {
+export function marketFrom(g: GameData, o: { margin: Int16Array; total: Int16Array }, note?: string, props?: PropMarket[]): GameMarket | undefined {
   if (g.phase !== 'pre' || !g.odds) return undefined;
-  return { gameId: g.id, league: g.league, label: `${g.away.abbr} @ ${g.home.abbr}`, home: g.home.abbr, away: g.away.abbr, tip: g.date, note, odds: g.odds, margin: o.margin, total: o.total };
+  return { gameId: g.id, league: g.league, label: `${g.away.abbr} @ ${g.home.abbr}`, home: g.home.abbr, away: g.away.abbr, tip: g.date, note, odds: g.odds, margin: o.margin, total: o.total, props };
 }
 
 export interface Slate {

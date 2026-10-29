@@ -1718,3 +1718,9 @@ td .neg {
   color: var(--ink);
   font-weight: 600;
 }
+
+/* Player props */
+.props-table tbody th {
+  white-space: normal;
+  min-width: 9em;
+}

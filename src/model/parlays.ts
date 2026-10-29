@@ -8,7 +8,7 @@
 // Where that leaves the market alone on every bet (NBA), picks can be ranked by the simulation
 // alone instead, labeled as such.
 import { impliedFromAmerican } from '../lib/stats';
-import type { LeagueId, Odds } from './types';
+import type { LeagueId, Odds, PropStat } from './types';
 
 export interface GameMarket {
   gameId: string;
@@ -23,9 +23,26 @@ export interface GameMarket {
   odds: Odds;
   margin: Int16Array;
   total: Int16Array;
+  /** Posted player props, each with the player's stat in every simulation (open game only). */
+  props?: PropMarket[];
 }
 
-export type LegKind = 'ml' | 'spread' | 'total';
+export interface PropMarket {
+  athleteId: string;
+  /** e.g. "A. Reaves" */
+  player: string;
+  stat: PropStat;
+  line: number;
+  /** American prices. */
+  over: number;
+  under: number;
+  /** The player's stat in each simulation, aligned with margin and total. */
+  values: Uint8Array;
+  /** Simulated average. */
+  mean: number;
+}
+
+export type LegKind = 'ml' | 'spread' | 'total' | 'prop';
 
 export interface Leg {
   key: string;
@@ -47,6 +64,8 @@ export interface Leg {
   ev: number;
   /** Per simulation: 0 lose, 1 win, 2 push. */
   outcome: Uint8Array;
+  /** Player props only. */
+  prop?: { athleteId: string; player: string; stat: PropStat; line: number; mean: number };
 }
 
 export interface Parlay {
@@ -79,15 +98,16 @@ export type BlendWeights = Record<LegKind, number>;
  * MODEL_VERSION changes.
  */
 export const MODEL_WEIGHT: Record<LeagueId, BlendWeights> = {
-  nba: { ml: 0, spread: 0, total: 0 },
-  ncaam: { ml: 0, spread: 0.25, total: 0.25 },
+  // Player props have no backtest yet, so the blend leaves them to the market.
+  nba: { ml: 0, spread: 0, total: 0, prop: 0 },
+  ncaam: { ml: 0, spread: 0.25, total: 0.25, prop: 0 },
 };
 
 /** False when the market alone ranks every bet in this league, so no leg can beat the vig. */
 export const modelHasSay = (league: LeagueId) => Object.values(MODEL_WEIGHT[league]).some((w) => w > 0);
 
 /** The simulation's chances alone, ignoring the market: its own picks, unproven against the market. */
-export const SIM_ONLY: BlendWeights = { ml: 1, spread: 1, total: 1 };
+export const SIM_ONLY: BlendWeights = { ml: 1, spread: 1, total: 1, prop: 1 };
 
 /** "blend" ranks by the backtested weights; "sim" by the simulation alone. */
 export type PickMode = 'blend' | 'sim';
@@ -117,11 +137,11 @@ export function legsForGame(g: GameMarket, weights: BlendWeights = MODEL_WEIGHT[
   const o = g.odds;
   const n = g.margin.length;
   const legs: Leg[] = [];
-  const add = (kind: LegKind, side: Leg['side'], label: string, price: number, pFairRaw: number, test: (m: number, t: number) => number) => {
+  const add = (kind: LegKind, side: Leg['side'], label: string, price: number, pFairRaw: number, test: (m: number, t: number, s: number) => number, prop?: Leg['prop']) => {
     const outcome = new Uint8Array(n);
     let win = 0, push = 0;
     for (let s = 0; s < n; s++) {
-      const r = test(g.margin[s], g.total[s]);
+      const r = test(g.margin[s], g.total[s], s);
       outcome[s] = r;
       if (r === 1) win++;
       else if (r === 2) push++;
@@ -132,7 +152,8 @@ export function legsForGame(g: GameMarket, weights: BlendWeights = MODEL_WEIGHT[
     const pBlend = weights[kind] * pModel + (1 - weights[kind]) * pFairRaw;
     const decimal = toDecimal(price);
     const ev = pPush + (1 - pPush) * pBlend * decimal - 1;
-    legs.push({ key: `${g.gameId}:${kind}:${side}`, gameId: g.gameId, game: g.label, kind, side, label, price, decimal, pModel, pPush, pFair: pFairRaw, pBlend, ev, outcome });
+    const key = prop ? `${g.gameId}:prop:${prop.athleteId}:${prop.stat}:${side}` : `${g.gameId}:${kind}:${side}`;
+    legs.push({ key, gameId: g.gameId, game: g.label, kind, side, label, price, decimal, pModel, pPush, pFair: pFairRaw, pBlend, ev, outcome, prop });
   };
   const sign = (v: number) => (v > 0 ? 1 : v < 0 ? 0 : 2);
 
@@ -155,12 +176,35 @@ export function legsForGame(g: GameMarket, weights: BlendWeights = MODEL_WEIGHT[
     add('total', 'over', `Over ${T}`, op, po, (_m, t) => sign(t - T));
     add('total', 'under', `Under ${T}`, up, pu, (_m, t) => sign(T - t));
   }
+  for (const pm of g.props ?? []) {
+    if (pm.values.length !== n) continue;
+    const [po, pu] = noVig(pm.over, pm.under);
+    const info = { athleteId: pm.athleteId, player: pm.player, stat: pm.stat, line: pm.line, mean: pm.mean };
+    const what = `${pm.line} ${PROP_WORDS[pm.stat]}`;
+    add('prop', 'over', `${pm.player} over ${what}`, pm.over, po, (_m, _t, s) => sign(pm.values[s] - pm.line), info);
+    add('prop', 'under', `${pm.player} under ${what}`, pm.under, pu, (_m, _t, s) => sign(pm.line - pm.values[s]), info);
+  }
   return legs;
 }
 
-/** Legs that can't share a parlay: both sides of a market, or a moneyline and spread of one game. */
+export const PROP_WORDS: Record<PropStat, string> = {
+  pts: 'points',
+  reb: 'rebounds',
+  ast: 'assists',
+  tpm: 'threes',
+  pra: 'pts + reb + ast',
+  pr: 'pts + reb',
+  pa: 'pts + ast',
+  ar: 'reb + ast',
+};
+
+/**
+ * Legs that can't share a parlay: both sides of a market, a moneyline and spread of one game, or
+ * two props on one player (they overlap too much to add anything).
+ */
 function compatible(a: Leg, b: Leg): boolean {
   if (a.gameId !== b.gameId) return true;
+  if (a.prop || b.prop) return !(a.prop && b.prop && a.prop.athleteId === b.prop.athleteId);
   const teamA = a.kind !== 'total', teamB = b.kind !== 'total';
   return teamA !== teamB;
 }
@@ -238,10 +282,10 @@ export interface Suggestions {
 /** Best positive-value parlays of 1, 2 and 3 legs, each clearing a minimum hit chance. */
 export function suggestParlays(games: GameMarket[], perSize = 3, weights?: BlendWeights): Suggestions {
   const legs = games.flatMap((g) => legsForGame(g, weights));
-  const pool = legs
-    .filter((l) => l.pBlend >= 0.3 && l.ev > -0.06)
-    .sort((a, b) => b.ev - a.ev)
-    .slice(0, 30);
+  // Game legs and props compete for separate places, so a game with dozens of props can't crowd
+  // out the lines, and the pool stays small enough to score every three-leg combination.
+  const best = (xs: Leg[], k: number) => xs.filter((l) => l.pBlend >= 0.3 && l.ev > -0.06).sort((a, b) => b.ev - a.ev).slice(0, k);
+  const pool = [...best(legs.filter((l) => !l.prop), 30), ...best(legs.filter((l) => !!l.prop), 12)].sort((a, b) => b.ev - a.ev);
   const candidates: Record<1 | 2 | 3, Parlay[]> = { 1: [], 2: [], 3: [] };
   for (let i = 0; i < pool.length; i++) {
     candidates[1].push(evaluate([pool[i]]));
