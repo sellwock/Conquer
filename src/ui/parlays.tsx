@@ -492,26 +492,8 @@ function LiveProps(props: {
   const markets = useMemo(() => ({ ...slate.markets, ...(m ? { [m.gameId]: m } : {}) }), [slate.markets, m]);
   const pool = useMemo(() => (all ? Object.values(markets) : m ? [m] : []), [all, markets, m]);
   const weights = weightsFor(g.league, props.mode);
-  const singles = useMemo(
-    () =>
-      pool
-        .flatMap((x) => legsForGame(x, weights).filter((l) => l.prop))
-        .map((l) => evaluate([l]))
-        .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
-        .sort((a, b) => b.ev - a.ev)
-        .slice(0, all ? 15 : 10),
-    [pool, weights],
-  );
-  const lineSingles = useMemo(
-    () =>
-      pool
-        .flatMap((x) => legsForGame(x, weights).filter((l) => !l.prop))
-        .map((l) => evaluate([l]))
-        .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
-        .sort((a, b) => b.ev - a.ev)
-        .slice(0, all ? 6 : 3),
-    [pool, weights],
-  );
+  const singles = useMemo(() => liveSingles(pool, weights, 'props', all ? 15 : 10), [pool, weights, all]);
+  const lineSingles = useMemo(() => liveSingles(pool, weights, 'lines', all ? 6 : 3), [pool, weights, all]);
   const sug = useMemo(() => suggestParlays(pool, 3, weights), [pool, weights]);
   const posted = state?.status === 'ok' ? state.board!.lines.length : 0;
   const hasLines = state?.status === 'ok' && !!state.board!.odds;
@@ -677,5 +659,88 @@ export function LiveStatus(props: { slate: LiveSlate; priced: number }) {
       )}
       {slate.failed > 0 && <span class="muted small">{slate.failed} couldn't be loaded.</span>}
     </div>
+  );
+}
+
+/** The best singles among these markets' props or game lines that clear the singles bar, best first. */
+export function liveSingles(markets: GameMarket[], weights: BlendWeights, kind: 'props' | 'lines', limit: number): Parlay[] {
+  return markets
+    .flatMap((m) => legsForGame(m, weights).filter((l) => (kind === 'props') === !!l.prop))
+    .map((l) => evaluate([l]))
+    .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
+    .sort((a, b) => b.ev - a.ev)
+    .slice(0, limit);
+}
+
+/**
+ * The open live game's top live bets, for the Outlook tab: a couple of game lines and the best
+ * props, ranked as the Parlays tab ranks them by default, with a link to the full Live bets card.
+ */
+export function LiveBetsPreview(props: { game: GameData; market?: GameMarket; state?: PropState; fromNow: boolean; onFromNow: () => void; onMore: () => void }) {
+  const { game: g, market: m, state } = props;
+  const mode = defaultPickMode(g.league);
+  const weights = weightsFor(g.league, mode);
+  const pool = useMemo(() => (m ? [m] : []), [m]);
+  const lines = useMemo(() => liveSingles(pool, weights, 'lines', 2), [pool, weights]);
+  const picks = useMemo(() => liveSingles(pool, weights, 'props', 5), [pool, weights]);
+  const board = state?.status === 'ok' ? state.board : undefined;
+  const posted = !!board && (board.lines.length > 0 || !!board.odds);
+  const time = board ? new Date(board.fetchedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+
+  let body;
+  if (!props.fromNow)
+    body = (
+      <p>
+        Live bets are priced from the current score.{' '}
+        <button type="button" class="btn" onClick={props.onFromNow}>
+          Simulate from now
+        </button>
+      </p>
+    );
+  else if (!state || state.status === 'loading') body = <p class="muted">Loading live lines…</p>;
+  else if (state.status === 'error') body = <p class="muted">Couldn't load live lines from ESPN.</p>;
+  else if (!posted) body = <p class="muted">No live lines or props posted right now.</p>;
+  else if (!m) body = <p class="muted">Simulating the rest of the game…</p>;
+  else if (!lines.length && !picks.length) body = <p class="muted">No live bet clears the bar right now. Passing is a fine choice.</p>;
+  else
+    body = (
+      <>
+        {lines.length > 0 && (
+          <ul class="facts live-lines">
+            {lines.map((p) => (
+              <li key={p.legs[0].key}>
+                <strong>{p.legs[0].label}</strong> {fmtAmerican(p.price)} · sim {pct(p.pHit, 0)} vs market {pct(p.legs[0].pFair, 0)} ·{' '}
+                <span class="pos">{perHundred(p.ev)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {picks.length > 0 && <PropTable singles={picks} live />}
+      </>
+    );
+
+  return (
+    <section class="card">
+      <header class="card-head">
+        <h2>Live bets</h2>
+        {props.fromNow && posted && (
+          <p class="muted small">
+            {board!.provider ?? 'Book'} via ESPN · {time}, refreshed every 2 minutes
+          </p>
+        )}
+      </header>
+      {props.fromNow && m && posted && (lines.length > 0 || picks.length > 0) && (
+        <p class="note caution">
+          {mode === 'sim' ? "The simulation's own leans from the current score, never backtested." : 'Weighted toward the market by what the simulation earned in backtests.'} Suggestions,
+          not advice.
+        </p>
+      )}
+      {body}
+      <p>
+        <button type="button" class="link" onClick={props.onMore}>
+          All live bets and parlays
+        </button>
+      </p>
+    </section>
   );
 }

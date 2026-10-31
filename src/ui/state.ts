@@ -1,7 +1,7 @@
 // Shareable URL state. Keeps compatibility with links of the form
 //   #game=401909088&date=20261020&out=1642269
 // (unknown player ids are reported and ignored).
-import type { LeagueId } from '../model/types';
+import type { GamePhase, LeagueId } from '../model/types';
 import type { MinutesMode } from '../model/build';
 
 export type Tab = 'outlook' | 'typical' | 'players' | 'recent' | 'parlays' | 'flow' | 'method';
@@ -21,7 +21,7 @@ export interface UrlState {
   whistle: number;
   hca: boolean;
   mode: MinutesMode;
-  /** 'tip' (whole game), 'now' (live state) or a play sequence number. */
+  /** 'auto' (from now for a game in progress, else tip), 'tip' (whole game), 'now' (live state) or a play sequence number. */
   from: string;
   tab: Tab;
 }
@@ -38,9 +38,12 @@ export const DEFAULTS: UrlState = {
   whistle: 1,
   hca: true,
   mode: 'projected',
-  from: 'tip',
+  from: 'auto',
   tab: 'outlook',
 };
+
+/** Where the simulation starts: a game in progress from its current state unless the link says otherwise. */
+export const effectiveFrom = (from: string, phase: GamePhase | undefined) => (from === 'auto' ? (phase === 'in' ? 'now' : 'tip') : from);
 
 const list = (v: string | null) => (v ? v.split(',').map((s) => s.trim()).filter(Boolean) : []);
 
@@ -64,7 +67,7 @@ export function parseHash(hash: string): UrlState {
     whistle: whistle >= 0.7 && whistle <= 1.35 ? whistle : DEFAULTS.whistle,
     hca: q.get('hca') !== '0',
     mode: q.get('mode') === 'actual' ? 'actual' : 'projected',
-    from: q.get('from') ?? 'tip',
+    from: q.get('from') ?? DEFAULTS.from,
     tab: TABS.includes(tab) ? tab : DEFAULTS.tab,
   };
 }
@@ -82,7 +85,7 @@ export function toHash(s: UrlState): string {
   if (s.whistle !== 1) q.set('whistle', s.whistle.toFixed(2));
   if (!s.hca) q.set('hca', '0');
   if (s.mode !== 'projected') q.set('mode', s.mode);
-  if (s.from !== 'tip') q.set('from', s.from);
+  if (s.from !== DEFAULTS.from) q.set('from', s.from);
   if (s.tab !== 'outlook') q.set('tab', s.tab);
   return '#' + q.toString().replace(/%2C/g, ',');
 }
