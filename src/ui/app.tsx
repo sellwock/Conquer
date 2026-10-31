@@ -276,7 +276,7 @@ export function App() {
     const live = propGame.phase === 'in';
     const fetchLines = (first: boolean) => {
       if (first) setProps({ gameId, status: 'loading' });
-      loadProps(propGame.league, gameId, ac.signal, live)
+      loadProps(propGame.league, gameId, ac.signal, live, live ? { home: propGame.home.abbr, away: propGame.away.abbr } : undefined)
         .then((board) => setProps({ gameId, status: 'ok', board }))
         .catch((e) => {
           if ((e as Error)?.name !== 'AbortError' && first) setProps({ gameId, status: 'error' });
@@ -298,14 +298,15 @@ export function App() {
   const liveMarket = useMemo((): GameMarket | undefined => {
     const sc = sim.scenario, g = sim.liveFrom;
     const board = props?.board;
-    if (!g || !sc?.outcomes.players || !board?.live || props?.gameId !== g.id || !board.lines.length) return undefined;
+    if (!g || !sc?.outcomes.players || !board?.live || props?.gameId !== g.id || (!board.lines.length && !board.odds)) return undefined;
     return {
       gameId: g.id,
       league: g.league,
       label: `${g.away.abbr} @ ${g.home.abbr}`,
       home: g.home.abbr,
       away: g.away.abbr,
-      odds: { provider: board.provider ?? '' },
+      // The book's live game lines; the simulation from now gives full-game margins and totals.
+      odds: board.odds ?? { provider: board.provider ?? '' },
       margin: sc.outcomes.margin,
       total: sc.outcomes.total,
       props: propMarkets(board.lines, sc.outcomes.players, rosterNames(g), soFarOf(g)),

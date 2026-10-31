@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setFetch, setStore } from '../src/data/espn/client';
 import { liveCandidates, priceLiveGame, type Simulate } from '../src/ui/liveSlate';
-import { suggestParlays, SIM_ONLY } from '../src/model/parlays';
+import { legsForGame, suggestParlays, SIM_ONLY } from '../src/model/parlays';
 import { runOutcomes } from '../src/sim/quick';
 import type { ScoreboardGame } from '../src/model/types';
 
@@ -29,7 +29,17 @@ beforeEach(() => {
         body = {
           items: [
             { provider: { id: '100', name: 'DraftKings' }, propBets: { $ref: `http://sports.core.api.espn.com${u.pathname}/100/propBets` } },
-            { provider: { id: '200', name: 'DraftKings - Live Odds' }, propBets: { $ref: `http://sports.core.api.espn.com${u.pathname}/200/propBets` } },
+            {
+              provider: { id: '200', name: 'DraftKings - Live Odds' },
+              propBets: { $ref: `http://sports.core.api.espn.com${u.pathname}/200/propBets` },
+              details: 'BOS -6.5',
+              spread: -6.5,
+              overUnder: 230.5,
+              overOdds: -110,
+              underOdds: -110,
+              homeTeamOdds: { moneyLine: -400, spreadOdds: -110 },
+              awayTeamOdds: { moneyLine: 300, spreadOdds: -110 },
+            },
           ],
         };
       else if (u.pathname.endsWith('/200/propBets'))
@@ -68,6 +78,19 @@ describe('live slate', () => {
     expect(again.market).toBeDefined();
   });
 
+  it("prices the live book's game lines from full-game finals", async () => {
+    const m = (await priceLiveGame('nba', '401810123', undefined, 'live', simulate, undefined, 300)).market!;
+    expect(m.odds).toMatchObject({ provider: 'DraftKings - Live Odds', spread: -6.5, total: 230.5, homeML: -400, awayML: 300 });
+    // The simulation starts at the current 122-113, so every final total is already past 230.5.
+    for (let k = 0; k < 300; k++) expect(m.total[k]).toBeGreaterThanOrEqual(235);
+    const legs = legsForGame(m, SIM_ONLY);
+    expect(legs.find((l) => l.kind === 'total' && l.side === 'over')!.pModel).toBe(1);
+    expect(legs.filter((l) => !l.prop).map((l) => l.kind).sort()).toEqual(['ml', 'ml', 'spread', 'spread', 'total', 'total']);
+    // Lines and props from one game can share a parlay, scored together.
+    const s = suggestParlays([m], 3, SIM_ONLY);
+    expect([...s.bySize[2], ...s.bySize[3]].some((p) => p.legs.some((l) => !l.prop) && p.legs.some((l) => l.prop))).toBe(true);
+  });
+
   it('drops a game once it ends', async () => {
     const r = await priceLiveGame('nba', '401810123', undefined, 'live', simulate, undefined, 300);
     state = 'post';
@@ -77,7 +100,9 @@ describe('live slate', () => {
   });
 
   it('builds parlays across live games from props alone', async () => {
-    const a = (await priceLiveGame('nba', '401810123', undefined, 'live', simulate, undefined, 300)).market!;
+    const priced = (await priceLiveGame('nba', '401810123', undefined, 'live', simulate, undefined, 300)).market!;
+    // Without the game lines, so every leg is a prop.
+    const a = { ...priced, odds: { provider: priced.odds.provider } };
     const b = { ...a, gameId: 'other', label: 'OTH @ ERS' };
     const s = suggestParlays([a, b], 3, SIM_ONLY);
     const mixed = [...s.bySize[2], ...s.bySize[3]].filter((p) => new Set(p.legs.map((l) => l.gameId)).size > 1);

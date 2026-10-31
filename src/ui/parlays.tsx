@@ -468,7 +468,8 @@ function PropTable(props: { singles: Parlay[]; onOpen?: (id: string) => void; li
 }
 
 /**
- * Live props for games in progress, priced from each player's line so far plus the simulated rest:
+ * Live bets for games in progress: the book's in-game game lines and player props, priced from a
+ * simulation from the current score (props from each player's line so far plus the simulated rest):
  * the open game's (from its own simulation from now), or every live game's (from the live scan),
  * as singles and as 2- and 3-leg parlays.
  */
@@ -501,8 +502,19 @@ function LiveProps(props: {
         .slice(0, all ? 15 : 10),
     [pool, weights],
   );
+  const lineSingles = useMemo(
+    () =>
+      pool
+        .flatMap((x) => legsForGame(x, weights).filter((l) => !l.prop))
+        .map((l) => evaluate([l]))
+        .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
+        .sort((a, b) => b.ev - a.ev)
+        .slice(0, all ? 6 : 3),
+    [pool, weights],
+  );
   const sug = useMemo(() => suggestParlays(pool, 3, weights), [pool, weights]);
   const posted = state?.status === 'ok' ? state.board!.lines.length : 0;
+  const hasLines = state?.status === 'ok' && !!state.board!.odds;
   const others = slate.candidates;
   const time = (t: number) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
@@ -512,7 +524,7 @@ function LiveProps(props: {
     if (!props.fromNow)
       body = (
         <>
-          <p>Live props are priced from the current score, clock and box score, so the simulation has to start from now.</p>
+          <p>Live bets are priced from the current score, clock and box score, so the simulation has to start from now.</p>
           <p>
             <button type="button" class="btn" onClick={props.onFromNow}>
               Simulate from now
@@ -522,12 +534,13 @@ function LiveProps(props: {
       );
     else if (!state || state.status === 'loading') body = <p class="muted">Loading live prop lines…</p>;
     else if (state.status === 'error') body = <p class="muted">Couldn't load live prop lines from ESPN.</p>;
-    else if (!posted) body = <p class="muted">The book has no live player props for this game right now.</p>;
+    else if (!posted && !hasLines) body = <p class="muted">The book has no live lines or player props for this game right now.</p>;
     else if (!m) body = <p class="muted">Waiting for the simulation from now to finish.</p>;
-    if (props.fromNow && posted > 0)
+    if (props.fromNow && (posted > 0 || hasLines))
       status = (
         <p class="muted small">
-          {state!.board!.provider ?? 'Book'} via ESPN, {posted} posted · {time(state!.board!.fetchedAt)}, refreshed every 2 minutes
+          {state!.board!.provider ?? 'Book'} via ESPN: {[hasLines ? 'game lines' : '', posted ? `${posted} props` : ''].filter(Boolean).join(' and ')} ·{' '}
+          {time(state!.board!.fetchedAt)}, refreshed every 2 minutes
         </p>
       );
   } else {
@@ -575,7 +588,7 @@ function LiveProps(props: {
       );
     if (!priced) body = <p class="muted">{slate.status === 'running' || (!slate.updatedAt && !slate.paused) ? 'Pricing live games…' : 'No live props to price right now.'}</p>;
   }
-  const ready = all ? Object.keys(markets).length > 0 : !!m && props.fromNow && posted > 0;
+  const ready = all ? Object.keys(markets).length > 0 : !!m && props.fromNow && (posted > 0 || hasLines);
   let picks;
   if (ready && props.mode === 'blend')
     picks = (
@@ -588,11 +601,26 @@ function LiveProps(props: {
         </p>
       </>
     );
-  else if (ready && !singles.length) picks = <p class="muted">No live prop clears the bar right now. Passing is a fine choice.</p>;
+  else if (ready && !singles.length && !lineSingles.length) picks = <p class="muted">No live bet clears the bar right now. Passing is a fine choice.</p>;
   else if (ready)
     picks = (
       <>
-        <PropTable singles={singles} live onOpen={all ? props.onOpen : undefined} />
+        {lineSingles.length > 0 && (
+          <>
+            <h3 class="kicker">Game lines</h3>
+            <div class="parlay-grid">
+              {lineSingles.map((p) => (
+                <ParlayCard key={p.legs[0].key} p={p} mode={props.mode} showGame={all} markets={markets} onOpen={props.onOpen} />
+              ))}
+            </div>
+          </>
+        )}
+        {singles.length > 0 && (
+          <>
+            <h3 class="kicker">Player props</h3>
+            <PropTable singles={singles} live onOpen={all ? props.onOpen : undefined} />
+          </>
+        )}
         {([2, 3] as const).map((size) =>
           sug.bySize[size].length ? (
             <div key={size}>
@@ -611,7 +639,7 @@ function LiveProps(props: {
   return (
     <section class="card">
       <header class="card-head">
-        <h2>Live props</h2>
+        <h2>Live bets</h2>
         {live && (
           <div class="seg small" role="radiogroup" aria-label="Which live games">
             <button type="button" role="radio" aria-checked={!all} class={!all ? 'on' : ''} onClick={() => props.onScope('game')}>
@@ -626,7 +654,7 @@ function LiveProps(props: {
       {!live && !all ? (
         <>
           <p>
-            {others} game{others === 1 ? ' is' : 's are'} live right now. Pricing their props for live parlays reads each game's in-game lines and simulates it from the current
+            {others} game{others === 1 ? ' is' : 's are'} live right now. Pricing them for live parlays reads each game's in-game lines and props and simulates it from the current
             score, about 1 MB per game every 2 minutes.
           </p>
           <p>
@@ -641,7 +669,8 @@ function LiveProps(props: {
           {ready && props.mode === 'sim' && (
             <p class="note caution">
               Live lines move fast and the book's prices here can trail the real ones by a minute or two. Each player's final line is what they have now plus the simulated rest
-              of the game, from the simulation's minutes; none of this has been backtested. Treat these as leans.{all && ' Legs from different games are treated as independent.'}
+              of the game, from the simulation's minutes. Live spreads and totals are full-game lines, priced from the simulation's final scores starting at the current one.
+              None of this has been backtested. Treat these as leans.{all && ' Legs from different games are treated as independent.'}
               {all && ' Pricing every live game costs about 1 MB per game per refresh; pause to stop.'}
             </p>
           )}

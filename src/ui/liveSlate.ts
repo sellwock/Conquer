@@ -1,5 +1,5 @@
-// Prices the player props of every game in progress for live parlays: each game's in-game prop
-// lines, and a simulation from its current score, clock and box score. Refreshes every two minutes
+// Prices every game in progress for live parlays: each game's in-game prop lines and game lines
+// (moneyline, spread, total), and a simulation from its current score, clock and box score. Refreshes every two minutes
 // while asked to (and the tab is visible). Nothing is cached: live state goes stale in minutes.
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { buildSpec } from '../model/build';
@@ -23,7 +23,9 @@ export type Simulate = (spec: SimSpec, n: number, seed: string, opts: { players:
 
 /**
  * One live game: the latest state (loaded once, then refreshed with a single uncached summary
- * request) and, while it's in progress with live props posted, its props market.
+ * request) and, while it's in progress with live lines or props posted, its market. The
+ * simulation starts from the current score, so its margins and totals are full-game finals, which
+ * is what live spreads and totals are written against.
  */
 export async function priceLiveGame(
   league: LeagueId,
@@ -37,13 +39,14 @@ export async function priceLiveGame(
   const game = await refreshGame(prev ?? (await loadGame(league, id, { sampleGames: SAMPLE_GAMES, signal })), signal);
   const start = snapshotFromGame(game);
   if (game.phase !== 'in' || !start) return { game };
-  const board = await loadProps(league, id, signal, true);
-  if (!board.lines.length) return { game };
+  const board = await loadProps(league, id, signal, true, { home: game.home.abbr, away: game.away.abbr });
+  const lines = !!board.odds && (board.odds.homeML != null || board.odds.spread != null || board.odds.total != null);
+  if (!board.lines.length && !lines) return { game };
   const built = buildSpec(game, { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected', start });
   const o = await simulate(built.spec, sims, seed, { players: true });
   if (!o.players) return { game };
   const props = propMarkets(board.lines, o.players, rosterNames(game), soFarOf(game));
-  if (!props.length) return { game };
+  if (!props.length && !lines) return { game };
   return {
     game,
     market: {
@@ -52,7 +55,7 @@ export async function priceLiveGame(
       label: `${game.away.abbr} @ ${game.home.abbr}`,
       home: game.home.abbr,
       away: game.away.abbr,
-      odds: { provider: board.provider ?? '' },
+      odds: board.odds ?? { provider: board.provider ?? '' },
       margin: o.margin,
       total: o.total,
       props,

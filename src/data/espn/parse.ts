@@ -405,12 +405,20 @@ export function parseOdds(summary: J, homeId: string): Odds | undefined {
   const pc: J[] = Array.isArray(summary?.pickcenter) ? summary.pickcenter : Array.isArray(summary?.odds) ? summary.odds : [];
   const o = pc.find((x) => x?.spread != null || x?.overUnder != null) ?? pc[0];
   if (!o) return undefined;
-  let spread: number | undefined = o.spread != null ? num(o.spread) : undefined;
-  // ESPN's `spread` is from the home team's perspective in recent payloads; verify with `details`.
-  const details: string | undefined = o.details;
   const comps: J[] = summary?.header?.competitions?.[0]?.competitors ?? [];
   const homeAbbr = comps.find((c) => String(c?.team?.id) === homeId)?.team?.abbreviation;
   const awayAbbr = comps.find((c) => String(c?.team?.id) !== homeId)?.team?.abbreviation;
+  return oddsFromItem(o, homeAbbr, awayAbbr);
+}
+
+/**
+ * One book's game lines. The summary's pickcenter entries and the odds feed's items
+ * (sports.core.api.espn.com) share these fields.
+ */
+export function oddsFromItem(o: J, homeAbbr?: string, awayAbbr?: string): Odds {
+  let spread: number | undefined = o.spread != null ? num(o.spread) : undefined;
+  // ESPN's `spread` is from the home team's perspective in recent payloads; verify with `details`.
+  const details: string | undefined = o.details;
   if (details && spread != null) {
     const m = details.match(/^([A-Z.&]+)\s+([-+]?\d+(?:\.\d+)?)/);
     if (m && m[1] === homeAbbr) spread = num(m[2]);
