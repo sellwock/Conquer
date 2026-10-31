@@ -26,6 +26,7 @@ import { Parlays } from './parlays';
 import { TrackRecord } from './record';
 import { SlateBoard } from './slate';
 import { marketFrom, useSlate } from './useSlate';
+import { useLiveSlate } from './liveSlate';
 
 export interface SimState {
   status: 'idle' | 'running' | 'done' | 'error';
@@ -289,6 +290,10 @@ export function App() {
     };
   }, [propGame?.id, propGame?.league, propGame?.phase === 'in']);
 
+  // Every other game in progress, priced for live parlays while the Parlays tab shows all live games.
+  const [liveScope, setLiveScope] = useState<'game' | 'all'>('game');
+  const liveSlate = useLiveSlate(url.league, board.status === 'ok' ? board.games : NO_GAMES, url.game, url.view === 'game' && url.tab === 'parlays' && liveScope === 'all', url.seed);
+
   // A live game's props, priced from what each player has so far plus the simulated rest.
   const liveMarket = useMemo((): GameMarket | undefined => {
     const sc = sim.scenario, g = sim.liveFrom;
@@ -479,6 +484,9 @@ export function App() {
                       liveMarket={liveMarket}
                       simFromNow={url.from === 'now'}
                       onFromNow={() => update({ from: 'now' })}
+                      liveSlate={liveSlate}
+                      liveScope={liveScope}
+                      onLiveScope={setLiveScope}
                     />
                   )}
                   {url.tab === 'method' && <Method game={data} />}

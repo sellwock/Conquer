@@ -291,7 +291,9 @@ export function suggestParlays(games: GameMarket[], perSize = 3, weights?: Blend
   // Game legs and props compete for separate places, so a game with dozens of props can't crowd
   // out the lines, and the pool stays small enough to score every three-leg combination.
   const best = (xs: Leg[], k: number) => xs.filter((l) => l.pBlend >= 0.3 && l.ev > -0.06).sort((a, b) => b.ev - a.ev).slice(0, k);
-  const pool = [...best(legs.filter((l) => !l.prop), 30), ...best(legs.filter((l) => !!l.prop), 12)].sort((a, b) => b.ev - a.ev);
+  const gameLegs = legs.filter((l) => !l.prop);
+  // A pool of props alone (live games) gets every place.
+  const pool = [...best(gameLegs, 30), ...best(legs.filter((l) => !!l.prop), gameLegs.length ? 12 : 30)].sort((a, b) => b.ev - a.ev);
   const candidates: Record<1 | 2 | 3, Parlay[]> = { 1: [], 2: [], 3: [] };
   for (let i = 0; i < pool.length; i++) {
     candidates[1].push(evaluate([pool[i]]));
