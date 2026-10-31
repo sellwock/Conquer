@@ -545,47 +545,7 @@ function LiveProps(props: {
       );
   } else {
     const priced = Object.keys(markets).length;
-    status = (
-      <div class="scan">
-        {slate.status === 'running' ? (
-          <>
-            <span class="spinner" aria-hidden="true" />
-            <span>
-              Pricing live games ({slate.done} of {slate.total} done)
-            </span>
-          </>
-        ) : (
-          <span class="muted small">
-            {priced} live game{priced === 1 ? '' : 's'} priced{slate.updatedAt ? ` · updated ${time(slate.updatedAt)}` : ''}
-            {slate.paused ? ' · paused' : ' · refreshes every 2 minutes'}
-          </span>
-        )}
-        {slate.paused ? (
-          <button type="button" class="btn" onClick={slate.resume}>
-            Resume
-          </button>
-        ) : (
-          <button type="button" class="ghost-btn" onClick={slate.pause}>
-            Pause
-          </button>
-        )}
-        {!slate.paused && slate.status !== 'running' && (
-          <button type="button" class="ghost-btn" onClick={slate.refresh}>
-            Refresh now
-          </button>
-        )}
-        {slate.failed > 0 && <span class="muted small">{slate.failed} couldn't be loaded.</span>}
-      </div>
-    );
-    if (live && !props.fromNow)
-      body = (
-        <p class="muted small">
-          This game joins once it's simulated from now.{' '}
-          <button type="button" class="link" onClick={props.onFromNow}>
-            Simulate from now
-          </button>
-        </p>
-      );
+    status = <LiveStatus slate={slate} priced={priced} />;
     if (!priced) body = <p class="muted">{slate.status === 'running' || (!slate.updatedAt && !slate.paused) ? 'Pricing live games…' : 'No live props to price right now.'}</p>;
   }
   const ready = all ? Object.keys(markets).length > 0 : !!m && props.fromNow && (posted > 0 || hasLines);
@@ -646,7 +606,7 @@ function LiveProps(props: {
               This game
             </button>
             <button type="button" role="radio" aria-checked={all} class={all ? 'on' : ''} onClick={() => props.onScope('all')}>
-              All live games ({slate.updatedAt ? Object.keys(markets).length : others + 1})
+              All live games ({slate.updatedAt ? Object.keys(markets).length : others + (m ? 1 : 0)})
             </button>
           </div>
         )}
@@ -679,5 +639,43 @@ function LiveProps(props: {
         </>
       )}
     </section>
+  );
+}
+
+/** How live pricing is going, with Pause / Resume / Refresh now. Shared by the live bets card and the slate board. */
+export function LiveStatus(props: { slate: LiveSlate; priced: number }) {
+  const { slate } = props;
+  const time = (t: number) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return (
+    <div class="scan">
+      {slate.status === 'running' ? (
+        <>
+          <span class="spinner" aria-hidden="true" />
+          <span>
+            Pricing live games ({slate.done} of {slate.total} done)
+          </span>
+        </>
+      ) : (
+        <span class="muted small">
+          {props.priced} live game{props.priced === 1 ? '' : 's'} priced{slate.updatedAt ? ` · updated ${time(slate.updatedAt)}` : ''}
+          {slate.paused ? ' · paused' : ' · refreshes every 2 minutes'}
+        </span>
+      )}
+      {slate.paused ? (
+        <button type="button" class="btn" onClick={slate.resume}>
+          Resume
+        </button>
+      ) : (
+        <button type="button" class="ghost-btn" onClick={slate.pause}>
+          Pause
+        </button>
+      )}
+      {!slate.paused && slate.status !== 'running' && (
+        <button type="button" class="ghost-btn" onClick={slate.refresh}>
+          Refresh now
+        </button>
+      )}
+      {slate.failed > 0 && <span class="muted small">{slate.failed} couldn't be loaded.</span>}
+    </div>
   );
 }

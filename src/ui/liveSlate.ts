@@ -65,9 +65,12 @@ export async function priceLiveGame(
   };
 }
 
-/** Games that are, or may by now be, in progress: the scoreboard isn't refreshed after it loads. */
-export const liveCandidates = (games: ScoreboardGame[], openGame: string | undefined, now = Date.now()) =>
-  games.filter((g) => g.id !== openGame && (g.phase === 'in' || (g.phase === 'pre' && Date.parse(g.date) <= now))).map((g) => g.id);
+/**
+ * Games that are, or may by now be, in progress (the scoreboard isn't refreshed after it loads),
+ * leaving out `exclude`: the open game when its own simulation from now already prices it.
+ */
+export const liveCandidates = (games: ScoreboardGame[], exclude: string | undefined, now = Date.now()) =>
+  games.filter((g) => g.id !== exclude && (g.phase === 'in' || (g.phase === 'pre' && Date.parse(g.date) <= now))).map((g) => g.id);
 
 export interface LiveSlate {
   markets: Record<string, GameMarket>;
@@ -86,13 +89,13 @@ export interface LiveSlate {
 
 const backgroundSimulate: Simulate = (spec, n, seed, opts) => runOutcomesInBackground(spec, n, seed, opts).promise;
 
-export function useLiveSlate(league: LeagueId, games: ScoreboardGame[], openGame: string | undefined, enabled: boolean, seed: string): LiveSlate {
+export function useLiveSlate(league: LeagueId, games: ScoreboardGame[], exclude: string | undefined, enabled: boolean, seed: string): LiveSlate {
   const [markets, setMarkets] = useState<Record<string, GameMarket>>({});
   const [progress, setProgress] = useState({ status: 'idle' as 'idle' | 'running', done: 0, total: 0, failed: 0 });
   const [updatedAt, setUpdatedAt] = useState<number>();
   const [paused, setPaused] = useState(false);
   const states = useRef(new Map<string, GameData>());
-  const ids = liveCandidates(games, openGame);
+  const ids = liveCandidates(games, exclude);
   const idsKey = ids.join();
   const idsRef = useRef(ids);
   idsRef.current = ids;

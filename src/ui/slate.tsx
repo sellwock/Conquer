@@ -4,8 +4,8 @@
 // started show what the forward log saved before tip-off.
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { LeagueId, ScoreboardGame } from '../model/types';
-import { boardRow } from '../model/slate';
-import { MODEL_WEIGHT, modelHasSay, type Parlay } from '../model/parlays';
+import { boardPicks, boardRow } from '../model/slate';
+import { MODEL_WEIGHT, modelHasSay, type GameMarket, type Parlay } from '../model/parlays';
 import { LEAGUES } from '../model/leagues';
 import { fmtAmerican, impliedFromAmerican } from '../lib/stats';
 import { loadForwardLog } from '../track/forward';
@@ -13,7 +13,8 @@ import { gradeEntry, type Graded } from '../track/grade';
 import type { Entry } from '../track/types';
 import { dateLabel, lineText, pct, perHundred, tipTime } from './format';
 import type { Slate } from './useSlate';
-import { blendText } from './parlays';
+import type { LiveSlate } from './liveSlate';
+import { blendText, LiveStatus } from './parlays';
 
 type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge' | 'prop';
 
@@ -33,6 +34,8 @@ interface Row {
   best?: Parlay;
   bestProp?: Parlay;
   hasProps?: boolean;
+  /** A game in progress whose picks come from the in-game book. */
+  livePick?: boolean;
   note?: string;
   logged?: { e: Entry; graded: Graded | null };
 }
@@ -73,8 +76,11 @@ export function SlateBoard(props: {
   slate: Slate;
   openGame?: string;
   onOpen: (id: string) => void;
+  /** Games in progress priced from their in-game lines and props. */
+  live?: { slate: LiveSlate; markets: Record<string, GameMarket> };
 }) {
   const { slate, board } = props;
+  const liveMarkets = props.live?.markets;
   const [sort, setSort] = useState<SortKey>('tip');
   const hasSay = modelHasSay(props.league);
   const [log, setLog] = useState<Record<string, Entry>>({});
@@ -99,11 +105,13 @@ export function SlateBoard(props: {
         return { g, n: r, best: r.best, bestProp: r.bestProp, hasProps: r.hasProps, note: m.note };
       }
       const e = log[g.id];
-      return { g, n: e && fromEntry(e), logged: e ? { e, graded: e.status === 'final' ? gradeEntry(e) : null } : undefined };
+      const row: Row = { g, n: e && fromEntry(e), logged: e ? { e, graded: e.status === 'final' ? gradeEntry(e) : null } : undefined };
+      const lm = g.phase === 'in' ? liveMarkets?.[g.id] : undefined;
+      return lm ? { ...row, ...boardPicks(lm), livePick: true } : row;
     });
     const key = SORTS[sort];
     return out.sort((a, b) => key(b) - key(a) || Date.parse(a.g.date) - Date.parse(b.g.date));
-  }, [board.games, slate.markets, log, sort]);
+  }, [board.games, slate.markets, log, sort, liveMarkets]);
 
   const pendingIds = new Set(slate.pending.map((g) => g.id));
   // The prop column appears once any game on the board has posted props priced.
@@ -163,6 +171,15 @@ export function SlateBoard(props: {
           ) : null}
           {slate.scan.failed > 0 && <span class="muted small">{slate.scan.failed} couldn't be loaded and were skipped.</span>}
         </div>
+        {props.live && (props.live.slate.candidates > 0 || Object.keys(props.live.markets).length > 0) && (
+          <>
+            <LiveStatus slate={props.live.slate} priced={Object.keys(props.live.markets).length} />
+            <p class="muted small">
+              Games in progress show live picks from the in-game book, priced from the current score and box score and refreshed every 2 minutes (about 1 MB per game
+              each time). They're the simulation's leans, never backtested.
+            </p>
+          </>
+        )}
       </section>
 
       {board.status === 'loading' && !board.games.length && (
@@ -217,7 +234,7 @@ export function SlateBoard(props: {
 }
 
 function BoardRowView(props: { r: Row; showProps: boolean; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
-  const { g, n, best, bestProp, logged } = props.r;
+  const { g, n, best, bestProp, logged, livePick } = props.r;
   const pre = g.phase === 'pre';
   const waiting = pre && !n;
   const placeholder = waiting ? (props.queued ? (props.scanning ? 'Queued' : '–') : props.open && g.odds ? 'Simulating' : 'No line') : '–';
@@ -257,21 +274,36 @@ function BoardRowView(props: { r: Row; showProps: boolean; queued: boolean; scan
           {pre ? placeholder : 'No saved prediction'}
         </td>
       )}
-      <td class="best">{!pre ? <ResultCell g={g} logged={logged} /> : <BestCell best={best} waiting={waiting} />}</td>
+      <td class="best">{livePick ? <BestCell best={best} waiting={false} live /> : !pre ? <ResultCell g={g} logged={logged} /> : <BestCell best={best} waiting={waiting} />}</td>
       {props.showProps && (
-        <td class="best">{!pre || (n && !props.r.hasProps) ? <span class="muted">–</span> : <BestCell best={bestProp} waiting={waiting} />}</td>
+        <td class="best">
+          {livePick ? (
+            props.r.hasProps ? (
+              <BestCell best={bestProp} waiting={false} live />
+            ) : (
+              <span class="muted">–</span>
+            )
+          ) : !pre || (n && !props.r.hasProps) ? (
+            <span class="muted">–</span>
+          ) : (
+            <BestCell best={bestProp} waiting={waiting} />
+          )}
+        </td>
       )}
     </tr>
   );
 }
 
-function BestCell(props: { best?: Parlay; waiting: boolean }) {
+function BestCell(props: { best?: Parlay; waiting: boolean; live?: boolean }) {
   if (props.waiting) return <span class="muted">–</span>;
   const p = props.best;
-  if (!p) return <span class="muted">Pass</span>;
+  const tag = props.live ? <span class="chip warn">Live</span> : null;
+  if (!p) return <span class="muted">Pass {tag}</span>;
+  const now = p.legs[0].prop?.now;
   return (
     <span>
       {p.legs[0].label} {fmtAmerican(p.price)} <span class="pos small">{perHundred(p.ev)}</span>
+      {now != null && <span class="muted small"> · has {now}</span>} {tag}
     </span>
   );
 }

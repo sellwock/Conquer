@@ -290,10 +290,6 @@ export function App() {
     };
   }, [propGame?.id, propGame?.league, propGame?.phase === 'in']);
 
-  // Every other game in progress, priced for live parlays while the Parlays tab shows all live games.
-  const [liveScope, setLiveScope] = useState<'game' | 'all'>('game');
-  const liveSlate = useLiveSlate(url.league, board.status === 'ok' ? board.games : NO_GAMES, url.game, url.view === 'game' && url.tab === 'parlays' && liveScope === 'all', url.seed);
-
   // A live game's props, priced from what each player has so far plus the simulated rest.
   const liveMarket = useMemo((): GameMarket | undefined => {
     const sc = sim.scenario, g = sim.liveFrom;
@@ -314,6 +310,13 @@ export function App() {
       propsProvider: board.provider,
     };
   }, [sim.scenario, sim.liveFrom, props]);
+
+  // Games in progress priced for live bets, while the Parlays tab shows all live games or the Slate
+  // view is open. The open game is left to its own simulation from now when it has one.
+  const [liveScope, setLiveScope] = useState<'game' | 'all'>('game');
+  const liveWanted = (url.view === 'game' && url.tab === 'parlays' && liveScope === 'all') || url.view === 'slate';
+  const liveSlate = useLiveSlate(url.league, board.status === 'ok' ? board.games : NO_GAMES, liveMarket?.gameId, liveWanted, url.seed);
+  const liveMarkets = useMemo(() => ({ ...liveSlate.markets, ...(liveMarket ? { [liveMarket.gameId]: liveMarket } : {}) }), [liveSlate.markets, liveMarket]);
 
   // The open game's market for the parlays tab: the simulation's outcomes plus any props.
   useEffect(() => {
@@ -403,6 +406,7 @@ export function App() {
           slate={slate}
           openGame={url.game}
           onOpen={(id) => update({ view: 'game', game: id, outs: [], ins: [], from: 'tip', mode: 'projected' })}
+          live={{ slate: liveSlate, markets: liveMarkets }}
         />
       ) : (
         <>

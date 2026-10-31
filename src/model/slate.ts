@@ -52,11 +52,12 @@ export function boardRow(m: GameMarket, weights: BlendWeights = weightsFor(m.lea
     fairHome,
     marketMargin: o.spread != null ? -o.spread : undefined,
     marketTotal: o.total,
-    ...picks(m, weights),
+    ...boardPicks(m, weights),
   };
 }
 
-function picks(m: GameMarket, weights: BlendWeights): Pick<BoardRow, 'best' | 'bestProp' | 'hasProps'> {
+/** A game's best line single and best prop single in the default ranking; also used for live games' in-game markets. */
+export function boardPicks(m: GameMarket, weights: BlendWeights = weightsFor(m.league, defaultPickMode(m.league))): Pick<BoardRow, 'best' | 'bestProp' | 'hasProps'> {
   const legs = legsForGame(m, weights);
   return { best: topSingle(legs.filter((l) => !l.prop)), bestProp: topSingle(legs.filter((l) => !!l.prop)), hasProps: !!m.props?.length };
 }
