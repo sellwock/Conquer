@@ -3,8 +3,9 @@
 // lists the over first. That was checked against lines whose side is obvious, such as a high-volume
 // shooter's 1.5 threes priced at -188 (the over). Milestone ladders ("25+ points"), team, quarter
 // and first-basket props are left out.
-import type { LeagueId, PropStat } from '../../model/types';
+import type { LeagueId, Odds, PropStat } from '../../model/types';
 import { corePath, getJson } from './client';
+import { oddsFromItem } from './parse';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type J = any;
@@ -24,6 +25,8 @@ export interface PropBoard {
   fetchedAt: number;
   /** Lines from the book's in-game feed. */
   live?: boolean;
+  /** The same book's game lines (moneyline, spread, total), when asked for with the teams. */
+  odds?: Odds;
 }
 
 /** ESPN prop type ids for the over/under player props this app can simulate. */
@@ -71,11 +74,15 @@ export function pickPropBook(items: J[], live: boolean): J | undefined {
   return (live ? books.find(isLive) : books.find((it) => !isLive(it))) ?? (live ? undefined : books[0]);
 }
 
-/** The posted prop lines for one game; empty when the book hasn't posted any. With `live`, the in-game lines. */
-export async function loadProps(league: LeagueId, eventId: string, signal?: AbortSignal, live = false): Promise<PropBoard> {
+/**
+ * The posted prop lines for one game; empty when the book hasn't posted any. With `live`, the
+ * in-game lines. With `teams` (abbreviations), the book's game lines come along too.
+ */
+export async function loadProps(league: LeagueId, eventId: string, signal?: AbortSignal, live = false, teams?: { home: string; away: string }): Promise<PropBoard> {
   const odds = await getJson('core', corePath(league, `/events/${eventId}/competitions/${eventId}/odds?lang=en&region=us`), { signal, noStore: true });
   const withProps = pickPropBook(odds?.items ?? [], live);
   const board: PropBoard = { provider: withProps?.provider?.name, lines: [], fetchedAt: Date.now(), live };
+  if (withProps && teams) board.odds = oddsFromItem(withProps, teams.home, teams.away);
   if (!withProps) return board;
   const ref = new URL(String(withProps.propBets.$ref));
   const items: J[] = [];
