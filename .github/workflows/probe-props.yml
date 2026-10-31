@@ -6,21 +6,16 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Prop feed for live and finished games
+      - name: Game-line fields on the core odds items
         run: |
           set +e
           date -u
           B=https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba
-          for EV in 401909884 401909886 401909889 401909891 401909892; do
-            st=$(curl -s "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=$EV" | jq -r '.header.competitions[0].status.type | "\(.state) \(.shortDetail)"')
-            echo "===== event $EV: $st"
+          for EV in 401909897 401909898; do
+            echo "===== event $EV"
             curl -s "$B/events/$EV/competitions/$EV/odds?lang=en&region=us" > odds.json
-            jq -c '[.items[]? | {id: .provider.id, name: .provider.name, props: (.propBets["$ref"] != null)}]' odds.json
-            for P in $(jq -r '.items[]? | select(.propBets) | .provider.id' odds.json); do
-              curl -s "$B/events/$EV/competitions/$EV/odds/$P/propBets?lang=en&region=us&limit=1000" > p.json
-              echo "provider $P: items $(jq '.items | length' p.json), pages $(jq .pageCount p.json)"
-              echo "lastUpdated range: $(jq -r '[.items[].lastUpdated] | sort | "\(.[0]) .. \(.[-1])"' p.json)"
-              echo "player over/under types present: $(jq -r '[.items[] | select(.type.id | IN("1","2","3","4","87","88","89","90")) | .type.name] | group_by(.) | map("\(.[0]) x\(length)") | join(", ")' p.json)"
-              jq -c '[.items[] | select(.type.id == "1")][0:2] | map({athlete: (.athlete["$ref"] | capture("athletes/(?<id>[0-9]+)").id), target: .current.target.value, open: .open.target.value, am: .odds.american, upd: .lastUpdated})' p.json
-            done
+            jq -c '.items[]? | {provider: .provider.name, details, spread, overUnder, overOdds, underOdds,
+              home: (.homeTeamOdds | {moneyLine, spreadOdds, favorite, team: (.team["$ref"] // .team.abbreviation // null), keys: keys}),
+              away: (.awayTeamOdds | {moneyLine, spreadOdds, favorite, keys: keys}),
+              currentKeys: (.current | keys?), current: .current}' odds.json | head -c 4000; echo
           done
