@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { boardRow, packMarket, unpackMarket } from '../src/model/slate';
+import { boardPicks, boardRow, packMarket, unpackMarket } from '../src/model/slate';
 import { legsForGame, suggestParlays, SIM_ONLY, type GameMarket } from '../src/model/parlays';
 import { leagueAverageGame } from './helpers';
 import { buildSpec } from '../src/model/build';
@@ -69,6 +69,18 @@ describe('slate board', () => {
     expect(r.bestProp!.legs[0].label).toBe('A. Player over 20.5 points');
     expect(r.bestProp!.pHit).toBeCloseTo(0.9, 2);
     expect(boardRow(nba)).toMatchObject({ hasProps: false, bestProp: undefined });
+  });
+
+  it("gives a live game's in-game market the same two picks", () => {
+    // A live market: the in-game book's lines, a prop with the player's line so far, and finals
+    // simulated from the current score.
+    const live = market('nba');
+    const n = live.margin.length;
+    const hits = Uint8Array.from({ length: n }, (_, i) => (i % 5 === 0 ? 0 : 1));
+    const picks = boardPicks({ ...live, props: [{ athleteId: 'p1', player: 'A. Player', stat: 'ast', line: 6.5, over: 105, under: -135, hits, mean: 7.4, now: 5 }] });
+    expect(picks.hasProps).toBe(true);
+    expect(picks.best!.legs[0].prop).toBeUndefined();
+    expect(picks.bestProp!.legs[0]).toMatchObject({ label: 'A. Player over 6.5 assists', prop: { now: 5 } });
   });
 
   it('round-trips outcomes through the cache format', () => {
