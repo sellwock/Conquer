@@ -3,14 +3,45 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setFetch, setStore } from '../src/data/espn/client';
-import { easternYmd, logPath, resultsPath, runJob, type LogIO } from '../src/track/job';
-import type { Entry, LogFile } from '../src/track/types';
+import { easternYmd, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
+import type { Entry, LogFile, PropEntry, PropLogFile } from '../src/track/types';
+import { gradeProps } from '../src/track/propGrade';
 import { MODEL_VERSION } from '../src/model/version';
 
 const fx = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/espn/${name}`, import.meta.url), 'utf8'));
 
 let summaryOverride: Record<string, unknown> = {};
 let noLines = false;
+/** Serve the core odds feed with prop lines (off: it 404s, as for a game without odds). */
+let withProps = false;
+let coreStatus = 200;
+/** Puts the final fixture's game (401810123) in progress on the scoreboard at this period and clock. */
+let liveAt: { period: number; clock: string } | undefined;
+let summaryCalls: Record<string, number> = {};
+let noLiveProps = false;
+
+const ath = (id: string) => ({ $ref: `http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/athletes/${id}?lang=en&region=us` });
+const pair = (id: string, typeId: string, line: number, over: string, under: string) =>
+  [over, under].map((am) => ({ athlete: ath(id), type: { id: typeId, name: 'x' }, odds: { american: { value: am } }, current: { target: { value: line } } }));
+
+function coreBody(u: URL): unknown {
+  if (u.pathname.endsWith('/odds'))
+    return {
+      items: [
+        { provider: { id: '100', name: 'DraftKings' }, propBets: { $ref: `http://sports.core.api.espn.com${u.pathname}/100/propBets` } },
+        { provider: { id: '200', name: 'DraftKings - Live Odds' }, propBets: { $ref: `http://sports.core.api.espn.com${u.pathname}/200/propBets` }, spread: -6.5, overUnder: 230.5 },
+      ],
+    };
+  if (u.pathname.endsWith('/100/propBets')) return { pageCount: 1, items: [...pair('4432101', '1', 20.5, '-110', '-110'), ...pair('4432104', '2', 5.5, '+100', '-120')] };
+  if (u.pathname.endsWith('/200/propBets') && noLiveProps) return { pageCount: 1, items: [] };
+  if (u.pathname.endsWith('/200/propBets')) return { pageCount: 1, items: [...pair('4432201', '1', 34.5, '-110', '-120'), ...pair('4432101', '3', 6.5, '+105', '-135')] };
+  return undefined;
+}
+
+function liveStatus(period: number, clock: string) {
+  const [m, sec] = clock.split(':').map(Number);
+  return { period, displayClock: clock, clock: m * 60 + sec, type: { id: '2', name: 'STATUS_IN_PROGRESS', state: 'in', completed: false, detail: `${clock} - ${period}`, shortDetail: `${clock} - ${period}` } };
+}
 
 type Payload = { events?: { competitions?: { odds?: unknown }[] }[]; pickcenter?: unknown; odds?: unknown };
 
@@ -26,11 +57,23 @@ function mockEspn() {
   setFetch((async (input: RequestInfo | URL) => {
     const u = new URL(String(input));
     let body: unknown;
-    if (u.pathname.includes('mens-college-basketball')) body = { events: [] };
-    else if (u.pathname.endsWith('/scoreboard')) body = fx('synthetic-nba-scoreboard.json');
-    else if (u.pathname.endsWith('/summary')) {
+    if (u.hostname === 'sports.core.api.espn.com') {
+      if (!withProps) return new Response('{}', { status: 404 });
+      if (coreStatus !== 200) return new Response('{}', { status: coreStatus });
+      body = coreBody(u);
+    } else if (u.pathname.includes('mens-college-basketball')) body = { events: [] };
+    else if (u.pathname.endsWith('/scoreboard')) {
+      const b = fx('synthetic-nba-scoreboard.json');
+      if (liveAt) b.events.find((e: { id: string }) => e.id === '401810123').competitions[0].status = liveStatus(liveAt.period, liveAt.clock);
+      body = b;
+    } else if (u.pathname.endsWith('/summary')) {
       const ev = u.searchParams.get('event')!;
-      body = summaryOverride[ev] ?? (ev === '401810131' ? fx('synthetic-nba-summary-pregame.json') : fx('synthetic-nba-summary-final.json'));
+      summaryCalls[ev] = (summaryCalls[ev] ?? 0) + 1;
+      if (liveAt && ev === '401810123') {
+        const b = fx('synthetic-nba-summary-final.json');
+        b.header.competitions[0].status = liveStatus(liveAt.period, liveAt.clock);
+        body = b;
+      } else body = summaryOverride[ev] ?? (ev === '401810131' ? fx('synthetic-nba-summary-pregame.json') : fx('synthetic-nba-summary-final.json'));
     } else if (u.pathname.includes('/roster')) body = fx('synthetic-nba-team-roster.json');
     else if (u.pathname.includes('/schedule')) {
       const s = fx('synthetic-nba-team-schedule.json');
@@ -61,6 +104,11 @@ const PRE_PATH = logPath('nba', 2026, '20260116');
 beforeEach(() => {
   summaryOverride = {};
   noLines = false;
+  withProps = false;
+  coreStatus = 200;
+  liveAt = undefined;
+  summaryCalls = {};
+  noLiveProps = false;
   const mem = new Map<string, string>();
   setStore({ get: (k) => mem.get(k) ?? null, set: (k, v) => void mem.set(k, v), clearPrefix: () => mem.clear() });
   mockEspn();
@@ -204,3 +252,150 @@ describe('forward log job', () => {
     expect(files.get('status.json')).toMatchObject({ lastRun: '2026-01-16T16:00:00.000Z', model: MODEL_VERSION });
   });
 });
+
+// Both fixtures' games fall in January 2026, so their props share a file.
+const PROPS = propsPath('nba', 2026, '20260116');
+
+describe('player props in the forward log', () => {
+  it('saves the posted prop lines with the pre-game snapshot', async () => {
+    withProps = true;
+    const { io, files } = memoryIO();
+    const r = await run(io, '2026-01-16T22:00:00Z');
+    expect(r.snapshots).toBe(1);
+    expect(r.propsPre).toBe(1);
+    expect(PROPS).toBe('props/nba/2026/2026-01.json');
+    const e = (files.get(PROPS) as PropLogFile)['401810131'];
+    expect(e).toMatchObject({ status: 'open', home: { abbr: 'NY' }, away: { abbr: 'BKN' }, players: { '4432101': 'M. Hale' } });
+    expect(e.pre).toMatchObject({ model: MODEL_VERSION, provider: 'DraftKings', n: 200 });
+    const hale = e.pre!.rows.find((x) => x[0] === '4432101' && x[1] === 'pts')!;
+    expect(hale.slice(2, 5)).toEqual([20.5, -110, -110]);
+    expect(hale[5]).toBeGreaterThan(0);
+    expect(hale[5] + hale[6]).toBeLessThanOrEqual(1);
+    expect(hale).toHaveLength(8); // no "so far" before tip
+    expect(e.live).toBeUndefined();
+    expect((files.get('index.json') as { files: string[] }).files).toEqual([PRE_PATH, PROPS]);
+  });
+
+  it("keeps the game's snapshot when the prop feed fails", async () => {
+    withProps = true;
+    coreStatus = 403;
+    const { io, files } = memoryIO();
+    const r = await run(io, '2026-01-16T22:00:00Z');
+    expect(r.snapshots).toBe(1);
+    expect(r.propsPre).toBe(0);
+    expect(r.errors.some((x) => / props: /.test(x))).toBe(true);
+    expect((files.get(PRE_PATH) as LogFile)['401810131'].pred).toBeDefined();
+    expect(files.get(PROPS)).toBeUndefined();
+  });
+
+  it('takes no props and logs no error for a game without odds', async () => {
+    const { io, files } = memoryIO();
+    const r = await run(io, '2026-01-16T22:00:00Z');
+    expect(r.snapshots).toBe(1);
+    expect(r.errors).toEqual([]);
+    expect(files.get(PROPS)).toBeUndefined();
+  });
+
+  it('saves the live lines once per game, mid-game only', async () => {
+    withProps = true;
+    const { io, files } = memoryIO();
+    // 1st quarter: too early.
+    liveAt = { period: 1, clock: '5:00' };
+    let r = await run(io, '2026-01-15T00:45:00Z');
+    expect(r.propsLive).toBe(0);
+    expect(files.get(PROPS)).toBeUndefined();
+
+    // 2nd quarter: saved, with the game state and what each player had.
+    liveAt = { period: 2, clock: '5:00' };
+    r = await run(io, '2026-01-15T01:15:00Z');
+    expect(r.propsLive).toBe(1);
+    const e = (files.get(PROPS) as PropLogFile)['401810123'];
+    expect(e.live).toMatchObject({ model: MODEL_VERSION, provider: 'DraftKings - Live Odds', n: 200, at: { period: 2, clockSec: 300, home: 122, away: 113 } });
+    expect(e.players['4432201']).toBe('C. Vance');
+    const vance = e.live!.rows.find((x) => x[0] === '4432201' && x[1] === 'pts')!;
+    expect(vance[8]).toBe(27);
+    expect(vance[7]).toBeGreaterThanOrEqual(27);
+    expect(e.pre).toBeUndefined();
+
+    // A later run, still mid-game: the saved lines stay as they were.
+    liveAt = { period: 3, clock: '6:00' };
+    const before = JSON.stringify(files.get(PROPS));
+    r = await run(io, '2026-01-15T01:45:00Z');
+    expect(r.propsLive).toBe(0);
+    expect(JSON.stringify(files.get(PROPS))).toBe(before);
+  });
+
+  it('loads nothing more for a live game whose book has no in-game props', async () => {
+    withProps = true;
+    liveAt = { period: 2, clock: '5:00' };
+    const { io, files } = memoryIO();
+    const before = { ...summaryCalls };
+    const r = await run(io, '2026-01-15T01:15:00Z');
+    expect(r.propsLive).toBe(1);
+    expect(summaryCalls['401810123'] - (before['401810123'] ?? 0)).toBe(2); // the load and the refresh
+
+    // Same game, but the feed has no live props: the game is never loaded.
+    files.clear();
+    summaryCalls = {};
+    noLiveProps = true;
+    const r2 = await run(io, '2026-01-15T01:15:00Z');
+    expect(r2.propsLive).toBe(0);
+    expect(r2.errors).toEqual([]);
+    expect(summaryCalls['401810123'] ?? 0).toBe(0);
+  });
+
+  it('skips the 4th quarter', async () => {
+    withProps = true;
+    liveAt = { period: 4, clock: '8:00' };
+    const { io, files } = memoryIO();
+    const r = await run(io, '2026-01-15T02:30:00Z');
+    expect(r.propsLive).toBe(0);
+    expect(files.get(PROPS)).toBeUndefined();
+    expect(playedShare('nba', 2, 300)).toBeCloseTo((720 + 420) / 2880);
+    expect(playedShare('ncaam', 1, 600)).toBe(0.25);
+    expect(playedShare('nba', 5, 100)).toBe(1);
+  });
+
+  it('grades props from the final box score with the game, voiding players who sat', async () => {
+    const { io, files } = memoryIO();
+    const tip = '2026-01-15T00:30:00Z';
+    const game: Entry = { id: '401810123', league: 'nba', season: 2026, tip, home: { id: '2', abbr: 'BOS' }, away: { id: '13', abbr: 'LAL' }, neutral: false, status: 'open' };
+    const props: PropEntry = {
+      id: '401810123',
+      league: 'nba',
+      season: 2026,
+      tip,
+      home: game.home,
+      away: game.away,
+      status: 'open',
+      players: { '4432201': 'C. Vance', '4432209': 'G. Holloway' },
+      pre: {
+        model: MODEL_VERSION,
+        takenAt: '2026-01-14T23:00:00Z',
+        n: 1000,
+        rows: [
+          ['4432201', 'pts', 25.5, -110, -110, 0.6, 0, 26.8],
+          ['4432201', 'pra', 41.5, -110, -110, 0.45, 0, 40.9],
+          ['4432209', 'pts', 4.5, -110, -110, 0.4, 0, 3.9],
+        ],
+      },
+    };
+    files.set(logPath('nba', 2026, '20260114'), { [game.id]: game });
+    files.set(PROPS, { [props.id]: props });
+
+    const r = await run(io, '2026-01-15T04:00:00Z');
+    expect(r.graded).toBe(1);
+    expect(r.propsGraded).toBe(1);
+    // One summary request grades both.
+    expect(summaryCalls['401810123']).toBe(1);
+    const e = (files.get(PROPS) as PropLogFile)['401810123'];
+    expect(e.status).toBe('final');
+    expect(e.box).toEqual({ '4432201': [27, 8, 7, 2], '4432209': null });
+    const g = gradeProps(e, 'pre')!;
+    expect(g.lines.map((l) => [l.stat, l.side, l.final, l.result])).toEqual([
+      ['pts', 'over', 27, 'win'],
+      ['pra', 'under', 42, 'loss'],
+    ]);
+  });
+});
+

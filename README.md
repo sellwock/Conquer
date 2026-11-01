@@ -54,6 +54,11 @@ Completed-game extracts are cached in `localStorage`. If a host blocks direct ca
 - Nothing is written after tip and nothing is backfilled, so the record has no hindsight.
 - Each prediction stores the model version (`src/model/version.ts`), the line at that moment, and the full margin and total distributions.
 - `src/track/grade.ts` derives the record from those entries: winners, against the spread, over/under, Brier score vs the market's no-vig odds with a bootstrap interval, calibration and closing-line value.
+- **Player props** go to `v1/props/{league}/{season}/{yyyy-mm}.json`, apart from the game log:
+  - Before tip-off, each snapshot also saves the book's posted prop lines with the simulation's over and push chances (the last refresh with lines wins).
+  - Once per game, mid-game, the job saves the in-game book's prop lines, priced from the current score and box score, with the period, clock and score. That's NBA 2nd and 3rd quarters, or college from 10:00 left in the first half to 10:00 left in the second.
+  - After the final, each logged player's box line is added, or `null` if they sat, which voids their props.
+  - `src/track/propGrade.ts` grades the simulation's side of every line and its top five picks per game, ranked as the app ranks single bets. It also gives a Brier comparison with the market on the over, averaged per game because props in one game move together.
 
 `v1/index.json` lists the log files, since the site can't list folders on raw.githubusercontent.com. To run the job by hand (dry run writes nothing): Actions → Forward log → Run workflow.
 

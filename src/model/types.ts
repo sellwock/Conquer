@@ -208,6 +208,9 @@ export interface ScoreboardGame {
   date: string;
   phase: GamePhase;
   statusText: string;
+  /** The period and clock when the scoreboard loaded, once the game has started. */
+  period?: number;
+  clockSec?: number;
   home: { id: string; abbr: string; name: string; logo?: string; color: string; score?: number; record?: string };
   away: { id: string; abbr: string; name: string; logo?: string; color: string; score?: number; record?: string };
   odds?: string;

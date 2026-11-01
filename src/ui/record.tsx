@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { LeagueId } from '../model/types';
+import { LEAGUES } from '../model/leagues';
+import { PROP_WORDS } from '../model/parlays';
 import { MODEL_VERSION } from '../model/version';
 import { fmtAmerican } from '../lib/stats';
 import { gradeEntry, summarize, type Graded, type Record3, type Summary } from '../track/grade';
-import { loadForwardLog, type ForwardLog } from '../track/forward';
+import { gradeProps, summarizeProps, TOP_PER_GAME, type GradedProp, type GradedSnap, type PropSummary, type PropWhen } from '../track/propGrade';
+import { loadForwardLog, loadPropLog, type ForwardLog } from '../track/forward';
 import { runBacktest, type BacktestProgress } from '../track/backtest';
-import type { Entry } from '../track/types';
+import type { Entry, PropEntry, PropSnap } from '../track/types';
 import { Reliability } from './charts';
-import { lineText, pct, signed1 } from './format';
+import { lineText, one, pct, signed1 } from './format';
 
 type Source = 'log' | 'backtest';
 const BACKTEST_DAYS = [7, 14, 30];
@@ -30,17 +33,24 @@ function units(u: number): string {
   return `${u >= 0 ? '+' : '−'}${Math.abs(u).toFixed(1)} units`;
 }
 
+/** A bootstrap interval from a handful of games is meaningless, so don't call it early. */
+function verdictOf(v: { n: number; lo: number; hi: number }, who: string) {
+  const few = v.n < MIN_VERDICT_GAMES;
+  const better = !few && v.hi < 0, worse = !few && v.lo > 0;
+  return {
+    few,
+    cls: better ? 'pos' : worse ? 'neg' : '',
+    text: few ? 'Too few games to tell' : better ? `${who} beats the market` : worse ? `Market beats the ${who.toLowerCase()}` : 'No clear difference yet',
+  };
+}
+
 function Verdict({ s }: { s: Summary }) {
   const v = s.vsMarket;
   if (!v) return <p class="muted">No moneylines in this sample, so there's no market to compare against.</p>;
-  // A bootstrap interval from a handful of games is meaningless, so don't call it early.
-  const few = v.n < MIN_VERDICT_GAMES;
-  const better = !few && v.hi < 0, worse = !few && v.lo > 0;
+  const { few, cls, text } = verdictOf(v, 'Model');
   return (
     <div class="verdict">
-      <strong class={better ? 'pos' : worse ? 'neg' : ''}>
-        {few ? 'Too few games to tell' : better ? 'Model beats the market' : worse ? 'Market beats the model' : 'No clear difference yet'}
-      </strong>
+      <strong class={cls}>{text}</strong>
       <span class="muted">
         Brier score (lower is better) on {v.n} game{v.n === 1 ? '' : 's'} with a moneyline: model {v.model.toFixed(3)}, market {v.market.toFixed(3)}. Difference {signed(v.diff)}
         {few ? `. A verdict needs at least ${MIN_VERDICT_GAMES} games.` : `, 95% interval ${signed(v.lo)} to ${signed(v.hi)}.`}
@@ -171,6 +181,203 @@ function GamesTable({ rows }: { rows: { e: Entry; g: Graded }[] }) {
   );
 }
 
+const record3 = (r: Record3) => `${r.win}–${r.loss}${r.push ? `–${r.push}` : ''} · ${units(r.units)}`;
+
+/** "Q2 5:00" or "H1 10:00": the moment a live line was saved. */
+function momentText(league: LeagueId, at: NonNullable<PropSnap['at']>): string {
+  const L = LEAGUES[league];
+  const p = at.period > L.periods ? (at.period - L.periods > 1 ? `${at.period - L.periods}OT` : 'OT') : `${L.periods === 4 ? 'Q' : 'H'}${at.period}`;
+  const m = Math.floor(at.clockSec / 60), sec = Math.floor(at.clockSec % 60);
+  return `${p} ${m}:${String(sec).padStart(2, '0')}`;
+}
+
+function PropStats({ s, when }: { s: PropSummary; when: PropWhen }) {
+  const v = s.vsMarket;
+  const verdict = v && verdictOf(v, 'Sim');
+  return (
+    <>
+      <section class="card stats-row" aria-label="Prop record">
+        <div class="stat">
+          <span class="kicker">Top picks</span>
+          <strong>{rate(s.top)}</strong>
+          <span class="muted">
+            {record3(s.top)} · the sim's best {TOP_PER_GAME} per game
+          </span>
+        </div>
+        <div class="stat">
+          <span class="kicker">Every line</span>
+          <strong>{rate(s.every)}</strong>
+          <span class="muted">
+            {record3(s.every)} · the sim's side of {s.lines} lines in {s.games} game{s.games === 1 ? '' : 's'}
+          </span>
+        </div>
+      </section>
+      <section class="card">
+        <header class="card-head">
+          <h2>Props against the market</h2>
+        </header>
+        {v && verdict ? (
+          <div class="verdict">
+            <strong class={verdict.cls}>{verdict.text}</strong>
+            <span class="muted">
+              Brier score on the over (lower is better), averaged per game over {v.n} game{v.n === 1 ? '' : 's'}: sim {v.model.toFixed(3)}, market {v.market.toFixed(3)}. Difference{' '}
+              {signed(v.diff)}
+              {verdict.few ? `. A verdict needs at least ${MIN_VERDICT_GAMES} games.` : `, 95% interval ${signed(v.lo)} to ${signed(v.hi)}.`}
+            </span>
+          </div>
+        ) : (
+          <p class="muted">Every graded line pushed, so there's nothing to compare yet.</p>
+        )}
+        <p class="muted small">
+          Props in one game move together (a fast pace lifts every over), so each game counts once in the comparison. Top picks are ranked the way the app ranks single bets: positive
+          sim return, at least a 40% hit chance, no longer than +200.{when === 'live' ? ' Live lines are the book\'s in-game prices at the moment shown.' : ''} Units are
+          hypothetical, staking 1 unit on every pick at the listed price. Not advice.
+        </p>
+      </section>
+    </>
+  );
+}
+
+function PropTable({ rows, league, live }: { rows: GradedProp[]; league: LeagueId; live: boolean }) {
+  const cell = (r: string) => (r === 'win' ? <span class="pos">Won</span> : r === 'loss' ? <span class="neg">Lost</span> : <span class="muted">Push</span>);
+  return (
+    <div class="table-wrap">
+      <table class="data props-table">
+        <thead>
+          <tr>
+            <th scope="col" title={live ? 'When the line was saved, the score then (away–home), and what the player had' : undefined}>
+              Bet
+            </th>
+            <th scope="col" class="num">
+              Price
+            </th>
+            <th scope="col" class="num" title="The sim's chance this side wins">
+              Sim
+            </th>
+            <th scope="col" class="num" title="The book's no-vig chance">
+              Mkt
+            </th>
+            <th scope="col" title="The player's final line">
+              Result
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={`${r.gameId}:${r.athleteId}:${r.stat}:${r.side}`}>
+              <th scope="row">
+                {r.player} {r.side} {r.line} {PROP_WORDS[r.stat]}
+                <br />
+                <span class="muted small">
+                  {new Date(r.tip).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {r.label}
+                  {live && (
+                    <>
+                      <br />
+                      Saved {r.at ? `${momentText(league, r.at)}, ${r.at.away}–${r.at.home}` : 'mid-game'} · had {r.now ?? 0}
+                    </>
+                  )}
+                </span>
+              </th>
+              <td class="num">{fmtAmerican(r.price)}</td>
+              <td class="num">{pct(r.pSim, 0)}</td>
+              <td class="num">{pct(r.pMarket, 0)}</td>
+              <td title={`Sim average ${one(r.mean)}`}>
+                {cell(r.result)}
+                <br />
+                <span class="muted small">{r.final}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Player props from the saved log: the lines and the sim's chances before tip-off, and once mid-game. */
+function PropRecord(props: { league: LeagueId; model: string }) {
+  const [when, setWhen] = useState<PropWhen>('pre');
+  const [log, setLog] = useState<{ status: 'loading' | 'ok' | 'error'; entries: PropEntry[]; error?: string }>({ status: 'loading', entries: [] });
+  const [all, setAll] = useState(false);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    setLog({ status: 'loading', entries: [] });
+    loadPropLog(props.league, ac.signal)
+      .then((entries) => setLog({ status: 'ok', entries }))
+      .catch((e) => {
+        if (e?.name !== 'AbortError') setLog({ status: 'error', entries: [], error: e?.message ?? String(e) });
+      });
+    return () => ac.abort();
+  }, [props.league]);
+
+  const logged = useMemo(() => log.entries.filter((e) => e[when] && (props.model === 'all' || e[when]!.model === props.model)), [log.entries, when, props.model]);
+  const snaps = useMemo(() => logged.map((e) => gradeProps(e, when)).filter((g): g is GradedSnap => !!g), [logged, when]);
+  const summary = useMemo(() => summarizeProps(snaps), [snaps]);
+  const top = useMemo(() => snaps.flatMap((s) => s.top), [snaps]);
+  const waiting = logged.filter((e) => e.status === 'open').length;
+
+  return (
+    <>
+      <section class="card">
+        <header class="card-head">
+          <h2>Player props</h2>
+          <div class="seg small" role="radiogroup" aria-label="Which prop lines">
+            <button type="button" role="radio" aria-checked={when === 'pre'} class={when === 'pre' ? 'on' : ''} onClick={() => setWhen('pre')}>
+              Before tip-off
+            </button>
+            <button type="button" role="radio" aria-checked={when === 'live'} class={when === 'live' ? 'on' : ''} onClick={() => setWhen('live')}>
+              Live
+            </button>
+          </div>
+        </header>
+        <p class="muted">
+          {when === 'pre'
+            ? "The posted prop lines and the sim's chance on each, saved with the game's last snapshot before tip-off and graded from the final box score."
+            : `The book's in-game prop lines, saved once per game mid-game (${LEAGUES[props.league].periods === 4 ? '2nd or 3rd quarter' : 'between 10:00 left in the first half and 10:00 left in the second'}) with the sim's chances from that score, then never changed. Graded from the final box score.`}
+          {waiting ? ` ${waiting} game${waiting === 1 ? '' : 's'} waiting on a result.` : ''}
+        </p>
+        {log.status === 'loading' && (
+          <p class="muted">
+            <span class="spinner" aria-hidden="true" /> Loading the prop log…
+          </p>
+        )}
+        {log.status === 'error' && <p class="note">Couldn't load the prop log: {log.error}</p>}
+        {log.status === 'ok' && !snaps.length && (
+          <p class="muted">
+            No graded {when === 'pre' ? 'pre-game' : 'live'} props yet.{' '}
+            {when === 'pre'
+              ? 'They appear once a game with posted props ends; books usually post them on game day, and the job saves them in its last few hours before tip-off.'
+              : "They appear once a game the job caught mid-game ends. A game with no job run in that window has no live entry."}{' '}
+            A player who sits has their props voided, as books do.
+          </p>
+        )}
+      </section>
+      {snaps.length > 0 && (
+        <>
+          <PropStats s={summary} when={when} />
+          <section class="card">
+            <header class="card-head">
+              <h2>Top prop picks</h2>
+              <p class="muted small">{top.length} graded, newest first.</p>
+            </header>
+            {top.length ? (
+              <PropTable rows={all ? top : top.slice(0, GAMES_SHOWN)} league={props.league} live={when === 'live'} />
+            ) : (
+              <p class="muted">None of the graded lines cleared the bar for a pick.</p>
+            )}
+            {top.length > GAMES_SHOWN && (
+              <button type="button" class="ghost-btn" onClick={() => setAll(!all)}>
+                {all ? `Show the latest ${GAMES_SHOWN}` : `Show all ${top.length} picks`}
+              </button>
+            )}
+          </section>
+        </>
+      )}
+    </>
+  );
+}
+
 export function TrackRecord(props: { league: LeagueId }) {
   const [source, setSource] = useState<Source>('log');
   const [log, setLog] = useState<{ status: 'loading' | 'ok' | 'error'; data?: ForwardLog; error?: string }>({ status: 'loading' });
@@ -246,7 +453,7 @@ export function TrackRecord(props: { league: LeagueId }) {
         </header>
         {source === 'log' ? (
           <p class="muted">
-            Every prediction here was saved before its game tipped off and never changed afterwards, so this record has no hindsight.
+            Every prediction here was saved before its game tipped off (live props: at the moment shown) and never changed afterwards, so this record has no hindsight.
             {log.status === 'ok' && lastRun ? ` The log last updated ${ago(lastRun)}.` : ''}
             {open ? ` ${open} game${open === 1 ? '' : 's'} waiting on a result.` : ''}
           </p>
@@ -281,7 +488,10 @@ export function TrackRecord(props: { league: LeagueId }) {
                 </button>
               )}
             </div>
-            <p class="muted small">The first run reads every game's history from ESPN and can take a few minutes; results are cached for model {MODEL_VERSION}.</p>
+            <p class="muted small">
+              The first run reads every game's history from ESPN and can take a few minutes; results are cached for model {MODEL_VERSION}. Player props are graded in the saved log
+              only.
+            </p>
             {bt.failed > 0 && <p class="note">{bt.failed} games couldn't be loaded and were skipped.</p>}
             {bt.status === 'error' && <p class="note">The backtest stopped: {bt.error}</p>}
           </>
@@ -336,6 +546,7 @@ export function TrackRecord(props: { league: LeagueId }) {
           </section>
         </>
       )}
+      {source === 'log' && <PropRecord league={props.league} model={pick} />}
     </div>
   );
 }

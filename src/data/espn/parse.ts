@@ -98,6 +98,7 @@ export function parseScoreboard(json: J): ScoreboardGame[] {
       date: ev?.date ?? comp?.date ?? '',
       phase: phaseOf(status?.type?.state),
       statusText: status?.type?.shortDetail ?? status?.type?.detail ?? '',
+      ...(num(status?.period) > 0 ? { period: num(status.period), clockSec: clockToSec(status?.displayClock ?? status?.clock) } : {}),
       home: side('home'),
       away: side('away'),
       odds: comp?.odds?.[0]?.details,
