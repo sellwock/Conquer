@@ -76,7 +76,8 @@ export function Method(props: { game: GameData }) {
         games other than the open one are as of that game's simulation, cached for 30 minutes. During a game simulated from now, the book's in-game prop
         lines are read every two minutes and priced as each player's stats so far plus the simulated rest of the game. "All live games" does the same for
         every game in progress (2,000 sims each from its current state, refreshed every two minutes while open) and builds live parlays across them. The
-        in-game book's live moneyline, spread and total join those parlays too, priced from the simulated final scores. These are suggestions from a model, not advice.
+        in-game book's live moneyline, spread and total join those parlays too, priced from the simulated final scores. A game in progress opens
+        simulated from now, and its Outlook tab leads with the top live bets. These are suggestions from a model, not advice.
       </p>
       <h3>Limits</h3>
       <ul>

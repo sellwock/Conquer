@@ -9,7 +9,7 @@ import { DataError, getProxy, setProxy } from '../data/espn/client';
 import { demoGame } from '../data/demo';
 import { CancelledError, runInBackground, runQuickInBackground, type Job } from '../sim/client';
 import type { SimSummary } from '../sim/run';
-import { DEFAULTS, parseHash, toHash, type Tab, type UrlState } from './state';
+import { DEFAULTS, effectiveFrom, parseHash, toHash, type Tab, type UrlState } from './state';
 import { yyyymmdd } from './format';
 import { prefersDark, teamPair } from './colors';
 import { TopBar, GameStrip } from './header';
@@ -22,7 +22,7 @@ import { Players, type ImpactRow } from './players';
 import { Recent } from './recent';
 import { Flow } from './flow';
 import { Method } from './method';
-import { Parlays } from './parlays';
+import { LiveBetsPreview, Parlays } from './parlays';
 import { TrackRecord } from './record';
 import { SlateBoard } from './slate';
 import { marketFrom, useSlate } from './useSlate';
@@ -196,7 +196,9 @@ export function App() {
 
   // A refresh replaces the game object; the simulation only re-runs when it reads what changed:
   // the live state (simulating from now, or as-played minutes) or the game starting or ending.
-  const readsLive = !!data && data.phase !== 'pre' && (url.from === 'now' || url.mode === 'actual');
+  // A game in progress simulates from now unless the link picks another start.
+  const from = effectiveFrom(url.from, data?.phase);
+  const readsLive = !!data && data.phase !== 'pre' && (from === 'now' || url.mode === 'actual');
   const simKey = data ? [data.id, data.phase, readsLive ? [data.period, data.clockSec, data.homeScore, data.awayScore].join(':') : ''].join('|') : '';
   const simData = useMemo(() => data, [simKey]);
 
@@ -210,11 +212,11 @@ export function App() {
   // --- Simulation -------------------------------------------------------------------------------
   const start = useMemo((): GameSnapshot | undefined => {
     if (!simData) return undefined;
-    if (url.from === 'now') return snapshotFromGame(simData);
-    const seq = Number(url.from);
-    if (url.from !== 'tip' && Number.isFinite(seq)) return snapshotAtPlay(simData, seq);
+    if (from === 'now') return snapshotFromGame(simData);
+    const seq = Number(from);
+    if (from !== 'tip' && Number.isFinite(seq)) return snapshotAtPlay(simData, seq);
     return undefined;
-  }, [simData, url.from]);
+  }, [simData, from]);
 
   useEffect(() => {
     if (!simData) return;
@@ -251,7 +253,7 @@ export function App() {
             !url.hca ? 'no home court' : '',
           ].filter(Boolean);
           const market = start ? undefined : { note: tweaks.length ? `your scenario (${tweaks.join(', ')})` : undefined };
-          const liveFrom = url.from === 'now' && simData.phase === 'in' ? simData : undefined;
+          const liveFrom = from === 'now' && simData.phase === 'in' ? simData : undefined;
           setSim({ status: 'done', progress: 1, scenario, baseline, built, options, market, liveFrom });
         })
         .catch((e) => {
@@ -267,7 +269,7 @@ export function App() {
   // Posted player props for the open game: once before tip-off, and while a game is live and
   // simulated from now, the book's in-game lines every two minutes.
   const [props, setProps] = useState<PropState>();
-  const liveProps = !!simData && simData.phase === 'in' && url.from === 'now';
+  const liveProps = !!simData && simData.phase === 'in' && from === 'now';
   const propGame = simData && !simData.demo && (simData.phase === 'pre' || liveProps) ? simData : undefined;
   useEffect(() => {
     if (!propGame) return setProps(undefined);
@@ -392,9 +394,9 @@ export function App() {
         onView={(view) => update({ view })}
         league={url.league}
         date={url.date!}
-        onLeague={(league) => update({ league, game: undefined, outs: [], ins: [], from: 'tip', mode: 'projected' })}
-        onDate={(date) => update({ date, game: undefined, outs: [], ins: [], from: 'tip', mode: 'projected' })}
-        onSample={() => update({ game: 'demo', outs: [], ins: [], from: 'tip', mode: 'projected' })}
+        onLeague={(league) => update({ league, game: undefined, outs: [], ins: [], from: 'auto', mode: 'projected' })}
+        onDate={(date) => update({ date, game: undefined, outs: [], ins: [], from: 'auto', mode: 'projected' })}
+        onSample={() => update({ game: 'demo', outs: [], ins: [], from: 'auto', mode: 'projected' })}
       />
       {url.view === 'record' ? (
         <TrackRecord league={url.league} />
@@ -405,7 +407,7 @@ export function App() {
           board={board}
           slate={slate}
           openGame={url.game}
-          onOpen={(id) => update({ view: 'game', game: id, outs: [], ins: [], from: 'tip', mode: 'projected' })}
+          onOpen={(id) => update({ view: 'game', game: id, outs: [], ins: [], from: 'auto', mode: 'projected' })}
           live={{ slate: liveSlate, markets: liveMarkets }}
         />
       ) : (
@@ -420,7 +422,7 @@ export function App() {
           </button>
         </div>
       )}
-      <GameStrip board={offline ? { ...board, error: undefined, status: board.games.length ? 'ok' : 'empty' } : board} selected={url.game} onSelect={(id) => update({ game: id, outs: [], ins: [], from: 'tip', mode: 'projected', tab: url.tab })} />
+      <GameStrip board={offline ? { ...board, error: undefined, status: board.games.length ? 'ok' : 'empty' } : board} selected={url.game} onSelect={(id) => update({ game: id, outs: [], ins: [], from: 'auto', mode: 'projected', tab: url.tab })} />
       {game.status === 'loading' && <div class="loading-panel"><span class="spinner" aria-hidden="true" />{game.msg}…</div>}
       {game.status === 'error' && (
         <div class="error-panel" role="alert">
@@ -435,7 +437,7 @@ export function App() {
           <main class="workspace">
             <Sheet
               game={data}
-              url={url}
+              url={{ ...url, from }}
               sim={sim}
               palette={palette}
               unknownOuts={unknownOuts}
@@ -470,11 +472,24 @@ export function App() {
               {url.tab !== 'recent' && !sim.scenario && sim.status !== 'error' && <div class="loading-panel"><span class="spinner" aria-hidden="true" />Simulating {url.n.toLocaleString()} games…</div>}
               {url.tab !== 'recent' && sim.scenario && sim.built && (
                 <div class={sim.status === 'running' ? 'tabpanel stale' : 'tabpanel'} role="tabpanel">
+                  {url.tab === 'outlook' && data.phase === 'in' && !data.demo && (
+                    <LiveBetsPreview
+                      game={data}
+                      market={liveMarket}
+                      state={props}
+                      fromNow={from === 'now'}
+                      onFromNow={() => update({ from: 'now' })}
+                      onMore={() => {
+                        setLiveScope('game');
+                        setTab('parlays');
+                      }}
+                    />
+                  )}
                   {url.tab === 'outlook' && <Outlook game={data} sim={sim as Required<SimState>} palette={palette} start={start} />}
                   {url.tab === 'typical' && <TypicalGame game={data} summary={sim.scenario} built={sim.built} palette={palette} />}
                   {url.tab === 'players' && <Players game={data} summary={sim.scenario} built={sim.built} palette={palette} impact={impact} onImpact={runImpact} />}
                   {url.tab === 'flow' && (
-                    <Flow game={data} summary={sim.scenario} palette={palette} from={url.from} onFrom={(from) => update({ from })} />
+                    <Flow game={data} summary={sim.scenario} palette={palette} from={from} onFrom={(f) => update({ from: f })} />
                   )}
                   {url.tab === 'parlays' && (
                     <Parlays
@@ -484,10 +499,10 @@ export function App() {
                       scan={slate.scan}
                       onScan={slate.start}
                       onCancelScan={slate.stop}
-                      onOpen={(id) => update({ game: id, outs: [], ins: [], from: 'tip', mode: 'projected', tab: 'parlays' })}
+                      onOpen={(id) => update({ game: id, outs: [], ins: [], from: 'auto', mode: 'projected', tab: 'parlays' })}
                       props={props}
                       liveMarket={liveMarket}
-                      simFromNow={url.from === 'now'}
+                      simFromNow={from === 'now'}
                       onFromNow={() => update({ from: 'now' })}
                       liveSlate={liveSlate}
                       liveScope={liveScope}
