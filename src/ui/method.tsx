@@ -77,7 +77,9 @@ export function Method(props: { game: GameData }) {
         lines are read every two minutes and priced as each player's stats so far plus the simulated rest of the game. "All live games" does the same for
         every game in progress (2,000 sims each from its current state, refreshed every two minutes while open) and builds live parlays across them. The
         in-game book's live moneyline, spread and total join those parlays too, priced from the simulated final scores. A game in progress opens
-        simulated from now, and its Outlook tab leads with the top live bets. These are suggestions from a model, not advice.
+        simulated from now, and its Outlook tab leads with the top live bets. The Track record grades props going forward: the scheduled job saves each
+        game's posted lines with the simulation's chances before tip-off, and once more mid-game from the in-game book. These are suggestions from a model,
+        not advice.
       </p>
       <h3>Limits</h3>
       <ul>

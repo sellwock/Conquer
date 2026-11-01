@@ -109,6 +109,12 @@ describe('summary pieces', () => {
     const games = parseScoreboard(fx('synthetic-nba-scoreboard.json'));
     expect(games.length).toBe(2);
     expect(games[0].home.abbr).toBeTruthy();
+    // Period and clock once a game has started, for the forward log's mid-game prop snapshot.
+    expect(games[0]).toMatchObject({ phase: 'post', period: 4, clockSec: 0 });
+    expect(games[1].period).toBeUndefined();
+    const live = fx('synthetic-nba-scoreboard.json');
+    live.events[0].competitions[0].status = { period: 2, displayClock: '5:12', clock: 312, type: { state: 'in' } };
+    expect(parseScoreboard(live)[0]).toMatchObject({ phase: 'in', period: 2, clockSec: 312 });
     expect(parseScoreboard(fx('synthetic-mbb-scoreboard.json')).length).toBeGreaterThan(0);
     expect(parseRoster(fx('synthetic-nba-team-roster.json')).length).toBe(4);
     const sched = parseScheduleEvents(fx('synthetic-nba-team-schedule.json'));

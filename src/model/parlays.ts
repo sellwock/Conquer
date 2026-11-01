@@ -129,7 +129,7 @@ export const MAX_PRICE: Record<number, number> = { 1: 200, 2: 400, 3: 700 };
 export const toDecimal = (american: number) => (american > 0 ? 1 + american / 100 : 1 + 100 / -american);
 export const toAmerican = (decimal: number) => (decimal >= 2 ? Math.round((decimal - 1) * 100) : -Math.round(100 / (decimal - 1)));
 
-function noVig(a: number, b: number): [number, number] {
+export function noVig(a: number, b: number): [number, number] {
   const pa = impliedFromAmerican(a), pb = impliedFromAmerican(b);
   return [pa / (pa + pb), pb / (pa + pb)];
 }

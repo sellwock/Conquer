@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setFetch, setStore } from '../src/data/espn/client';
 import { backtestKey, runBacktest } from '../src/track/backtest';
-import { loadForwardLog } from '../src/track/forward';
+import { loadForwardLog, loadPropLog } from '../src/track/forward';
 import { gradeEntry } from '../src/track/grade';
 import type { Entry } from '../src/track/types';
 
@@ -70,6 +70,25 @@ describe('forward log loader', () => {
     expect(log.status?.model).toBe('1.0.0');
     expect(log.entries.map((e) => e.id)).toEqual(['2', '1']);
     expect(calls.some((c) => c.includes('ncaam'))).toBe(false);
+  });
+
+  it("keeps prop files out of the game log and reads them on their own", async () => {
+    const calls: string[] = [];
+    const prop = (id: string, tip: string) => ({ id, league: 'nba', season: 2027, tip, home: { id: 'h', abbr: 'HOM' }, away: { id: 'a', abbr: 'AWY' }, status: 'open', players: {} });
+    vi.stubGlobal('fetch', async (url: string) => {
+      calls.push(url);
+      const path = url.split('/data/v1/')[1];
+      const body: Record<string, unknown> = {
+        'index.json': { files: ['nba/2027/2026-10.json', 'props/nba/2027/2026-10.json', 'props/ncaam/2027/2026-11.json'] },
+        'nba/2027/2026-10.json': { '1': entry('1', '2026-10-21T23:00:00Z') },
+        'props/nba/2027/2026-10.json': { '1': prop('1', '2026-10-21T23:00:00Z'), '2': prop('2', '2026-10-23T23:00:00Z') },
+      };
+      return path in body ? new Response(JSON.stringify(body[path]), { status: 200 }) : new Response('', { status: 404 });
+    });
+    expect((await loadForwardLog('nba')).entries.map((e) => e.id)).toEqual(['1']);
+    expect(calls.some((c) => c.includes('props/'))).toBe(false);
+    expect((await loadPropLog('nba')).map((e) => e.id)).toEqual(['2', '1']);
+    expect(calls.some((c) => c.includes('props/ncaam'))).toBe(false);
   });
 
   it('treats a missing log as empty', async () => {

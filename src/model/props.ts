@@ -10,7 +10,8 @@ import type { PlayerOutcomes } from '../sim/players';
 
 export const MIN_MINUTES = 15;
 
-const PARTS: Record<PropStat, ('pts' | 'reb' | 'ast' | 'tpm')[]> = {
+/** The box-score stats each prop adds up. */
+export const PARTS: Record<PropStat, ('pts' | 'reb' | 'ast' | 'tpm')[]> = {
   pts: ['pts'],
   reb: ['reb'],
   ast: ['ast'],

@@ -147,7 +147,7 @@ export interface Summary {
   clv?: { n: number; mean: number };
 }
 
-function record(items: { result: BetResult; price: number }[]): Record3 {
+export function record(items: { result: BetResult; price: number }[]): Record3 {
   const r: Record3 = { win: 0, loss: 0, push: 0, units: 0 };
   for (const x of items) {
     r[x.result]++;
