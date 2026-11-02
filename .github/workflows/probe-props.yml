@@ -11,9 +11,9 @@ jobs:
       matrix:
         include:
           - league: nba
-            args: --ranges 20261020-20261101,20260105-20260331 --max 120 --usage 30,15,10 --rate 45,20,10 --minutes 1.5,2 --usage-noise 0 --full
+            args: --ranges 20261020-20261101,20260105-20260331 --max 120 --usage 15 --rate 20 --minutes 0,0.75,1,1.5,2 --usage-noise 0 --full
           - league: ncaam
-            args: --ranges 20260110-20260301 --max 150 --usage 60,30,15 --rate 90,45,20 --minutes 0,1.5,2 --usage-noise 0 --full
+            args: --ranges 20260110-20260301 --max 150 --usage 15 --rate 20 --minutes 0,0.75,1,1.5,2 --usage-noise 0 --full
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
