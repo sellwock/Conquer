@@ -566,9 +566,11 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
   }
 
   /**
-   * Draws this game's minutes target and usage multiplier per player. Minutes vary by an sd of
+   * Draws this game's minutes target and usage multiplier per player. Minutes vary by about
    * 2 + 0.1 × the projection (more, relatively, for the bench), scaled by `noise.minutes` and by how
-   * much of the game is left; the team's total stays the same.
+   * much of the game is left. The draw is a multiplier with a mean of 1, so each player keeps his
+   * projection on average (a cut-off normal would hand the bench minutes and take them from
+   * stars), and the team's total stays the same.
    */
   function vary(ts: TeamState, noise: { minutes: number; usage: number }, left: number) {
     let before = 0, after = 0;
@@ -576,7 +578,11 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
       const t = ts.t.players[i].targetMin;
       if (t <= 0 || ts.out[i]) continue;
       before += t;
-      if (noise.minutes > 0) ts.target[i] = Math.max(0, t + noise.minutes * left * (2 + 0.1 * t) * normal(rng));
+      if (noise.minutes > 0) {
+        const cv = Math.min(1, (noise.minutes * left * (2 + 0.1 * t)) / t);
+        const sigma = Math.sqrt(Math.log(1 + cv * cv));
+        ts.target[i] = t * Math.exp(sigma * normal(rng) - (sigma * sigma) / 2);
+      }
       after += ts.target[i];
       if (noise.usage > 0) ts.useMult[i] = Math.exp(noise.usage * normal(rng) - (noise.usage * noise.usage) / 2);
     }
