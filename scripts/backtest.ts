@@ -8,6 +8,8 @@
 //
 // --games reuses another run's game list, so a base run grades exactly the branch's games.
 // --root evaluates another checkout's model (its src/ is imported directly; it needs no install).
+// Each run also grades every player's simulated lines against his box score with this checkout's
+// src/track/players.ts, so base and branch are graded the same way.
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -15,6 +17,9 @@ import type { LeagueId, ScoreboardGame } from '../src/model/types';
 import type { Entry } from '../src/track/types';
 import { compareRuns, comparisonMarkdown } from '../src/track/compare';
 import { evenly, finalsToGrade } from '../src/track/rebuild';
+import { evaluatePlayers, playersMarkdown, summarizePlayers, type PlayerEval } from '../src/track/players';
+import type { SimSpec } from '../src/sim/types';
+import type { Outcomes } from '../src/sim/quick';
 import { args, fileStore } from './cli';
 
 /** Last season's regular season by default: big enough to settle a Brier difference. */
@@ -34,6 +39,8 @@ interface RunFile {
   sims: number;
   games: GameRef[];
   entries: Entry[];
+  /** Every player who played, graded against his simulated lines (absent for older runs). */
+  players?: PlayerEval[];
   failed: number;
   errors: string[];
 }
@@ -82,14 +89,28 @@ async function run(a: Record<string, string | boolean>) {
 
   console.log(`Model ${MODEL_VERSION} from ${root}, ${sims} sims per game.`);
   const entries: Entry[] = [];
+  const players: PlayerEval[] = [];
   const errors: string[] = [];
   let done = 0;
   const started = Date.now();
   await client.mapLimit(games, 3, async (g: GameRef) => {
     try {
-      const e: Entry | null = await rebuildGame(league, g, sims, runOutcomes);
+      // The same simulation also records every player's line, for grading players below.
+      let sim: { spec: SimSpec; o: Outcomes } | undefined;
+      const simulate = (spec: SimSpec, n: number, seed: string) => {
+        const o: Outcomes = runOutcomes(spec, n, seed, { players: true });
+        sim = { spec, o };
+        return o;
+      };
+      const e: Entry | null = await rebuildGame(league, g, sims, simulate);
       if (e) entries.push(e);
       else errors.push(`${g.id}: no final score`);
+      if (e && sim?.o.players) {
+        // Already cached by the rebuild: this only re-reads it, for the box score.
+        const game = await load.loadGame(league, g.id, { sampleGames: 10, asOf: g.date });
+        const proj = new Map([...sim.spec.home.players, ...sim.spec.away.players].map((p) => [p.id, p.targetMin]));
+        players.push(...evaluatePlayers(game, sim.o.players, proj));
+      }
     } catch (err) {
       errors.push(`${g.id}: ${(err as Error).message}`);
     }
@@ -97,7 +118,7 @@ async function run(a: Record<string, string | boolean>) {
       console.log(`${done}/${games.length} · ${errors.length} failed · ${client.requestCount()} requests · ${Math.round((Date.now() - started) / 1000)}s`);
   });
   entries.sort((x, y) => x.tip.localeCompare(y.tip) || x.id.localeCompare(y.id));
-  const out: RunFile = { league, model: MODEL_VERSION, sims, games, entries, failed: errors.length, errors: errors.slice(0, 50) };
+  const out: RunFile = { league, model: MODEL_VERSION, sims, games, entries, players, failed: errors.length, errors: errors.slice(0, 50) };
   writeFileSync(String(a.out ?? 'backtest.json'), JSON.stringify(out));
   if (errors.length) console.log(`First failures:\n${errors.slice(0, 10).join('\n')}`);
 }
@@ -109,6 +130,11 @@ function compare(a: Record<string, string | boolean>) {
   const base = read(a.base);
   const title = String(a.title ?? head.league.toUpperCase());
   let md = comparisonMarkdown(title, compareRuns(head.entries, base?.entries));
+  if (head.players?.length) {
+    md += `\n### ${title} player lines (players projected 15+ minutes)\n\n`;
+    md += playersMarkdown([...(base?.players?.length ? [{ label: 'Base', s: summarizePlayers(base.players) }] : []), { label: 'Branch', s: summarizePlayers(head.players) }]);
+    md += '\nCRPS scores the whole simulated distribution against the actual line (lower is better); about 80% of actual lines should land inside the middle 80%.\n';
+  }
   const failures = [`branch ${head.failed} of ${head.games.length}`, ...(base ? [`base ${base.failed} of ${base.games.length}`] : [])];
   md += `\nGames that failed to load: ${failures.join(', ')}. ${base ? '' : 'No base run, so no paired comparison.'}\n`;
   console.log(md);
