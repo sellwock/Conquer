@@ -1,11 +1,13 @@
 // Fits the player-level knobs (PLAYER_TUNING in src/model/build.ts) against real box scores. Each
 // finished game is rebuilt as it looked at tip-off, simulated with every setting, and each player's
-// simulated lines are graded against what he did (src/track/players.ts). Stage 1 tries how hard
-// usage and per-minute rates are pulled toward position averages; stage 2 adds game-to-game
-// variation in minutes and usage on top of stage 1's best.
+// simulated lines are graded against what he did (src/track/players.ts). By default, stage 1 tries
+// how hard usage and per-minute rates are pulled toward position averages, and stage 2 adds
+// game-to-game variation in minutes and usage on top of stage 1's best. --full tries every
+// combination of the lists instead.
 //
 //   npx tsx scripts/players.ts --league nba --ranges 20261020-20261101,20260105-20260331
 //       [--max 120] [--sims 1000] [--cache .cache/bt] [--out players.md]
+//       [--usage 120,60,30] [--rate 180,90,45] [--minutes 0,1,1.5] [--usage-noise 0,0.12,0.2] [--full]
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { setStore, mapLimit, requestCount } from '../src/data/espn/client';
 import { loadGame, loadScoreboard, pregameView } from '../src/data/espn/load';
@@ -94,24 +96,38 @@ async function main() {
   /** Mean CRPS over points, rebounds and assists, each relative to the current model's. */
   const score = (x: PlayerSummary, base: PlayerSummary) => (['pts', 'reb', 'ast'] as const).reduce((acc, k) => acc + x.stats[k].crps / base.stats[k].crps, 0) / 3;
 
-  // Stage 1: how hard usage and rates are pulled toward position averages.
+  const list = (k: string, d: number[]) => (typeof a[k] === 'string' || typeof a[k] === 'number' ? String(a[k]).split(',').map(Number) : d);
+  const grid = {
+    usagePriorMin: list('usage', [120, 60, 30]),
+    ratePriorMin: list('rate', [180, 90, 45]),
+    minutesNoise: list('minutes', [0, 1, 1.5]),
+    usageNoise: list('usage-noise', [0, 0.12, 0.2]),
+  };
   const base = run({});
   let best: { s: Setting; v: number } = { s: {}, v: 1 };
-  for (const usagePriorMin of [120, 60, 30])
-    for (const ratePriorMin of [180, 90, 45]) {
-      if (usagePriorMin === 120 && ratePriorMin === 180) continue;
-      const s = { usagePriorMin, ratePriorMin };
-      const v = score(run(s), base);
-      if (v < best.v) best = { s, v };
-    }
-  // Stage 2: game-to-game variation on top of the best priors.
-  for (const minutesNoise of [0, 1, 1.5])
-    for (const usageNoise of [0, 0.12, 0.2]) {
-      if (!minutesNoise && !usageNoise) continue;
-      const s = { ...best.s, minutesNoise, usageNoise };
-      const v = score(run(s), base);
-      if (v < best.v) best = { s, v };
-    }
+  const tryIt = (s: Setting) => {
+    const v = score(run(s), base);
+    if (v < best.v) best = { s, v };
+  };
+  if (a.full) {
+    for (const usagePriorMin of grid.usagePriorMin)
+      for (const ratePriorMin of grid.ratePriorMin)
+        for (const minutesNoise of grid.minutesNoise) for (const usageNoise of grid.usageNoise) tryIt({ usagePriorMin, ratePriorMin, minutesNoise, usageNoise });
+  } else {
+    // Stage 1: how hard usage and rates are pulled toward position averages.
+    for (const usagePriorMin of grid.usagePriorMin)
+      for (const ratePriorMin of grid.ratePriorMin) {
+        if (usagePriorMin === defaults.usagePriorMin && ratePriorMin === defaults.ratePriorMin) continue;
+        tryIt({ usagePriorMin, ratePriorMin });
+      }
+    // Stage 2: game-to-game variation on top of the best priors.
+    const priors = { ...best.s };
+    for (const minutesNoise of grid.minutesNoise)
+      for (const usageNoise of grid.usageNoise) {
+        if (!minutesNoise && !usageNoise) continue;
+        tryIt({ ...priors, minutesNoise, usageNoise });
+      }
+  }
 
   // --- Report ------------------------------------------------------------------------------------
   const ranked = results
