@@ -5,7 +5,7 @@ import { PROP_WORDS } from '../model/parlays';
 import { MODEL_VERSION } from '../model/version';
 import { fmtAmerican } from '../lib/stats';
 import { gradeEntry, summarize, type Graded, type Record3, type Summary } from '../track/grade';
-import { gradeProps, summarizeProps, TOP_PER_GAME, type GradedProp, type GradedSnap, type PropSummary, type PropWhen } from '../track/propGrade';
+import { gradeNews, gradeProps, summarizeProps, TOP_PER_GAME, type GradedProp, type GradedSnap, type PropSummary, type PropWhen } from '../track/propGrade';
 import { loadForwardLog, loadPropLog, type ForwardLog } from '../track/forward';
 import { runBacktest, type BacktestProgress } from '../track/backtest';
 import type { Entry, PropEntry, PropSnap } from '../track/types';
@@ -202,16 +202,27 @@ function PropStats({ s, when }: { s: PropSummary; when: PropWhen }) {
           <span class="kicker">Top picks</span>
           <strong>{rate(s.top)}</strong>
           <span class="muted">
-            {record3(s.top)} · the app's best {TOP_PER_GAME} per game
+            {record3(s.top)} · the app's best {TOP_PER_GAME} per {when === 'news' ? 'news snapshot' : 'game'}
           </span>
         </div>
         <div class="stat">
           <span class="kicker">Every line</span>
           <strong>{rate(s.every)}</strong>
           <span class="muted">
-            {record3(s.every)} · the sim's side of {s.lines} lines in {s.games} game{s.games === 1 ? '' : 's'}
+            {record3(s.every)} · the sim's side of {s.lines} lines in {s.games} {when === 'news' ? 'news snapshot' : 'game'}
+            {s.games === 1 ? '' : 's'}
           </span>
         </div>
+        {when === 'news' && s.moved && (
+          <div class="stat">
+            <span class="kicker">Line moved toward the pick</span>
+            <strong>{pct(s.moved.toward / Math.max(1, s.moved.toward + s.moved.away + s.moved.same), 0)}</strong>
+            <span class="muted">
+              {s.moved.toward} of {s.moved.toward + s.moved.away + s.moved.same} picks by tip-off ({s.moved.away} away, {s.moved.same} unchanged): the book was still catching up when
+              the news was saved
+            </span>
+          </div>
+        )}
       </section>
       <section class="card">
         <header class="card-head">
@@ -278,6 +289,14 @@ function PropTable({ rows, league, live }: { rows: GradedProp[]; league: LeagueI
                       Saved {r.at ? `${momentText(league, r.at)}, ${r.at.away}–${r.at.home}` : 'mid-game'} · had {r.now ?? 0}
                     </>
                   )}
+                  {r.news && (
+                    <>
+                      <br />
+                      {r.news.name} out · sim {r.news.shift > 0 ? '+' : '−'}
+                      {Math.abs(r.news.shift).toFixed(1)}
+                      {r.news.moved ? ` · line moved ${r.news.moved === 'same' ? 'nowhere' : r.news.moved === 'toward' ? 'toward it' : 'away'} by tip` : ''}
+                    </>
+                  )}
                 </span>
               </th>
               <td class="num">{fmtAmerican(r.price)}</td>
@@ -313,8 +332,17 @@ function PropRecord(props: { league: LeagueId; model: string }) {
     return () => ac.abort();
   }, [props.league]);
 
-  const logged = useMemo(() => log.entries.filter((e) => e[when] && (props.model === 'all' || e[when]!.model === props.model)), [log.entries, when, props.model]);
-  const snaps = useMemo(() => logged.map((e) => gradeProps(e, when)).filter((g): g is GradedSnap => !!g), [logged, when]);
+  const logged = useMemo(
+    () =>
+      log.entries.filter((e) =>
+        when === 'news' ? e.news?.some((n) => props.model === 'all' || n.model === props.model) : e[when] && (props.model === 'all' || e[when]!.model === props.model),
+      ),
+    [log.entries, when, props.model],
+  );
+  const snaps = useMemo(
+    () => (when === 'news' ? logged.flatMap((e) => gradeNews(e)) : logged.map((e) => gradeProps(e, when)).filter((g): g is GradedSnap => !!g)),
+    [logged, when],
+  );
   const summary = useMemo(() => summarizeProps(snaps), [snaps]);
   const top = useMemo(() => snaps.flatMap((s) => s.top), [snaps]);
   const waiting = logged.filter((e) => e.status === 'open').length;
@@ -331,12 +359,19 @@ function PropRecord(props: { league: LeagueId; model: string }) {
             <button type="button" role="radio" aria-checked={when === 'live'} class={when === 'live' ? 'on' : ''} onClick={() => setWhen('live')}>
               Live
             </button>
+            {props.league === 'nba' && (
+              <button type="button" role="radio" aria-checked={when === 'news'} class={when === 'news' ? 'on' : ''} onClick={() => setWhen('news')}>
+                After news
+              </button>
+            )}
           </div>
         </header>
         <p class="muted">
           {when === 'pre'
             ? "The posted prop lines and the sim's chance on each, saved with the game's last snapshot before tip-off and graded from the final box score."
-            : `The book's in-game prop lines, saved once per game mid-game (${LEAGUES[props.league].periods === 4 ? '2nd or 3rd quarter' : 'between 10:00 left in the first half and 10:00 left in the second'}) with the sim's chances from that score, then never changed. Graded from the final box score.`}
+            : when === 'live'
+              ? `The book's in-game prop lines, saved once per game mid-game (${LEAGUES[props.league].periods === 4 ? '2nd or 3rd quarter' : 'between 10:00 left in the first half and 10:00 left in the second'}) with the sim's chances from that score, then never changed. Graded from the final box score.`
+              : "Saved by the scheduled job within about 15 minutes of a player being ruled out before tip: the game's prop lines with the sim's chances with him out, and what each player would have done had he played. Picks are the side the news points to. Graded from the final box score, and each pick's line is checked again just before tip to see whether the book moved toward it."}
           {waiting ? ` ${waiting} game${waiting === 1 ? '' : 's'} waiting on a result.` : ''}
         </p>
         {log.status === 'loading' && (
@@ -347,10 +382,12 @@ function PropRecord(props: { league: LeagueId; model: string }) {
         {log.status === 'error' && <p class="note">Couldn't load the prop log: {log.error}</p>}
         {log.status === 'ok' && !snaps.length && (
           <p class="muted">
-            No graded {when === 'pre' ? 'pre-game' : 'live'} props yet.{' '}
+            No graded {when === 'pre' ? 'pre-game' : when === 'live' ? 'live' : 'after-news'} props yet.{' '}
             {when === 'pre'
               ? 'They appear once a game with posted props ends; books usually post them on game day, and the job saves them in its last few hours before tip-off.'
-              : "They appear once a game the job caught mid-game ends. A game with no job run in that window has no live entry."}{' '}
+              : when === 'live'
+                ? 'They appear once a game the job caught mid-game ends. A game with no job run in that window has no live entry.'
+                : 'They appear once a game ends that had a player ruled out after its props were posted, for a player projected 12+ minutes.'}{' '}
             A player who sits has their props voided, as books do.
           </p>
         )}

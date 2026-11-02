@@ -1,6 +1,7 @@
 // Shapes of the prediction log (data branch, v1/). Grades are always derived from these entries,
 // so a metric can change without rewriting history.
 import type { LeagueId, Odds, PropStat } from '../model/types';
+import type { NewsEvent } from '../model/news';
 
 /** A discrete distribution over integers: [lowest value, probabilities from there up]. */
 export type Pmf = [lo: number, probs: number[]];
@@ -75,9 +76,30 @@ export interface PropEntry {
   pre?: PropSnap;
   /** Saved once, mid-game, from the book's in-game feed. */
   live?: PropSnap;
+  /** Saved when a player was newly ruled out before tip: one per scratched player. */
+  news?: NewsSnap[];
+  /** The pre-game book's lines in the last 20 minutes before tip, for games with news. */
+  close?: { takenAt: string; lines: CloseLine[] };
   /** Each logged player's final [pts, reb, ast, tpm], or null if they didn't play (their props are void). */
   box?: Record<string, [number, number, number, number] | null>;
   gradedAt?: string;
 }
 
 export type PropLogFile = Record<string, PropEntry>;
+
+/** [athlete id, stat, line, over price, under price] */
+export type CloseLine = [athleteId: string, stat: PropStat, line: number, over: number, under: number];
+
+/** The game's prop lines priced with a newly scratched player out, right after the news. */
+export interface NewsSnap extends PropSnap {
+  out: { athleteId: string; name: string; status: string; since?: string; minutes: number };
+  /** Each row's simulated mean had he played, in row order. */
+  meanWith: number[];
+}
+
+/** v1/injuries/{league}.json: the last report the job saw, and recent news it found. */
+export interface InjuryLog {
+  updatedAt: string;
+  players: Record<string, { status: string; out: boolean; since?: string; team: string }>;
+  events: (NewsEvent & { seenAt: string })[];
+}

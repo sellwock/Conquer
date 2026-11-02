@@ -3,8 +3,8 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setFetch, setStore } from '../src/data/espn/client';
-import { easternYmd, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
-import type { Entry, LogFile, PropEntry, PropLogFile } from '../src/track/types';
+import { easternYmd, injuryLogPath, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
+import type { Entry, InjuryLog, LogFile, PropEntry, PropLogFile } from '../src/track/types';
 import { gradeProps } from '../src/track/propGrade';
 import { MODEL_VERSION } from '../src/model/version';
 
@@ -19,6 +19,8 @@ let coreStatus = 200;
 let liveAt: { period: number; clock: string } | undefined;
 let summaryCalls: Record<string, number> = {};
 let noLiveProps = false;
+/** ESPN's league-wide injury report as the mock serves it. */
+let injuriesFeed: unknown = { injuries: [] };
 
 const ath = (id: string) => ({ $ref: `http://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/athletes/${id}?lang=en&region=us` });
 const pair = (id: string, typeId: string, line: number, over: string, under: string) =>
@@ -61,7 +63,8 @@ function mockEspn() {
       if (!withProps) return new Response('{}', { status: 404 });
       if (coreStatus !== 200) return new Response('{}', { status: coreStatus });
       body = coreBody(u);
-    } else if (u.pathname.includes('mens-college-basketball')) body = { events: [] };
+    } else if (u.pathname.endsWith('/injuries')) body = injuriesFeed;
+    else if (u.pathname.includes('mens-college-basketball')) body = { events: [] };
     else if (u.pathname.endsWith('/scoreboard')) {
       const b = fx('synthetic-nba-scoreboard.json');
       if (liveAt) b.events.find((e: { id: string }) => e.id === '401810123').competitions[0].status = liveStatus(liveAt.period, liveAt.clock);
@@ -109,6 +112,7 @@ beforeEach(() => {
   liveAt = undefined;
   summaryCalls = {};
   noLiveProps = false;
+  injuriesFeed = { injuries: [] };
   const mem = new Map<string, string>();
   setStore({ get: (k) => mem.get(k) ?? null, set: (k, v) => void mem.set(k, v), clearPrefix: () => mem.clear() });
   mockEspn();
@@ -396,6 +400,73 @@ describe('player props in the forward log', () => {
       ['pts', 'over', 27, 'win'],
       ['pra', 'under', 42, 'loss'],
     ]);
+  });
+});
+
+describe('injury news in the forward log', () => {
+  // Hale (NY) ruled out at 22:10 for the 00:30 tip; a long-term injury and a questionable player too.
+  const FEED = fx('synthetic-nba-injuries.json');
+  const PROPS = propsPath('nba', 2026, '20260116');
+
+  it('prices the game once when a player is newly ruled out, and remembers the report', async () => {
+    withProps = true;
+    injuriesFeed = FEED;
+    const { io, files } = memoryIO();
+    // The previous run's report had Hale healthy and Northrup already out.
+    files.set(injuryLogPath('nba'), {
+      updatedAt: '2026-01-16T22:00:00Z',
+      players: { '4432110': { status: 'Out', out: true, team: '18' } },
+      events: [],
+    } satisfies InjuryLog);
+    const r = await run(io, '2026-01-16T22:45:00Z');
+    expect(r.news).toBe(1);
+    expect(r.propsNews).toBe(1);
+    const e = (files.get(PROPS) as PropLogFile)['401810131'];
+    expect(e.news).toHaveLength(1);
+    const n = e.news![0];
+    expect(n.out).toMatchObject({ athleteId: '4432101', name: 'Marcus Hale', status: 'Out', since: '2026-01-16T22:10Z' });
+    expect(n.out.minutes).toBeGreaterThanOrEqual(12);
+    expect(n).toMatchObject({ model: MODEL_VERSION, provider: 'DraftKings', n: 200, takenAt: '2026-01-16T22:45:00.000Z' });
+    expect(n.rows.length).toBeGreaterThan(0);
+    expect(n.meanWith).toHaveLength(n.rows.length);
+    const log = files.get(injuryLogPath('nba')) as InjuryLog;
+    expect(log.players['4432101']).toMatchObject({ status: 'Out', out: true, since: '2026-01-16T22:10Z' });
+    expect(log.events.map((x) => [x.name, x.seenAt])).toEqual([['Marcus Hale', '2026-01-16T22:45:00.000Z']]);
+
+    // The next run knows he's out: no new news, nothing repriced.
+    const r2 = await run(io, '2026-01-16T23:00:00Z');
+    expect(r2.news).toBe(0);
+    expect((files.get(PROPS) as PropLogFile)['401810131'].news).toHaveLength(1);
+    expect((files.get(injuryLogPath('nba')) as InjuryLog).events).toHaveLength(1);
+  });
+
+  it('saves the closing lines just before tip for games with news, once', async () => {
+    withProps = true;
+    injuriesFeed = FEED;
+    const { io, files } = memoryIO();
+    files.set(injuryLogPath('nba'), { updatedAt: '2026-01-16T22:00:00Z', players: {}, events: [] } satisfies InjuryLog);
+    await run(io, '2026-01-16T22:45:00Z');
+    // 45 minutes out: too early for the closing lines.
+    let r = await run(io, '2026-01-16T23:45:00Z');
+    expect(r.propsClose).toBe(0);
+    r = await run(io, '2026-01-17T00:15:00Z');
+    expect(r.propsClose).toBe(1);
+    const e = (files.get(PROPS) as PropLogFile)['401810131'];
+    expect(e.close!.takenAt).toBe('2026-01-17T00:15:00.000Z');
+    expect(e.close!.lines).toContainEqual(['4432104', 'ast', 5.5, 100, -120]);
+    r = await run(io, '2026-01-17T00:25:00Z');
+    expect(r.propsClose).toBe(0);
+  });
+
+  it('without a previous report, counts only fresh out entries, and logs nothing for games without news', async () => {
+    injuriesFeed = FEED;
+    const { io, files } = memoryIO();
+    const r = await run(io, '2026-01-16T23:00:00Z');
+    // Hale's entry is 50 minutes old; Northrup's is weeks old. No odds posted, so no snapshot.
+    expect(r.news).toBe(1);
+    expect(r.propsNews).toBe(0);
+    expect(r.errors).toEqual([]);
+    expect(files.get(PROPS)).toBeUndefined();
   });
 });
 
