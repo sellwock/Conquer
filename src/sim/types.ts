@@ -12,6 +12,11 @@ export interface SimPlayer {
   targetMin: number;
   /** Share of team possessions this player ends while on the floor (usage rate). */
   usage: number;
+  /**
+   * His usage as the lineup's shot creation counts it: shrunk harder toward a below-average prior,
+   * so a lineup of unproven players doesn't look like it creates as much as an established one.
+   */
+  creation: number;
   /** Given the player ends the possession: turnover / shooting-foul trip probabilities. FGA is the rest. */
   pTO: number;
   pTrip: number;
