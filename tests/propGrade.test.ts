@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { gradeProps, sidesOf, summarizeProps, TOP_PER_GAME } from '../src/track/propGrade';
 import { propRows } from '../src/track/job';
-import { legsForGame, SIM_ONLY, type GameMarket } from '../src/model/parlays';
+import { legsForGame, weightsFor, type GameMarket } from '../src/model/parlays';
 import { liveSingles } from '../src/ui/parlays';
 import type { PropEntry, PropRow } from '../src/track/types';
 
@@ -60,14 +60,20 @@ describe('prop grading', () => {
       ...['ast', 'reb', 'tpm', 'pr', 'pa'].map((stat, i) => ({ athleteId: 'c', player: 'C. Three', stat: stat as 'ast', line: 3.5 + i, over: -110, under: -110, hits: hits(0.56 + i * 0.02), mean: 4 })),
     ];
     const market: GameMarket = { gameId: 'g1', league: 'nba', label: 'AWY @ HOM', home: 'HOM', away: 'AWY', odds: { provider: 'Book' }, margin: new Int16Array(n), total: new Int16Array(n), props };
-    const app = liveSingles([market], SIM_ONLY, 'props', TOP_PER_GAME).map((p) => p.legs[0]);
+    const picks = liveSingles([market], weightsFor('nba', 'sim'), 'props', TOP_PER_GAME);
+    const app = picks.map((p) => p.legs[0]);
     const e = entry(propRows(props), { a: [1, 1, 1, 1], b: [1, 1, 1, 1], c: [1, 1, 1, 1] });
     const g = gradeProps(e, 'live')!;
     expect(g.top.map((t) => `${t.athleteId}:${t.stat}:${t.side}`)).toEqual(app.map((l) => `${l.prop!.athleteId}:${l.prop!.stat}:${l.side}`));
     expect(g.top).toHaveLength(TOP_PER_GAME);
-    for (const [i, t] of g.top.entries()) expect(t.ev).toBeCloseTo(app[i].ev, 6);
+    for (const [i, t] of g.top.entries()) {
+      expect(t.ev).toBeCloseTo(picks[i].ev, 6);
+      // Ranked by the mix of the simulation and the book, as the app shows it.
+      expect(t.pPick).toBeCloseTo(app[i].pBlend, 6);
+      expect(t.pPick).toBeCloseTo(0.25 * t.pSim + 0.75 * t.pMarket, 6);
+    }
     // And each row's sides match the legs the app builds from the same market.
-    const legs = legsForGame(market, SIM_ONLY).filter((l) => l.prop);
+    const legs = legsForGame(market, weightsFor('nba', 'sim')).filter((l) => l.prop);
     for (const [k, r] of propRows(props).entries()) {
       const [over, under] = sidesOf(r);
       expect(over.ev).toBeCloseTo(legs[2 * k].ev, 6);

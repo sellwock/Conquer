@@ -14,7 +14,7 @@ import type { Entry } from '../track/types';
 import { dateLabel, lineText, pct, perHundred, tipTime } from './format';
 import type { Slate } from './useSlate';
 import type { LiveSlate } from './liveSlate';
-import { blendText, LiveStatus } from './parlays';
+import { blendText, LiveStatus, propMixText } from './parlays';
 
 type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge' | 'prop';
 
@@ -144,8 +144,8 @@ export function SlateBoard(props: {
             : `Line picks rank by the simulation alone and clear the same bar as the parlays tab's singles. In backtests the market's odds were more accurate than the simulation's on ${LEAGUES[props.league].label} games, so treat them as the simulation's leans.`}
           {showProps &&
             (hasSay
-              ? ' Props have no backtest, so the blend leaves them to the market and the prop column passes; switch the parlays tab to Simulation only to see prop leans.'
-              : " Prop picks are the simulation's best player prop for each game, also unbacktested.")}{' '}
+              ? ' Props have no backtest, so the blend leaves them to the market and the prop column passes; switch the parlays tab to Simulation to see prop leans.'
+              : ` Prop picks are each game's best player prop at ${propMixText()}: the first graded props showed the simulation far too sure of itself.`)}{' '}
           Suggestions, not advice.
         </p>
         <div class="scan">
