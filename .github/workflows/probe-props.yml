@@ -5,17 +5,20 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 70
     steps:
-      - name: Game-line fields on the core odds items
+      - name: Live game lines vs the pre-game book, every 10 minutes
         run: |
           set +e
-          date -u
           B=https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba
-          for EV in 401909897 401909898; do
-            echo "===== event $EV"
-            curl -s "$B/events/$EV/competitions/$EV/odds?lang=en&region=us" > odds.json
-            jq -c '.items[]? | {provider: .provider.name, details, spread, overUnder, overOdds, underOdds,
-              home: (.homeTeamOdds | {moneyLine, spreadOdds, favorite, team: (.team["$ref"] // .team.abbreviation // null), keys: keys}),
-              away: (.awayTeamOdds | {moneyLine, spreadOdds, favorite, keys: keys}),
-              currentKeys: (.current | keys?), current: .current}' odds.json | head -c 4000; echo
+          S=https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary
+          for i in 1 2 3 4 5 6; do
+            echo "########## $(date -u +%H:%M:%SZ)"
+            for EV in 401909905 401909906; do
+              curl -s "$S?event=$EV" | jq -c '.header.competitions[0] | {event: .id, state: .status.type.state, period: .status.period, clock: .status.displayClock,
+                score: ([.competitors[] | "\(.team.abbreviation) \(.score // "-")"] | join(" "))}'
+              curl -s "$B/events/$EV/competitions/$EV/odds?lang=en&region=us" | jq -c '.items[]? | {provider: .provider.name, details, spread, overUnder, overOdds, underOdds,
+                homeML: .homeTeamOdds.moneyLine, homeSpreadOdds: .homeTeamOdds.spreadOdds, awayML: .awayTeamOdds.moneyLine, awaySpreadOdds: .awayTeamOdds.spreadOdds}'
+            done
+            [ $i -lt 6 ] && sleep 600
           done
