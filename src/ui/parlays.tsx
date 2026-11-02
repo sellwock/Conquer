@@ -620,7 +620,7 @@ function LiveProps(props: {
           {status}
           {ready && props.mode === 'sim' && (
             <p class="note caution">
-              Live lines move fast and the book's prices here can trail the real ones by a minute or two. Each player's final line is what they have now plus the simulated rest
+              Live lines move fast, and the in-game prices ESPN relays can lag the book's by several minutes: check the book before betting. Each player's final line is what they have now plus the simulated rest
               of the game, from the simulation's minutes, and live prop chances count {propMixText()}. Live spreads and totals are full-game lines, priced from the
               simulation's final scores starting at the current one. None of this has been backtested. Treat these as leans.{all && ' Legs from different games are treated as independent.'}
               {all && ' Pricing every live game costs about 1 MB per game per refresh; pause to stop.'}
