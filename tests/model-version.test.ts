@@ -18,10 +18,10 @@ function fingerprint() {
 describe('model version', () => {
   it('changes only together with the simulation output', () => {
     expect({ version: MODEL_VERSION, fingerprint: fingerprint() }).toEqual({
-      version: '1.1.0',
+      version: '1.2.0',
       fingerprint: FINGERPRINT,
     });
   });
 });
 
-const FINGERPRINT = ['nba:0.5775:113.50:111.26', 'ncaam:0.5600:72.67:70.97'];
+const FINGERPRINT = ['nba:0.6375:116.19:111.93', 'ncaam:0.5525:72.69:70.70'];

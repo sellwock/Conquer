@@ -8,8 +8,11 @@ import { crps, evaluatePlayers, summarizePlayers } from '../src/track/players';
 import { emptyBox, type GameData } from '../src/model/types';
 import { leagueAverageGame } from './helpers';
 
-const defaults = { ...PLAYER_TUNING };
-afterEach(() => void Object.assign(PLAYER_TUNING, defaults));
+const defaults = { nba: { ...PLAYER_TUNING.nba }, ncaam: { ...PLAYER_TUNING.ncaam } };
+afterEach(() => {
+  Object.assign(PLAYER_TUNING.nba, defaults.nba);
+  Object.assign(PLAYER_TUNING.ncaam, defaults.ncaam);
+});
 
 const OPTS = { outs: new Set<string>(), ins: new Set<string>(), whistle: 1, homeCourt: true, minutesMode: 'projected' as const };
 
@@ -31,15 +34,18 @@ function spread(g: GameData, n = 1500) {
 }
 
 describe('game-to-game variation', () => {
-  it('is off by default, so the simulation is unchanged until the knobs move', () => {
-    const { spec } = buildSpec(leagueAverageGame(), OPTS);
-    expect(spec.noise).toBeUndefined();
+  it('varies NBA minutes by default, and not college minutes, as fitted against box scores', () => {
+    expect(buildSpec(leagueAverageGame('nba'), OPTS).spec.noise).toEqual({ minutes: 1.5, usage: 0 });
+    expect(buildSpec(leagueAverageGame('ncaam'), OPTS).spec.noise).toBeUndefined();
+    expect(PLAYER_TUNING.nba).toMatchObject({ usagePriorMin: 15, ratePriorMin: 20 });
+    expect(PLAYER_TUNING.ncaam).toMatchObject({ usagePriorMin: 15, ratePriorMin: 20 });
   });
 
   it('widens each player\'s lines while keeping his average minutes', () => {
     const g = leagueAverageGame();
+    Object.assign(PLAYER_TUNING.nba, { minutesNoise: 0, usageNoise: 0 });
     const before = spread(g);
-    Object.assign(PLAYER_TUNING, { minutesNoise: 2, usageNoise: 0.3 });
+    Object.assign(PLAYER_TUNING.nba, { minutesNoise: 2, usageNoise: 0.3 });
     expect(buildSpec(g, OPTS).spec.noise).toEqual({ minutes: 2, usage: 0.3 });
     const after = spread(g);
     for (const [i, b] of before.entries()) {
@@ -56,8 +62,9 @@ describe('game-to-game variation', () => {
     const g = leagueAverageGame();
     const late = { period: 4, clockSec: 60, homeScore: 100, awayScore: 98, prior: [[25, 25], [25, 25], [25, 25]] as [number, number][], periodStart: [75, 75] as [number, number] };
     const mins = () => Array.from(runOutcomes(buildSpec(g, { ...OPTS, start: late }).spec, 600, 'late', { players: true }).players!.min);
+    Object.assign(PLAYER_TUNING.nba, { minutesNoise: 0 });
     const still = mins();
-    Object.assign(PLAYER_TUNING, { minutesNoise: 2 });
+    Object.assign(PLAYER_TUNING.nba, { minutesNoise: 2 });
     const varied = mins();
     // With a minute to play, nobody's remaining minutes can swing far.
     for (const [j, m] of still.entries()) expect(Math.abs(varied[j] - m)).toBeLessThan(0.25);
@@ -70,9 +77,9 @@ describe('tunable priors', () => {
     const star = g.home.players[0];
     const box = { ...star.sample!.box, min: 360, fga: 220, fta: 80, tov: 35 };
     const p = { ...star, sample: { ...star.sample!, games: 10, box } };
-    const heavy = playerRates(p, LEAGUES.nba).usage;
-    Object.assign(PLAYER_TUNING, { usagePriorMin: 30 });
     const light = playerRates(p, LEAGUES.nba).usage;
+    Object.assign(PLAYER_TUNING.nba, { usagePriorMin: 120 });
+    const heavy = playerRates(p, LEAGUES.nba).usage;
     expect(light).toBeGreaterThan(heavy);
   });
 });
