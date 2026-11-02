@@ -3,22 +3,25 @@ on:
   push:
     branches: [claude/probe-props]
 jobs:
-  probe:
+  players:
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 180
     steps:
-      - name: Live game lines vs the pre-game book, every 10 minutes
-        run: |
-          set +e
-          B=https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba
-          S=https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary
-          for i in 1 2 3 4 5 6; do
-            echo "########## $(date -u +%H:%M:%SZ)"
-            for EV in 401909905 401909906; do
-              curl -s "$S?event=$EV" | jq -c '.header.competitions[0] | {event: .id, state: .status.type.state, period: .status.period, clock: .status.displayClock,
-                score: ([.competitors[] | "\(.team.abbreviation) \(.score // "-")"] | join(" "))}'
-              curl -s "$B/events/$EV/competitions/$EV/odds?lang=en&region=us" | jq -c '.items[]? | {provider: .provider.name, details, spread, overUnder, overOdds, underOdds,
-                homeML: .homeTeamOdds.moneyLine, homeSpreadOdds: .homeTeamOdds.spreadOdds, awayML: .awayTeamOdds.moneyLine, awaySpreadOdds: .awayTeamOdds.spreadOdds}'
-            done
-            [ $i -lt 6 ] && sleep 600
-          done
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: bt-cache
+          key: bt-espn-nba-players-${{ github.run_id }}
+          restore-keys: bt-espn-nba-
+      - name: Fit player priors and variation against box scores
+        run: npx tsx scripts/players.ts --league nba --ranges 20261020-20261101,20260105-20260331 --max 120 --sims 1000 --cache bt-cache --out players.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: players
+          path: players.md
