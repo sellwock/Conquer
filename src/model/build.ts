@@ -41,6 +41,12 @@ export interface PlayerTuning {
   usagePriorMin: number;
   /** That prior, as a share of the position group's usage. */
   usagePriorScale: number;
+  /**
+   * A multiplier on every player's usage. Who ends a possession depends only on usage relative to
+   * his teammates', so this moves just the engine's usage/efficiency trade-off: how short on shot
+   * creators the average lineup looks, and so how well it shoots.
+   */
+  usageLevel: number;
   /** Minutes of position-prior rates mixed into each player's per-minute counting stats. */
   ratePriorMin: number;
   /** How much each player's minutes vary from one simulation to the next: 1 means about 2 + 0.1 × his projection. */
@@ -61,8 +67,8 @@ export interface PlayerTuning {
  * moves with it.
  */
 export const PLAYER_TUNING: Record<LeagueId, PlayerTuning> = {
-  nba: { usagePriorMin: 15, usagePriorScale: 0.85, ratePriorMin: 20, minutesNoise: 1.5, usageNoise: 0 },
-  ncaam: { usagePriorMin: 15, usagePriorScale: 0.85, ratePriorMin: 20, minutesNoise: 0, usageNoise: 0 },
+  nba: { usagePriorMin: 15, usagePriorScale: 0.85, usageLevel: 1, ratePriorMin: 20, minutesNoise: 1.5, usageNoise: 0 },
+  ncaam: { usagePriorMin: 15, usagePriorScale: 0.85, usageLevel: 1, ratePriorMin: 20, minutesNoise: 0, usageNoise: 0 },
 };
 
 export function isUnavailable(p: PlayerProfile, opts: Pick<BuildOptions, 'outs' | 'ins' | 'healthy' | 'minutesMode'>): boolean {
@@ -182,7 +188,7 @@ export function playerRates(p: PlayerProfile, lg: LeagueConfig): Rates {
   const fga = b?.fga ?? 0, fta = b?.fta ?? 0, tov = b?.tov ?? 0;
   const rawUsage = min > 0 ? (fga + 0.44 * fta + tov) / min / teamPlaysPerMin : prior.usage * 0.8;
   const { usagePriorMin: uMin, usagePriorScale: uScale } = tuning;
-  const usage = (rawUsage * min + prior.usage * uScale * uMin) / (min + uMin);
+  const usage = (tuning.usageLevel * (rawUsage * min + prior.usage * uScale * uMin)) / (min + uMin);
 
   const trips = fta / FTA_PER_TRIP;
   const shootTrips = trips * (1 - lg.bonusTripShare);
