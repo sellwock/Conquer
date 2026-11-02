@@ -6,6 +6,14 @@ jobs:
   players:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - league: nba
+            args: --ranges 20261020-20261101,20260105-20260331 --max 120 --usage 30,15,10 --rate 45,20,10 --minutes 1.5,2 --usage-noise 0 --full
+          - league: ncaam
+            args: --ranges 20260110-20260301 --max 150 --usage 60,30,15 --rate 90,45,20 --minutes 0,1.5,2 --usage-noise 0 --full
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,12 +24,12 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: bt-cache
-          key: bt-espn-nba-players-${{ github.run_id }}
-          restore-keys: bt-espn-nba-
+          key: bt-espn-${{ matrix.league }}-players-${{ github.run_id }}
+          restore-keys: bt-espn-${{ matrix.league }}-
       - name: Fit player priors and variation against box scores
-        run: npx tsx scripts/players.ts --league nba --ranges 20261020-20261101,20260105-20260331 --max 120 --sims 1000 --cache bt-cache --out players.md
+        run: npx tsx scripts/players.ts --league ${{ matrix.league }} ${{ matrix.args }} --sims 1000 --cache bt-cache --out players.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: players
+          name: players-${{ matrix.league }}
           path: players.md
