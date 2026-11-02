@@ -3,21 +3,35 @@ on:
   push:
     branches: [claude/probe-props]
 jobs:
-  injuries:
+  players:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - part: knobs
+            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,usageLevel=1;usagePriorMin=15,ratePriorMin=180,minutesNoise=0,usageLevel=1;usagePriorMin=120,ratePriorMin=20,minutesNoise=0,usageLevel=1;usagePriorMin=120,ratePriorMin=180,minutesNoise=1.5,usageLevel=1"
+          - part: branch
+            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,usageLevel=1;usagePriorMin=15,ratePriorMin=20,minutesNoise=0,usageLevel=1;usagePriorMin=15,ratePriorMin=20,minutesNoise=1.5,usageLevel=1;usagePriorMin=15,ratePriorMin=20,minutesNoise=1.5,usageLevel=0.97"
+          - part: fixes
+            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,usageLevel=1;usagePriorMin=15,ratePriorMin=180,minutesNoise=0,usageLevel=0.97;usagePriorMin=15,ratePriorMin=45,minutesNoise=1.5,usageLevel=0.97;usagePriorMin=15,ratePriorMin=20,minutesNoise=1,usageLevel=0.97"
     steps:
-      - name: ESPN league-wide injuries feed
-        run: |
-          set +e
-          curl -s "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries" -o inj.json -w "status %{http_code}, %{size_download} bytes\n"
-          echo "--- top-level keys"; jq -c 'keys' inj.json
-          echo "--- teams"; jq -c '.injuries | length' inj.json
-          echo "--- first team (without its injuries)"; jq -c '.injuries[0] | del(.injuries)' inj.json | head -c 1500; echo
-          echo "--- first injury, full"; jq -c '.injuries[0].injuries[0]' inj.json | head -c 4000; echo
-          echo "--- every injury: team, athlete id/name, status, type, date"
-          jq -c '.injuries[] | .displayName as $t | .id as $tid | .injuries[] | {t: $t, tid: $tid, aid: (.athlete.id // (.athlete.links[0].href // "" | capture("id/(?<id>[0-9]+)").id // null)), name: .athlete.displayName, team: (.athlete.team.id // null), status, type: .type.description, date}' inj.json | head -60
-          echo "--- statuses"; jq -r '[.injuries[].injuries[].status] | group_by(.) | map("\(.[0]): \(length)") | .[]' inj.json
-          echo "--- a game summary's injuries (today's first game) for comparison"
-          EV=$(curl -s "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard" | jq -r '.events[0].id')
-          echo "event $EV"
-          curl -s "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=$EV" | jq -c '.injuries[]? | {team: .team.abbreviation, n: (.injuries | length), first: (.injuries[0] | {status, date, aid: .athlete.id, type: .type.description})}'
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: bt-cache
+          key: bt-espn-nba-diag-${{ matrix.part }}-${{ github.run_id }}
+          restore-keys: bt-espn-nba-
+      - name: Game and player lines, each knob on its own
+        run: npx tsx scripts/players.ts --league nba --ranges 20260105-20260331 --max 600 --sims 1000 --cache bt-cache --out players.md --try "${{ matrix.tries }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diag-${{ matrix.part }}
+          path: players.md
