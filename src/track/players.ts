@@ -93,9 +93,9 @@ export interface StatSummary {
 export interface PlayerSummary {
   n: number;
   stats: Record<PlayerStat, StatSummary>;
-  /** Points and PRA bias for stars and for the bench. */
-  starBias: { pts: number; pra: number; n: number };
-  benchBias: { pts: number; pra: number; n: number };
+  /** Points, PRA and simulated-minutes bias for stars and for the bench. */
+  starBias: { pts: number; pra: number; min: number; n: number };
+  benchBias: { pts: number; pra: number; min: number; n: number };
   /** Mean absolute miss on minutes: the projection, and the simulated average. */
   minutesMae: { proj: number; sim: number };
 }
@@ -115,7 +115,12 @@ export function summarizePlayers(rows: PlayerEval[], minProj = PROP_MINUTES): Pl
       inside: mean(v.map((x) => x[3])),
     };
   }
-  const biasOf = (sub: PlayerEval[]) => ({ pts: mean(sub.map((r) => r.stats.pts[0] - r.stats.pts[1])), pra: mean(sub.map((r) => r.stats.pra[0] - r.stats.pra[1])), n: sub.length });
+  const biasOf = (sub: PlayerEval[]) => ({
+    pts: mean(sub.map((r) => r.stats.pts[0] - r.stats.pts[1])),
+    pra: mean(sub.map((r) => r.stats.pra[0] - r.stats.pra[1])),
+    min: mean(sub.map((r) => r.simMin - r.min)),
+    n: sub.length,
+  });
   return {
     n: rs.length,
     stats,
@@ -137,8 +142,8 @@ export function playersMarkdown(cols: { label: string; s: PlayerSummary }[]): st
     out.push(line(`${name} bias`, (s) => sgn(s.stats[k].bias)));
     out.push(line(`${name} inside middle 80%`, (s) => `${f(s.stats[k].inside * 100, 0)}%`));
   }
-  out.push(line('Stars: PTS / PRA bias', (s) => `${sgn(s.starBias.pts)} / ${sgn(s.starBias.pra)}`));
-  out.push(line('Bench (8–20 min): PTS / PRA bias', (s) => `${sgn(s.benchBias.pts)} / ${sgn(s.benchBias.pra)}`));
+  out.push(line('Stars: PTS / PRA / minutes bias', (s) => `${sgn(s.starBias.pts)} / ${sgn(s.starBias.pra)} / ${sgn(s.starBias.min)}`));
+  out.push(line('Bench (8–20 min): PTS / PRA / minutes bias', (s) => `${sgn(s.benchBias.pts)} / ${sgn(s.benchBias.pra)} / ${sgn(s.benchBias.min)}`));
   out.push(line('Minutes miss: projection / sim avg', (s) => `${f(s.minutesMae.proj, 1)} / ${f(s.minutesMae.sim, 1)}`));
   return out.join('\n') + '\n';
 }
