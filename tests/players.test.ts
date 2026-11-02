@@ -82,6 +82,22 @@ describe('tunable priors', () => {
     const heavy = playerRates(p, LEAGUES.nba).usage;
     expect(light).toBeGreaterThan(heavy);
   });
+
+  it("judges a lineup's shot creation with its own, heavier prior, whatever the usage prior", () => {
+    const g = leagueAverageGame();
+    const bench = g.home.players[8];
+    // Ten quiet games of an unproven player: a small sample with a big usage rate.
+    const box = { ...bench.sample!.box, min: 60, fga: 30, fta: 8, tov: 6 };
+    const p = { ...bench, sample: { ...bench.sample!, games: 10, box } };
+    const light = playerRates(p, LEAGUES.nba);
+    // His share of possessions trusts the sample; the lineup's creation still counts him as below average.
+    expect(light.creation).toBeLessThan(light.usage - 0.03);
+    Object.assign(PLAYER_TUNING.nba, { usagePriorMin: 120 });
+    const heavy = playerRates(p, LEAGUES.nba);
+    expect(heavy.creation).toBeCloseTo(light.creation, 12);
+    // With both priors at 120 minutes, creation and usage agree, as before the split.
+    expect(heavy.usage).toBeCloseTo(heavy.creation, 12);
+  });
 });
 
 describe('player grading', () => {

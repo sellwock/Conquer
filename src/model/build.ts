@@ -37,16 +37,16 @@ const FTA_PER_TRIP = 1.87;
 const AND_ONE = 0.2;
 
 export interface PlayerTuning {
-  /** Minutes of position-prior usage mixed into each player's own usage. */
+  /** Minutes of position-prior usage mixed into each player's own usage: who ends possessions. */
   usagePriorMin: number;
-  /** That prior, as a share of the position group's usage. */
+  /** That prior, as a share of the position group's usage (an unproven player creates less). */
   usagePriorScale: number;
   /**
-   * A multiplier on every player's usage. Who ends a possession depends only on usage relative to
-   * his teammates', so this moves just the engine's usage/efficiency trade-off: how short on shot
-   * creators the average lineup looks, and so how well it shoots.
+   * The same prior's weight when the engine judges how much a lineup creates (its usage/efficiency
+   * trade-off). Heavier than usagePriorMin: counting unproven, low-minute players as below-average
+   * creators keeps teams that lean on them from looking stronger than they are.
    */
-  usageLevel: number;
+  creationPriorMin: number;
   /** Minutes of position-prior rates mixed into each player's per-minute counting stats. */
   ratePriorMin: number;
   /** How much each player's minutes vary from one simulation to the next: 1 means about 2 + 0.1 × his projection. */
@@ -67,8 +67,8 @@ export interface PlayerTuning {
  * moves with it.
  */
 export const PLAYER_TUNING: Record<LeagueId, PlayerTuning> = {
-  nba: { usagePriorMin: 15, usagePriorScale: 0.85, usageLevel: 1, ratePriorMin: 20, minutesNoise: 1.5, usageNoise: 0 },
-  ncaam: { usagePriorMin: 15, usagePriorScale: 0.85, usageLevel: 1, ratePriorMin: 20, minutesNoise: 0, usageNoise: 0 },
+  nba: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 120, ratePriorMin: 20, minutesNoise: 1.5, usageNoise: 0 },
+  ncaam: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 120, ratePriorMin: 20, minutesNoise: 0, usageNoise: 0 },
 };
 
 export function isUnavailable(p: PlayerProfile, opts: Pick<BuildOptions, 'outs' | 'ins' | 'healthy' | 'minutesMode'>): boolean {
@@ -160,6 +160,7 @@ export function planMinutes(team: TeamProfile, lg: LeagueConfig, opts: BuildOpti
 
 interface Rates {
   usage: number;
+  creation: number;
   pTO: number;
   pTrip: number;
   zoneShare: number[];
@@ -187,8 +188,10 @@ export function playerRates(p: PlayerProfile, lg: LeagueConfig): Rates {
 
   const fga = b?.fga ?? 0, fta = b?.fta ?? 0, tov = b?.tov ?? 0;
   const rawUsage = min > 0 ? (fga + 0.44 * fta + tov) / min / teamPlaysPerMin : prior.usage * 0.8;
-  const { usagePriorMin: uMin, usagePriorScale: uScale } = tuning;
-  const usage = (tuning.usageLevel * (rawUsage * min + prior.usage * uScale * uMin)) / (min + uMin);
+  const { usagePriorScale: uScale } = tuning;
+  const withPrior = (priorMin: number) => (rawUsage * min + prior.usage * uScale * priorMin) / (min + priorMin);
+  const usage = withPrior(tuning.usagePriorMin);
+  const creation = withPrior(tuning.creationPriorMin);
 
   const trips = fta / FTA_PER_TRIP;
   const shootTrips = trips * (1 - lg.bonusTripShare);
@@ -239,6 +242,7 @@ export function playerRates(p: PlayerProfile, lg: LeagueConfig): Rates {
 
   return {
     usage: clamp(usage, 0.06, 0.42),
+    creation: clamp(creation, 0.06, 0.42),
     pTO: clamp(pTO, 0.03, 0.3),
     pTrip: clamp(pTrip, 0.01, 0.3),
     zoneShare,
@@ -300,6 +304,7 @@ function buildTeam(t: TeamProfile, lg: LeagueConfig, plan: MinutesPlan, makeMult
       starter: plan.starters.has(p.id),
       targetMin: plan.unavailable.has(p.id) ? 0 : plan.minutes[p.id] ?? 0,
       usage: r.usage,
+      creation: r.creation,
       pTO: r.pTO,
       pTrip: r.pTrip,
       zoneCum: cum,

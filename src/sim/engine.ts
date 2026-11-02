@@ -602,13 +602,15 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
 }
 
 /**
- * Usage/efficiency trade-off. When the five on the floor don't normally use a full possession's
- * worth of usage (a star is sitting), everyone has to create more and shoots a little worse.
+ * Usage/efficiency trade-off. When the five on the floor don't normally create a full possession's
+ * worth of shots (a star is sitting), everyone has to create more and shoots a little worse. It
+ * reads `creation`, not `usage`: who ends a possession follows each player's own recent share, but
+ * how much a lineup creates counts unproven players as below-average creators.
  */
 function lineupEfficiency(ts: { onCourt: number[]; t: SimTeam }, lgAst: number) {
   let s = 0, ast = 0;
   for (const i of ts.onCourt) {
-    s += ts.t.players[i].usage;
+    s += ts.t.players[i].creation;
     ast += ts.t.players[i].ast;
   }
   if (s <= 0) return { make: 0.9, to: 1.2 };
