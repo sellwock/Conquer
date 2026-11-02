@@ -64,6 +64,8 @@ export interface SimSpec {
   pace: number;
   /** Referee whistle multiplier (1 = league average). */
   whistle: number;
+  /** Game-to-game variation per player, drawn once per simulated game (PLAYER_TUNING). */
+  noise?: { minutes: number; usage: number };
   start?: SimStart;
 }
 

@@ -74,7 +74,7 @@ export function runQuickInBackground(specs: SimSpec[], n: number, seed: string):
   return startJob({ kind: 'quick', specs, n, seed }, (r) => (r.kind === 'quick' ? r.results : undefined));
 }
 
-export function runOutcomesInBackground(spec: SimSpec, n: number, seed: string): Job<Outcomes> {
-  if (!supportsWorkers) return { promise: Promise.resolve(runOutcomes(spec, n, seed)), cancel: () => {} };
-  return startJob({ kind: 'outcomes', spec, n, seed }, (r) => (r.kind === 'outcomes' ? r.outcomes : undefined));
+export function runOutcomesInBackground(spec: SimSpec, n: number, seed: string, opts: { players?: boolean } = {}): Job<Outcomes> {
+  if (!supportsWorkers) return { promise: Promise.resolve(runOutcomes(spec, n, seed, opts)), cancel: () => {} };
+  return startJob({ kind: 'outcomes', spec, n, seed, players: opts.players }, (r) => (r.kind === 'outcomes' ? r.outcomes : undefined));
 }

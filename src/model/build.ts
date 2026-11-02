@@ -35,7 +35,23 @@ const SHOT_PRIOR: Record<PosGroup, { r3: number; two: [number, number, number]; 
 
 const FTA_PER_TRIP = 1.87;
 const AND_ONE = 0.2;
-const PRIOR_MIN = 180;
+
+/**
+ * Player-level knobs, fitted against real box scores with scripts/players.ts. Changing a value
+ * changes the simulation's output, so MODEL_VERSION moves with it.
+ */
+export const PLAYER_TUNING = {
+  /** Minutes of position-prior usage mixed into each player's own usage. */
+  usagePriorMin: 120,
+  /** That prior, as a share of the position group's usage. */
+  usagePriorScale: 0.85,
+  /** Minutes of position-prior rates mixed into each player's per-minute counting stats. */
+  ratePriorMin: 180,
+  /** How much each player's minutes vary from one simulation to the next: 1 means an sd of 2 + 0.1 × his projection. */
+  minutesNoise: 0,
+  /** How much each player's share of his team's possessions varies from one simulation to the next (lognormal sd). */
+  usageNoise: 0,
+};
 
 export function isUnavailable(p: PlayerProfile, opts: Pick<BuildOptions, 'outs' | 'ins' | 'healthy' | 'minutesMode'>): boolean {
   if (opts.minutesMode === 'actual' && p.actual) return !p.actual.played || (!opts.healthy && opts.outs.has(p.id));
@@ -147,11 +163,13 @@ export function playerRates(p: PlayerProfile, lg: LeagueConfig): Rates {
   const min = b?.min ?? 0;
   // Usage rate: share of the team's plays this player ends while on the floor.
   const teamPlaysPerMin = (lg.pace * lg.playsPerPoss) / (regulationSec(lg) / 60);
-  const perMin = (v: number | undefined, pri: number) => ((v ?? 0) + pri * PRIOR_MIN) / (min + PRIOR_MIN);
+  const priorMin = PLAYER_TUNING.ratePriorMin;
+  const perMin = (v: number | undefined, pri: number) => ((v ?? 0) + pri * priorMin) / (min + priorMin);
 
   const fga = b?.fga ?? 0, fta = b?.fta ?? 0, tov = b?.tov ?? 0;
   const rawUsage = min > 0 ? (fga + 0.44 * fta + tov) / min / teamPlaysPerMin : prior.usage * 0.8;
-  const usage = (rawUsage * min + prior.usage * 0.85 * 120) / (min + 120);
+  const { usagePriorMin: uMin, usagePriorScale: uScale } = PLAYER_TUNING;
+  const usage = (rawUsage * min + prior.usage * uScale * uMin) / (min + uMin);
 
   const trips = fta / FTA_PER_TRIP;
   const shootTrips = trips * (1 - lg.bonusTripShare);
@@ -306,6 +324,7 @@ export function buildSpec(game: GameData, opts: BuildOptions): BuiltSpec {
     away,
     pace,
     whistle: opts.whistle,
+    ...(PLAYER_TUNING.minutesNoise || PLAYER_TUNING.usageNoise ? { noise: { minutes: PLAYER_TUNING.minutesNoise, usage: PLAYER_TUNING.usageNoise } } : {}),
     start: opts.start
       ? {
           period: opts.start.period,

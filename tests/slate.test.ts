@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { boardRow, packMarket, unpackMarket } from '../src/model/slate';
+import { boardPicks, boardRow, packMarket, unpackMarket } from '../src/model/slate';
 import { legsForGame, suggestParlays, SIM_ONLY, type GameMarket } from '../src/model/parlays';
 import { leagueAverageGame } from './helpers';
 import { buildSpec } from '../src/model/build';
@@ -54,6 +54,33 @@ describe('slate board', () => {
     // And it is the best-value leg that clears the singles bar.
     const top = legsForGame(m).sort((a, b) => b.ev - a.ev)[0];
     expect(r.best!.ev).toBeLessThanOrEqual(top.ev + 1e-9);
+  });
+
+  it('picks the best line and the best prop separately', () => {
+    const nba = market('nba');
+    const n = nba.margin.length;
+    // The simulation has this player clearing the line in 90% of games; the book says a coin flip.
+    const hits = Uint8Array.from({ length: n }, (_, i) => (i % 10 === 0 ? 0 : 1));
+    const withProps: GameMarket = { ...nba, props: [{ athleteId: 'p1', player: 'A. Player', stat: 'pts', line: 20.5, over: -110, under: -110, hits, mean: 24 }] };
+    const r = boardRow(withProps);
+    expect(r.hasProps).toBe(true);
+    expect(r.best!.legs[0].prop).toBeUndefined();
+    expect(r.best!.legs.map((l) => l.key)).toEqual(boardRow(nba).best!.legs.map((l) => l.key));
+    expect(r.bestProp!.legs[0].label).toBe('A. Player over 20.5 points');
+    expect(r.bestProp!.pHit).toBeCloseTo(0.9, 2);
+    expect(boardRow(nba)).toMatchObject({ hasProps: false, bestProp: undefined });
+  });
+
+  it("gives a live game's in-game market the same two picks", () => {
+    // A live market: the in-game book's lines, a prop with the player's line so far, and finals
+    // simulated from the current score.
+    const live = market('nba');
+    const n = live.margin.length;
+    const hits = Uint8Array.from({ length: n }, (_, i) => (i % 5 === 0 ? 0 : 1));
+    const picks = boardPicks({ ...live, props: [{ athleteId: 'p1', player: 'A. Player', stat: 'ast', line: 6.5, over: 105, under: -135, hits, mean: 7.4, now: 5 }] });
+    expect(picks.hasProps).toBe(true);
+    expect(picks.best!.legs[0].prop).toBeUndefined();
+    expect(picks.bestProp!.legs[0]).toMatchObject({ label: 'A. Player over 6.5 assists', prop: { now: 5 } });
   });
 
   it('round-trips outcomes through the cache format', () => {

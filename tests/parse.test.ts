@@ -8,6 +8,7 @@ import {
   parseOdds,
   parseRoster,
   parseScheduleEvents,
+  oddsFromItem,
   parseScoreboard,
   parseShotText,
   parseStatLine,
@@ -108,10 +109,42 @@ describe('summary pieces', () => {
     const games = parseScoreboard(fx('synthetic-nba-scoreboard.json'));
     expect(games.length).toBe(2);
     expect(games[0].home.abbr).toBeTruthy();
+    // Period and clock once a game has started, for the forward log's mid-game prop snapshot.
+    expect(games[0]).toMatchObject({ phase: 'post', period: 4, clockSec: 0 });
+    expect(games[1].period).toBeUndefined();
+    const live = fx('synthetic-nba-scoreboard.json');
+    live.events[0].competitions[0].status = { period: 2, displayClock: '5:12', clock: 312, type: { state: 'in' } };
+    expect(parseScoreboard(live)[0]).toMatchObject({ phase: 'in', period: 2, clockSec: 312 });
     expect(parseScoreboard(fx('synthetic-mbb-scoreboard.json')).length).toBeGreaterThan(0);
     expect(parseRoster(fx('synthetic-nba-team-roster.json')).length).toBe(4);
     const sched = parseScheduleEvents(fx('synthetic-nba-team-schedule.json'));
     expect(sched.map((e) => e.completed)).toEqual([true, false]);
+  });
+
+  it("reads a book's game lines from an odds-feed item, spread from the home side", () => {
+    // Shape from sports.core.api.espn.com, ATL (away) favored at New Orleans.
+    const item = {
+      provider: { name: 'DraftKings' },
+      details: 'ATL -4.5',
+      spread: 4.5,
+      overUnder: 240.5,
+      overOdds: -108.0,
+      underOdds: -112.0,
+      homeTeamOdds: { moneyLine: 150, spreadOdds: -115.0, team: { $ref: 'x/teams/3' } },
+      awayTeamOdds: { moneyLine: -180, spreadOdds: -105.0 },
+    };
+    expect(oddsFromItem(item, 'NO', 'ATL')).toEqual({
+      provider: 'DraftKings',
+      details: 'ATL -4.5',
+      spread: 4.5,
+      total: 240.5,
+      homeML: 150,
+      awayML: -180,
+      homeSpreadOdds: -115,
+      awaySpreadOdds: -105,
+      overOdds: -108,
+      underOdds: -112,
+    });
   });
 
   it('season stats prefer the latest season and the traded-season totals row', () => {

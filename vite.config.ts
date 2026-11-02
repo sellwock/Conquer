@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => ({
     proxy: {
       '/espn-site': { target: 'https://site.api.espn.com', changeOrigin: true, rewrite: (p) => p.replace(/^\/espn-site/, '') },
       '/espn-web': { target: 'https://site.web.api.espn.com', changeOrigin: true, rewrite: (p) => p.replace(/^\/espn-web/, '') },
+      '/espn-core': { target: 'https://sports.core.api.espn.com', changeOrigin: true, rewrite: (p) => p.replace(/^\/espn-core/, '') },
     },
   },
   test: {

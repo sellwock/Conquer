@@ -12,7 +12,7 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
       const summary = runSims(req.spec, req.n, req.seed, (done) => post({ id: req.id, kind: 'progress', done }));
       post({ id: req.id, kind: 'run', summary });
     } else if (req.kind === 'outcomes') {
-      post({ id: req.id, kind: 'outcomes', outcomes: runOutcomes(req.spec, req.n, req.seed) });
+      post({ id: req.id, kind: 'outcomes', outcomes: runOutcomes(req.spec, req.n, req.seed, { players: req.players }) });
     } else {
       const results = req.specs.map((s) => runQuick(s, req.n, req.seed));
       post({ id: req.id, kind: 'quick', results });

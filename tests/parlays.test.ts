@@ -8,7 +8,7 @@ function market(id: string, margins: number[], totals: number[], odds: GameMarke
 }
 
 /** Pins the blend so the parlay-building tests don't depend on the fitted weights. */
-const HALF = { ml: 0.5, spread: 0.5, total: 0.5 };
+const HALF = { ml: 0.5, spread: 0.5, total: 0.5, prop: 0.5 };
 
 const evenOdds = { provider: 'test', spread: -0.5, total: 220.5, homeML: -110, awayML: -110, homeSpreadOdds: -110, awaySpreadOdds: -110, overOdds: -110, underOdds: -110 };
 
@@ -106,7 +106,7 @@ describe('parlay math', () => {
     expect(defaultPickMode('nba')).toBe('sim');
     expect(defaultPickMode('ncaam')).toBe('blend');
     expect(weightsFor('nba', 'sim')).toEqual(SIM_ONLY);
-    expect(weightsFor('ncaam', 'blend')).toEqual({ ml: 0, spread: 0.25, total: 0.25 });
+    expect(weightsFor('ncaam', 'blend')).toEqual({ ml: 0, spread: 0.25, total: 0.25, prop: 0 });
 
     // Home wins and covers in every sim; the market says a coin flip.
     const g = market('1', Array(100).fill(10), Array(100).fill(200), evenOdds, 'nba');

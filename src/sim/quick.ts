@@ -1,6 +1,7 @@
 import { makeRng } from '../lib/rng';
 import { simulateGame } from './engine';
 import type { SimSpec } from './types';
+import { PlayerRecorder, type PlayerOutcomes } from './players';
 
 export interface QuickResult {
   homeWin: number;
@@ -27,11 +28,14 @@ export interface Outcomes {
   total: Int16Array;
   homeWin: number;
   otPct: number;
+  /** With `players`: each player's line in every simulation, for player props. */
+  players?: PlayerOutcomes;
 }
 
-/** Final margin and total of every simulation, for backtests and logged predictions. */
-export function runOutcomes(spec: SimSpec, n: number, seed: string): Outcomes {
+/** Final margin and total of every simulation, for backtests, logged predictions and the slate. */
+export function runOutcomes(spec: SimSpec, n: number, seed: string, opts: { players?: boolean } = {}): Outcomes {
   const margin = new Int16Array(n), total = new Int16Array(n);
+  const recorder = opts.players ? new PlayerRecorder(spec, n) : undefined;
   let w = 0, ot = 0;
   for (let s = 0; s < n; s++) {
     const r = simulateGame(spec, makeRng(seed, s));
@@ -39,6 +43,7 @@ export function runOutcomes(spec: SimSpec, n: number, seed: string): Outcomes {
     total[s] = r.score[0] + r.score[1];
     if (margin[s] > 0) w++;
     if (r.ot) ot++;
+    recorder?.add(s, r);
   }
-  return { margin, total, homeWin: w / n, otPct: ot / n };
+  return { margin, total, homeWin: w / n, otPct: ot / n, players: recorder?.finish() };
 }

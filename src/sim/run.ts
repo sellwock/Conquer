@@ -4,6 +4,9 @@ import { makeRng } from '../lib/rng';
 import { Hist } from '../lib/stats';
 import { simulateGame } from './engine';
 import { BF, NBF, type GameResult, type SimSpec } from './types';
+import { PlayerRecorder, type PlayerOutcomes } from './players';
+
+export type { PlayerOutcomes } from './players';
 
 type HistJSON = ReturnType<Hist['toJSON']>;
 
@@ -46,7 +49,7 @@ export interface SimSummary {
   players: PlayerSummary[];
   typical: { index: number; result: SerializedResult };
   /** Every simulation's final margin (home minus away) and total, for joint probabilities. */
-  outcomes: { margin: Int16Array; total: Int16Array };
+  outcomes: { margin: Int16Array; total: Int16Array; players?: PlayerOutcomes };
   elapsedMs: number;
 }
 
@@ -78,6 +81,7 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
   const simMargin = new Int16Array(n);
   const simTotal = new Int16Array(n);
   const simPts = new Int16Array(n * (np[0] + np[1]));
+  const recorder = new PlayerRecorder(spec, n);
 
   for (let s = 0; s < n; s++) {
     const r = simulateGame(spec, makeRng(seed, s));
@@ -121,6 +125,7 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
         simPts[s * (np[0] + np[1]) + (t === 0 ? i : np[0] + i)] = pts;
       }
     }
+    recorder.add(s, r);
     if (onProgress && (s + 1) % 250 === 0) onProgress(s + 1);
   }
 
@@ -178,7 +183,7 @@ export function runSims(spec: SimSpec, n: number, seed: string, onProgress?: (do
     possessions: possSum / n,
     players,
     typical: { index: typicalIndex, result: serializeResult(typical) },
-    outcomes: { margin: simMargin, total: simTotal },
+    outcomes: { margin: simMargin, total: simTotal, players: recorder.finish() },
     elapsedMs: Date.now() - t0,
   };
 }

@@ -5,6 +5,8 @@ import {
   MAX_PRICE,
   MODEL_WEIGHT,
   defaultPickMode,
+  evaluate,
+  legsForGame,
   modelHasSay,
   suggestParlays,
   weightsFor,
@@ -17,7 +19,9 @@ import {
 import { LEAGUES } from '../model/leagues';
 import type { GameData, LeagueId } from '../model/types';
 import { fmtAmerican } from '../lib/stats';
-import { pct, perHundred, tipTime } from './format';
+import { one, pct, perHundred, tipTime } from './format';
+import type { PropState } from './app';
+import type { LiveSlate } from './liveSlate';
 
 export interface ScanState {
   status: 'idle' | 'running' | 'done';
@@ -29,12 +33,12 @@ export interface ScanState {
 
 const SIZE_TITLE: Record<1 | 2 | 3, string> = { 1: 'Singles', 2: '2-leg parlays', 3: '3-leg parlays' };
 
-const KIND_WORDS: Record<LegKind, string> = { ml: 'moneylines', spread: 'spreads', total: 'totals' };
+const KIND_WORDS: Record<LegKind, string> = { ml: 'moneylines', spread: 'spreads', total: 'totals', prop: 'player props' };
 
 /** "moneylines use the market's no-vig odds alone; spreads and totals blend 25% simulation with 75% market" */
 export function blendText(w: BlendWeights): string {
   const byWeight = new Map<number, string[]>();
-  for (const k of ['ml', 'spread', 'total'] as LegKind[]) byWeight.set(w[k], [...(byWeight.get(w[k]) ?? []), KIND_WORDS[k]]);
+  for (const k of ['ml', 'spread', 'total', 'prop'] as LegKind[]) byWeight.set(w[k], [...(byWeight.get(w[k]) ?? []), KIND_WORDS[k]]);
   const list = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}` : xs[0]);
   return [...byWeight]
     .map(([x, kinds]) => `${list(kinds)} ${x === 0 ? "use the market's no-vig odds alone" : `blend ${Math.round(x * 100)}% simulation with ${Math.round((1 - x) * 100)}% market`}`)
@@ -149,6 +153,14 @@ export function Parlays(props: {
   onScan: () => void;
   onCancelScan: () => void;
   onOpen: (id: string) => void;
+  props?: PropState;
+  /** A live game simulated from now: its in-game prop lines, priced from the current box score. */
+  liveMarket?: GameMarket;
+  simFromNow: boolean;
+  onFromNow: () => void;
+  liveSlate: LiveSlate;
+  liveScope: 'game' | 'all';
+  onLiveScope: (s: 'game' | 'all') => void;
 }) {
   const { game: g, markets } = props;
   const hasSay = modelHasSay(g.league);
@@ -171,6 +183,22 @@ export function Parlays(props: {
           lose, and if gambling stops being fun, call or text 1-800-GAMBLER.
         </p>
       </section>
+
+      {!g.demo && (g.phase === 'in' || props.liveSlate.candidates > 0) && (
+        <LiveProps
+          game={g}
+          market={props.liveMarket}
+          state={props.props}
+          fromNow={props.simFromNow}
+          onFromNow={props.onFromNow}
+          mode={mode}
+          onSim={() => setMode('sim')}
+          slate={props.liveSlate}
+          scope={props.liveScope}
+          onScope={props.onLiveScope}
+          onOpen={props.onOpen}
+        />
+      )}
 
       <section class="card">
         <header class="card-head">
@@ -202,7 +230,9 @@ export function Parlays(props: {
         ) : mode === 'sim' ? (
           <>
             <p class="note caution">{simOnlyText(g.league)}</p>
-            <p class="muted small">One to three legs from moneylines, spreads and totals. A pick needs positive expected value by the simulation's own chances. {barText()}</p>
+            <p class="muted small">
+              One to three legs from moneylines, spreads, totals and this game's player props. A pick needs positive expected value by the simulation's own chances. {barText()}
+            </p>
           </>
         ) : (
           <p class="muted small">
@@ -253,6 +283,10 @@ export function Parlays(props: {
         )}
       </section>
 
+      {(scope === 'slate' ? pool.some((m) => m.props?.length) || (g.phase === 'pre' && !g.demo) : g.phase === 'pre' && !g.demo) && (
+        <PropPicks game={g} scope={scope} pool={pool} state={props.props} mode={mode} onSim={() => setMode('sim')} onOpen={props.onOpen} />
+      )}
+
       {showPicks &&
         pool.length > 0 &&
         ([1, 2, 3] as const).map((size) => (
@@ -293,5 +327,420 @@ export function Parlays(props: {
         </section>
       )}
     </div>
+  );
+}
+
+/** The best player props by the current ranking, one bet each: the open game's, or the whole slate's. */
+function PropPicks(props: {
+  game: GameData;
+  scope: 'game' | 'slate';
+  pool: GameMarket[];
+  state?: PropState;
+  mode: PickMode;
+  onSim: () => void;
+  onOpen: (id: string) => void;
+}) {
+  const { game: g, scope, state } = props;
+  const slate = scope === 'slate';
+  const priced = props.pool.filter((m) => m.props?.length);
+  const singles = useMemo(
+    () =>
+      props.pool
+        .filter((m) => m.props?.length)
+        .flatMap((m) => legsForGame(m, weightsFor(m.league, props.mode)).filter((l) => l.prop))
+        .map((l) => evaluate([l]))
+        .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
+        .sort((a, b) => b.ev - a.ev)
+        .slice(0, slate ? 15 : 10),
+    [props.pool, props.mode, slate],
+  );
+  const open = props.pool.find((m) => m.gameId === g.id);
+  const posted = state?.gameId === g.id && state.status === 'ok' ? state.board!.lines.length : 0;
+  const provider = priced.find((m) => m.propsProvider)?.propsProvider ?? state?.board?.provider;
+  const oldest = Math.min(...priced.map((m) => m.propsAt ?? Infinity));
+  const time = (t: number) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const sourceText = slate
+    ? priced.length
+      ? `${provider ?? 'Book'} lines via ESPN · props for ${priced.length} of ${props.pool.length} game${props.pool.length === 1 ? '' : 's'}${Number.isFinite(oldest) ? ` · oldest ${time(oldest)}` : ''}`
+      : ''
+    : posted
+      ? `${provider ?? 'Book'} lines via ESPN, ${posted} posted${state?.board ? ` · ${time(state.board.fetchedAt)}` : ''}`
+      : '';
+
+  let body;
+  if (!slate && (!state || state.status === 'loading')) body = <p class="muted">Loading player prop lines…</p>;
+  else if (!slate && state!.status === 'error') body = <p class="muted">Couldn't load player prop lines from ESPN.</p>;
+  else if (!slate && !posted) body = <p class="muted">No player props are posted for this game yet.</p>;
+  else if (!slate && !open) body = <p class="muted">Waiting for this game's simulation to finish.</p>;
+  else if (slate && !priced.length)
+    body = <p class="muted">No props priced yet. Simulating the slate fetches each game's prop lines along with its simulations.</p>;
+  else if (props.mode === 'blend')
+    body = (
+      <>
+        <p>Player props have no backtest yet, so the backtest blend prices them at the market's own odds and none can beat the vig.</p>
+        <p>
+          <button type="button" class="btn" onClick={props.onSim}>
+            Show the simulation's prop picks
+          </button>
+        </p>
+      </>
+    );
+  else if (!singles.length) body = <p class="muted">No prop clears the bar. Passing is a fine choice.</p>;
+  else body = <PropTable singles={singles} onOpen={slate ? props.onOpen : undefined} />;
+
+  return (
+    <section class="card">
+      <header class="card-head">
+        <h2>Player props</h2>
+        {sourceText && <p class="muted small">{sourceText}</p>}
+      </header>
+      {props.mode === 'sim' && (slate ? priced.length > 0 : posted > 0 && !!open) && (
+        <p class="note caution">
+          Props are priced by the simulation alone and have never been backtested. Player minutes drive every prop, and the simulation's minutes are a projection, so treat these
+          as leans. Players projected under 15 minutes are left out. Props also go into the parlays below when they clear the bar.
+          {slate && ' Lines for games other than the open one are as of when that game was simulated.'}
+        </p>
+      )}
+      {body}
+    </section>
+  );
+}
+
+/** The best props as singles; `onOpen` adds a link to each prop's game. Live props add what the player has now. */
+function PropTable(props: { singles: Parlay[]; onOpen?: (id: string) => void; live?: boolean }) {
+  return (
+    <div class="table-wrap">
+      <table class="data props-table">
+        <thead>
+          <tr>
+            <th scope="col">Bet</th>
+            {props.live && (
+              <th scope="col" class="num" title="What the player has so far">
+                Now
+              </th>
+            )}
+            <th scope="col" class="num">
+              Price
+            </th>
+            <th scope="col" class="num" title={props.live ? 'The player\'s average final line in the simulations, from now' : "The player's average in the simulations"}>
+              Sim avg
+            </th>
+            <th scope="col" class="num">
+              Sim hit
+            </th>
+            <th scope="col" class="num" title="The book's no-vig chance">
+              Market
+            </th>
+            <th scope="col" class="num">
+              Sim return
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {props.singles.map((p) => {
+            const l = p.legs[0];
+            return (
+              <tr key={l.key}>
+                <th scope="row">
+                  {l.label}
+                  {props.onOpen && (
+                    <>
+                      <br />
+                      <button type="button" class="link p-game" onClick={() => props.onOpen!(l.gameId)}>
+                        {l.game}
+                      </button>
+                    </>
+                  )}
+                </th>
+                {props.live && <td class="num">{l.prop!.now ?? 0}</td>}
+                <td class="num">{fmtAmerican(l.price)}</td>
+                <td class="num">{one(l.prop!.mean)}</td>
+                <td class="num">{pct(p.pHit, 0)}</td>
+                <td class="num">{pct(l.pFair, 0)}</td>
+                <td class="num pos">{perHundred(p.ev)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/**
+ * Live bets for games in progress: the book's in-game game lines and player props, priced from a
+ * simulation from the current score (props from each player's line so far plus the simulated rest):
+ * the open game's (from its own simulation from now), or every live game's (from the live scan),
+ * as singles and as 2- and 3-leg parlays.
+ */
+function LiveProps(props: {
+  game: GameData;
+  market?: GameMarket;
+  state?: PropState;
+  fromNow: boolean;
+  onFromNow: () => void;
+  mode: PickMode;
+  onSim: () => void;
+  slate: LiveSlate;
+  scope: 'game' | 'all';
+  onScope: (s: 'game' | 'all') => void;
+  onOpen: (id: string) => void;
+}) {
+  const { game: g, market: m, state, slate } = props;
+  const live = g.phase === 'in';
+  const all = props.scope === 'all';
+  const markets = useMemo(() => ({ ...slate.markets, ...(m ? { [m.gameId]: m } : {}) }), [slate.markets, m]);
+  const pool = useMemo(() => (all ? Object.values(markets) : m ? [m] : []), [all, markets, m]);
+  const weights = weightsFor(g.league, props.mode);
+  const singles = useMemo(() => liveSingles(pool, weights, 'props', all ? 15 : 10), [pool, weights, all]);
+  const lineSingles = useMemo(() => liveSingles(pool, weights, 'lines', all ? 6 : 3), [pool, weights, all]);
+  const sug = useMemo(() => suggestParlays(pool, 3, weights), [pool, weights]);
+  const posted = state?.status === 'ok' ? state.board!.lines.length : 0;
+  const hasLines = state?.status === 'ok' && !!state.board!.odds;
+  const others = slate.candidates;
+  const time = (t: number) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  let status: preact.ComponentChildren = null;
+  let body;
+  if (!all) {
+    if (!props.fromNow)
+      body = (
+        <>
+          <p>Live bets are priced from the current score, clock and box score, so the simulation has to start from now.</p>
+          <p>
+            <button type="button" class="btn" onClick={props.onFromNow}>
+              Simulate from now
+            </button>
+          </p>
+        </>
+      );
+    else if (!state || state.status === 'loading') body = <p class="muted">Loading live prop lines…</p>;
+    else if (state.status === 'error') body = <p class="muted">Couldn't load live prop lines from ESPN.</p>;
+    else if (!posted && !hasLines) body = <p class="muted">The book has no live lines or player props for this game right now.</p>;
+    else if (!m) body = <p class="muted">Waiting for the simulation from now to finish.</p>;
+    if (props.fromNow && (posted > 0 || hasLines))
+      status = (
+        <p class="muted small">
+          {state!.board!.provider ?? 'Book'} via ESPN: {[hasLines ? 'game lines' : '', posted ? `${posted} props` : ''].filter(Boolean).join(' and ')} ·{' '}
+          {time(state!.board!.fetchedAt)}, refreshed every 2 minutes
+        </p>
+      );
+  } else {
+    const priced = Object.keys(markets).length;
+    status = <LiveStatus slate={slate} priced={priced} />;
+    if (!priced) body = <p class="muted">{slate.status === 'running' || (!slate.updatedAt && !slate.paused) ? 'Pricing live games…' : 'No live props to price right now.'}</p>;
+  }
+  const ready = all ? Object.keys(markets).length > 0 : !!m && props.fromNow && (posted > 0 || hasLines);
+  let picks;
+  if (ready && props.mode === 'blend')
+    picks = (
+      <>
+        <p>Player props have no backtest yet, so the backtest blend prices them at the market's own odds and none can beat the vig.</p>
+        <p>
+          <button type="button" class="btn" onClick={props.onSim}>
+            Show the simulation's prop picks
+          </button>
+        </p>
+      </>
+    );
+  else if (ready && !singles.length && !lineSingles.length) picks = <p class="muted">No live bet clears the bar right now. Passing is a fine choice.</p>;
+  else if (ready)
+    picks = (
+      <>
+        {lineSingles.length > 0 && (
+          <>
+            <h3 class="kicker">Game lines</h3>
+            <div class="parlay-grid">
+              {lineSingles.map((p) => (
+                <ParlayCard key={p.legs[0].key} p={p} mode={props.mode} showGame={all} markets={markets} onOpen={props.onOpen} />
+              ))}
+            </div>
+          </>
+        )}
+        {singles.length > 0 && (
+          <>
+            <h3 class="kicker">Player props</h3>
+            <PropTable singles={singles} live onOpen={all ? props.onOpen : undefined} />
+          </>
+        )}
+        {([2, 3] as const).map((size) =>
+          sug.bySize[size].length ? (
+            <div key={size}>
+              <h3 class="kicker">{SIZE_TITLE[size]}</h3>
+              <div class="parlay-grid">
+                {sug.bySize[size].map((p) => (
+                  <ParlayCard key={p.legs.map((l) => l.key).join('|')} p={p} mode={props.mode} showGame={all} markets={markets} onOpen={props.onOpen} />
+                ))}
+              </div>
+            </div>
+          ) : null,
+        )}
+      </>
+    );
+
+  return (
+    <section class="card">
+      <header class="card-head">
+        <h2>Live bets</h2>
+        {live && (
+          <div class="seg small" role="radiogroup" aria-label="Which live games">
+            <button type="button" role="radio" aria-checked={!all} class={!all ? 'on' : ''} onClick={() => props.onScope('game')}>
+              This game
+            </button>
+            <button type="button" role="radio" aria-checked={all} class={all ? 'on' : ''} onClick={() => props.onScope('all')}>
+              All live games ({slate.updatedAt ? Object.keys(markets).length : others + (m ? 1 : 0)})
+            </button>
+          </div>
+        )}
+      </header>
+      {!live && !all ? (
+        <>
+          <p>
+            {others} game{others === 1 ? ' is' : 's are'} live right now. Pricing them for live parlays reads each game's in-game lines and props and simulates it from the current
+            score, about 1 MB per game every 2 minutes.
+          </p>
+          <p>
+            <button type="button" class="btn" onClick={() => props.onScope('all')}>
+              Price live games
+            </button>
+          </p>
+        </>
+      ) : (
+        <>
+          {status}
+          {ready && props.mode === 'sim' && (
+            <p class="note caution">
+              Live lines move fast and the book's prices here can trail the real ones by a minute or two. Each player's final line is what they have now plus the simulated rest
+              of the game, from the simulation's minutes. Live spreads and totals are full-game lines, priced from the simulation's final scores starting at the current one.
+              None of this has been backtested. Treat these as leans.{all && ' Legs from different games are treated as independent.'}
+              {all && ' Pricing every live game costs about 1 MB per game per refresh; pause to stop.'}
+            </p>
+          )}
+          {body}
+          {picks}
+        </>
+      )}
+    </section>
+  );
+}
+
+/** How live pricing is going, with Pause / Resume / Refresh now. Shared by the live bets card and the slate board. */
+export function LiveStatus(props: { slate: LiveSlate; priced: number }) {
+  const { slate } = props;
+  const time = (t: number) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return (
+    <div class="scan">
+      {slate.status === 'running' ? (
+        <>
+          <span class="spinner" aria-hidden="true" />
+          <span>
+            Pricing live games ({slate.done} of {slate.total} done)
+          </span>
+        </>
+      ) : (
+        <span class="muted small">
+          {props.priced} live game{props.priced === 1 ? '' : 's'} priced{slate.updatedAt ? ` · updated ${time(slate.updatedAt)}` : ''}
+          {slate.paused ? ' · paused' : ' · refreshes every 2 minutes'}
+        </span>
+      )}
+      {slate.paused ? (
+        <button type="button" class="btn" onClick={slate.resume}>
+          Resume
+        </button>
+      ) : (
+        <button type="button" class="ghost-btn" onClick={slate.pause}>
+          Pause
+        </button>
+      )}
+      {!slate.paused && slate.status !== 'running' && (
+        <button type="button" class="ghost-btn" onClick={slate.refresh}>
+          Refresh now
+        </button>
+      )}
+      {slate.failed > 0 && <span class="muted small">{slate.failed} couldn't be loaded.</span>}
+    </div>
+  );
+}
+
+/** The best singles among these markets' props or game lines that clear the singles bar, best first. */
+export function liveSingles(markets: GameMarket[], weights: BlendWeights, kind: 'props' | 'lines', limit: number): Parlay[] {
+  return markets
+    .flatMap((m) => legsForGame(m, weights).filter((l) => (kind === 'props') === !!l.prop))
+    .map((l) => evaluate([l]))
+    .filter((p) => p.ev > 0 && p.pHit >= HIT_FLOOR[1] && p.price <= MAX_PRICE[1])
+    .sort((a, b) => b.ev - a.ev)
+    .slice(0, limit);
+}
+
+/**
+ * The open live game's top live bets, for the Outlook tab: a couple of game lines and the best
+ * props, ranked as the Parlays tab ranks them by default, with a link to the full Live bets card.
+ */
+export function LiveBetsPreview(props: { game: GameData; market?: GameMarket; state?: PropState; fromNow: boolean; onFromNow: () => void; onMore: () => void }) {
+  const { game: g, market: m, state } = props;
+  const mode = defaultPickMode(g.league);
+  const weights = weightsFor(g.league, mode);
+  const pool = useMemo(() => (m ? [m] : []), [m]);
+  const lines = useMemo(() => liveSingles(pool, weights, 'lines', 2), [pool, weights]);
+  const picks = useMemo(() => liveSingles(pool, weights, 'props', 5), [pool, weights]);
+  const board = state?.status === 'ok' ? state.board : undefined;
+  const posted = !!board && (board.lines.length > 0 || !!board.odds);
+  const time = board ? new Date(board.fetchedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+
+  let body;
+  if (!props.fromNow)
+    body = (
+      <p>
+        Live bets are priced from the current score.{' '}
+        <button type="button" class="btn" onClick={props.onFromNow}>
+          Simulate from now
+        </button>
+      </p>
+    );
+  else if (!state || state.status === 'loading') body = <p class="muted">Loading live lines…</p>;
+  else if (state.status === 'error') body = <p class="muted">Couldn't load live lines from ESPN.</p>;
+  else if (!posted) body = <p class="muted">No live lines or props posted right now.</p>;
+  else if (!m) body = <p class="muted">Simulating the rest of the game…</p>;
+  else if (!lines.length && !picks.length) body = <p class="muted">No live bet clears the bar right now. Passing is a fine choice.</p>;
+  else
+    body = (
+      <>
+        {lines.length > 0 && (
+          <ul class="facts live-lines">
+            {lines.map((p) => (
+              <li key={p.legs[0].key}>
+                <strong>{p.legs[0].label}</strong> {fmtAmerican(p.price)} · sim {pct(p.pHit, 0)} vs market {pct(p.legs[0].pFair, 0)} ·{' '}
+                <span class="pos">{perHundred(p.ev)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {picks.length > 0 && <PropTable singles={picks} live />}
+      </>
+    );
+
+  return (
+    <section class="card">
+      <header class="card-head">
+        <h2>Live bets</h2>
+        {props.fromNow && posted && (
+          <p class="muted small">
+            {board!.provider ?? 'Book'} via ESPN · {time}, refreshed every 2 minutes
+          </p>
+        )}
+      </header>
+      {props.fromNow && m && posted && (lines.length > 0 || picks.length > 0) && (
+        <p class="note caution">
+          {mode === 'sim' ? "The simulation's own leans from the current score, never backtested." : 'Weighted toward the market by what the simulation earned in backtests.'} Suggestions,
+          not advice.
+        </p>
+      )}
+      {body}
+      <p>
+        <button type="button" class="link" onClick={props.onMore}>
+          All live bets and parlays
+        </button>
+      </p>
+    </section>
   );
 }
