@@ -10,12 +10,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - part: knobs
-            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,usageLevel=1;usagePriorMin=15,ratePriorMin=180,minutesNoise=0,usageLevel=1;usagePriorMin=120,ratePriorMin=20,minutesNoise=0,usageLevel=1;usagePriorMin=120,ratePriorMin=180,minutesNoise=1.5,usageLevel=1"
-          - part: branch
-            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,usageLevel=1;usagePriorMin=15,ratePriorMin=20,minutesNoise=0,usageLevel=1;usagePriorMin=15,ratePriorMin=20,minutesNoise=1.5,usageLevel=1;usagePriorMin=15,ratePriorMin=20,minutesNoise=1.5,usageLevel=0.97"
-          - part: fixes
-            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,usageLevel=1;usagePriorMin=15,ratePriorMin=180,minutesNoise=0,usageLevel=0.97;usagePriorMin=15,ratePriorMin=45,minutesNoise=1.5,usageLevel=0.97;usagePriorMin=15,ratePriorMin=20,minutesNoise=1,usageLevel=0.97"
+          - part: nba-split
+            league: nba
+            range: 20260105-20260331
+            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,creationPriorMin=120;usagePriorMin=15,ratePriorMin=20,minutesNoise=1.5,creationPriorMin=120;usagePriorMin=15,ratePriorMin=180,minutesNoise=0,creationPriorMin=120"
+          - part: nba-alternatives
+            league: nba
+            range: 20260105-20260331
+            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,creationPriorMin=120;usagePriorMin=15,ratePriorMin=45,minutesNoise=1.5,creationPriorMin=120;usagePriorMin=120,ratePriorMin=20,minutesNoise=1.5,creationPriorMin=120"
+          - part: college
+            league: ncaam
+            range: 20260110-20260301
+            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,creationPriorMin=120;usagePriorMin=15,ratePriorMin=20,minutesNoise=0,creationPriorMin=120;usagePriorMin=15,ratePriorMin=20,minutesNoise=0,creationPriorMin=15"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,12 +32,12 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: bt-cache
-          key: bt-espn-nba-diag-${{ matrix.part }}-${{ github.run_id }}
-          restore-keys: bt-espn-nba-
-      - name: Game and player lines, each knob on its own
-        run: npx tsx scripts/players.ts --league nba --ranges 20260105-20260331 --max 600 --sims 1000 --cache bt-cache --out players.md --try "${{ matrix.tries }}"
+          key: bt-espn-${{ matrix.league }}-diag2-${{ matrix.part }}-${{ github.run_id }}
+          restore-keys: bt-espn-${{ matrix.league }}-
+      - name: Game and player lines with lineup creation split from usage
+        run: npx tsx scripts/players.ts --league ${{ matrix.league }} --ranges ${{ matrix.range }} --max 600 --sims 1000 --cache bt-cache --out players.md --try "${{ matrix.tries }}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: diag-${{ matrix.part }}
+          name: diag2-${{ matrix.part }}
           path: players.md
