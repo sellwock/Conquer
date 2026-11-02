@@ -1,4 +1,4 @@
-// Fits the player-level knobs (PLAYER_TUNING in src/model/build.ts) against real box scores. Each
+// Fits the player-level knobs (PLAYER_TUNING[league] in src/model/build.ts) against real box scores. Each
 // finished game is rebuilt as it looked at tip-off, simulated with every setting, and each player's
 // simulated lines are graded against what he did (src/track/players.ts). By default, stage 1 tries
 // how hard usage and per-minute rates are pulled toward position averages, and stage 2 adds
@@ -11,14 +11,14 @@
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { setStore, mapLimit, requestCount } from '../src/data/espn/client';
 import { loadGame, loadScoreboard, pregameView } from '../src/data/espn/load';
-import { buildSpec, PLAYER_TUNING } from '../src/model/build';
+import { buildSpec, PLAYER_TUNING, type PlayerTuning } from '../src/model/build';
 import type { GameData, LeagueId } from '../src/model/types';
 import { runOutcomes } from '../src/sim/quick';
 import { evenly, finalsToGrade } from '../src/track/rebuild';
 import { evaluatePlayers, playersMarkdown, summarizePlayers, type PlayerEval, type PlayerSummary } from '../src/track/players';
 import { args, fileStore } from './cli';
 
-type Setting = Partial<typeof PLAYER_TUNING>;
+type Setting = Partial<PlayerTuning>;
 
 function days(from: string, to: string): string[] {
   const d = (s: string) => Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
@@ -68,9 +68,10 @@ async function main() {
   }
 
   // --- Simulate every game with a setting, and grade the players ---------------------------------
-  const defaults = { ...PLAYER_TUNING };
+  const tuning = PLAYER_TUNING[league];
+  const defaults = { ...tuning };
   const evaluate = (s: Setting): Record<string, PlayerEval[]> => {
-    Object.assign(PLAYER_TUNING, defaults, s);
+    Object.assign(tuning, defaults, s);
     const out: Record<string, PlayerEval[]> = {};
     for (const set of sets) {
       out[set.name] = [];
@@ -81,7 +82,7 @@ async function main() {
         if (o.players) out[set.name].push(...evaluatePlayers(g, o.players, proj));
       }
     }
-    Object.assign(PLAYER_TUNING, defaults);
+    Object.assign(tuning, defaults);
     return out;
   };
   const results: { s: Setting; rows: Record<string, PlayerEval[]> }[] = [];

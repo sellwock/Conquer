@@ -20,7 +20,8 @@ export function Method(props: { game: GameData }) {
         <li>
           <b>Player tendencies</b> come from each team's last {g.demo ? 'several' : 'ten'} completed games on ESPN. The box scores give minutes, usage, turnovers, free
           throws, rebounding, assists, steals, blocks and fouls. The play-by-play gives every shot's location and who assisted whom. Players new to a team use their season
-          averages. Everything is shrunk toward league norms by sample size, so a hot week doesn't become a superstar.
+          averages. Everything is shrunk toward league norms by sample size, so a hot week doesn't become a superstar, but usage and per-minute rates only lightly
+          (15 and 20 minutes of league average), so stars stay stars: heavier shrinking pulled their projections toward the middle when checked against real box scores.
         </li>
         <li>
           <b>Team defense</b> is the opponents' shooting by zone and turnover rate in those same games, shrunk heavily toward league average.
@@ -36,6 +37,8 @@ export function Method(props: { game: GameData }) {
       <p>
         His minutes are redistributed to healthy teammates, with players at his position absorbing more and nobody passing {lg.playerMinCap + 6} minutes. Rotations follow those
         minute targets: starters open each half, players with early foul trouble sit, closers play the last five minutes of a close game, and benches empty in blowouts.
+        {g.league === 'nba' &&
+          ' In NBA games each simulation also nudges every player\'s minutes up or down around his projection, as real nights vary, so his lines spread the way real ones do.'}
         Losing a high-usage creator hurts twice: his possessions go to less efficient teammates, and lineups without enough shot creation or passing shoot worse and turn it
         over more.
       </p>
