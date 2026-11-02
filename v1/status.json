@@ -1,14 +1,14 @@
 {
-"lastRun": "2026-11-02T21:45:20.508Z",
+"lastRun": "2026-11-02T22:00:24.777Z",
 "model": "1.1.0",
-"requests": 9,
+"requests": 1513,
 "snapshots": 0,
-"refreshed": 0,
-"graded": 1,
+"refreshed": 47,
+"graded": 0,
 "voided": 0,
 "results": 0,
-"propsPre": 0,
+"propsPre": 4,
 "propsLive": 0,
 "propsGraded": 0,
-"errors": []
+"errors": ["ncaam: request budget reached; FDU @ ILL skipped"]
 }
