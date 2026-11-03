@@ -1,14 +1,14 @@
 {
-"lastRun": "2026-11-03T02:15:18.836Z",
+"lastRun": "2026-11-03T02:26:12.319Z",
 "model": "1.1.0",
-"requests": 71,
+"requests": 151,
 "snapshots": 0,
-"refreshed": 0,
-"graded": 20,
+"refreshed": 4,
+"graded": 4,
 "voided": 0,
 "results": 0,
 "propsPre": 0,
-"propsLive": 2,
+"propsLive": 0,
 "propsGraded": 0,
 "errors": []
 }
