@@ -1,14 +1,14 @@
 {
-"lastRun": "2026-11-02T23:45:19.504Z",
+"lastRun": "2026-11-03T00:00:28.916Z",
 "model": "1.1.0",
-"requests": 91,
-"snapshots": 2,
-"refreshed": 0,
+"requests": 1528,
+"snapshots": 0,
+"refreshed": 49,
 "graded": 0,
 "voided": 0,
 "results": 0,
-"propsPre": 0,
+"propsPre": 7,
 "propsLive": 0,
 "propsGraded": 0,
-"errors": []
+"errors": ["ncaam: request budget reached; PFW @ DUQ skipped"]
 }
