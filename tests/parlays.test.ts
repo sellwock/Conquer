@@ -86,7 +86,7 @@ describe('parlay math', () => {
     const spread = legs.find((l) => l.key.endsWith('spread:home'))!;
     expect(ml.pModel).toBe(1);
     expect(ml.pBlend).toBeCloseTo(0.5); // college moneylines: market alone
-    expect(spread.pBlend).toBeCloseTo(0.25 * 1 + 0.75 * 0.5); // college spreads: a quarter model
+    expect(spread.pBlend).toBeCloseTo(0.2 * 1 + 0.8 * 0.5); // college spreads: a fifth model
     expect(legsForGame(g, HALF).find((l) => l.key.endsWith('ml:home'))!.pBlend).toBeCloseTo(0.75);
   });
 
@@ -106,7 +106,7 @@ describe('parlay math', () => {
     expect(defaultPickMode('nba')).toBe('sim');
     expect(defaultPickMode('ncaam')).toBe('blend');
     expect(weightsFor('nba', 'sim')).toEqual(SIM_ONLY);
-    expect(weightsFor('ncaam', 'blend')).toEqual({ ml: 0, spread: 0.25, total: 0.25, prop: 0 });
+    expect(weightsFor('ncaam', 'blend')).toEqual({ ml: 0, spread: 0.2, total: 0.2, prop: 0 });
 
     // Home wins and covers in every sim; the market says a coin flip.
     const g = market('1', Array(100).fill(10), Array(100).fill(200), evenOdds, 'nba');

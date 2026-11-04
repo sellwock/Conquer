@@ -97,15 +97,15 @@ export type BlendWeights = Record<LegKind, number>;
 
 /**
  * How much the simulation counts next to the market's no-vig odds, by league and bet type. Fitted
- * with the backtest's "Best model weight" rows (scripts/backtest.ts, model 1.1.0, 600 games per
+ * with the backtest's "Best model weight" rows (scripts/backtest.ts, model 1.2.0, 600 games per
  * league): the market alone scored best on every NBA bet and on college moneylines, while college
- * spreads and totals did slightly better with a quarter of the model mixed in. Refit whenever
- * MODEL_VERSION changes.
+ * spreads and totals did slightly better with a fifth of the model mixed in (a quarter under
+ * 1.1.0). Refit whenever MODEL_VERSION changes.
  */
 export const MODEL_WEIGHT: Record<LeagueId, BlendWeights> = {
   // Player props have no backtest yet, so the blend leaves them to the market.
   nba: { ml: 0, spread: 0, total: 0, prop: 0 },
-  ncaam: { ml: 0, spread: 0.25, total: 0.25, prop: 0 },
+  ncaam: { ml: 0, spread: 0.2, total: 0.2, prop: 0 },
 };
 
 /** False when the market alone ranks every bet in this league, so no leg can beat the vig. */
