@@ -41,6 +41,8 @@ export function Method(props: { game: GameData }) {
           ' In NBA games each simulation also nudges every player\'s minutes up or down around his projection, as real nights vary, so his lines spread the way real ones do.'}
         Losing a high-usage creator hurts twice: his possessions go to less efficient teammates, and lineups without enough shot creation or passing shoot worse and turn it
         over more.
+        {g.league === 'nba' &&
+          " When judging a lineup's shot creation, unproven players with few minutes count as below-average creators, so a team leaning on them doesn't look stronger than it is."}
       </p>
       <h3>Inside a possession</h3>
       <ul>

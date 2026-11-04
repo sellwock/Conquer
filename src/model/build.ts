@@ -43,7 +43,7 @@ export interface PlayerTuning {
   usagePriorScale: number;
   /**
    * The same prior's weight when the engine judges how much a lineup creates (its usage/efficiency
-   * trade-off). Heavier than usagePriorMin: counting unproven, low-minute players as below-average
+   * trade-off). In the NBA it stays heavy: counting unproven, low-minute players as below-average
    * creators keeps teams that lean on them from looking stronger than they are.
    */
   creationPriorMin: number;
@@ -57,18 +57,20 @@ export interface PlayerTuning {
 
 /**
  * Player-level knobs by league, fitted against real box scores with scripts/players.ts (model
- * 1.2.0: 211 NBA games from this season and last, 150 college games from last season, every
- * player's simulated points, rebounds and assists scored by CRPS against his box score). Until then
- * usage leaned on 120 minutes of position average and per-minute rates on 180, which pulled stars
- * toward the middle, and every player's minutes were the same in every simulation, which made his
- * lines far too narrow (72% of NBA scoring lines landed inside the middle 80%). Now: NBA PRA CRPS
- * 5.02 → 4.80, 80% inside, stars' points bias −1.8 → −1.2; college PRA CRPS 4.51 → 4.43, where
- * varying minutes didn't help. Changing a value changes the simulation's output, so MODEL_VERSION
- * moves with it.
+ * 1.2.0), which grades every player's simulated points, rebounds and assists by CRPS against his
+ * box score and every game's win, margin and total predictions against the result. Until then usage
+ * leaned on 120 minutes of position average and per-minute rates on 180, which pulled stars toward
+ * the middle, and every player's minutes were the same in every simulation, which made his lines
+ * far too narrow. On last season's 600 NBA backtest games: PRA CRPS 4.75 → 4.58, scoring lines
+ * inside the middle 80% 74% → 81%, stars' points bias −1.39 → −0.92, with no clear change in any
+ * game metric. That needed creation kept on the old 120 minutes: with the light prior there too,
+ * NBA margins and win chances got significantly worse. College is the other way round: the light
+ * prior there made its game lines significantly better (Brier −0.003), and varying minutes didn't
+ * help. Changing a value changes the simulation's output, so MODEL_VERSION moves with it.
  */
 export const PLAYER_TUNING: Record<LeagueId, PlayerTuning> = {
   nba: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 120, ratePriorMin: 20, minutesNoise: 1.5, usageNoise: 0 },
-  ncaam: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 120, ratePriorMin: 20, minutesNoise: 0, usageNoise: 0 },
+  ncaam: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 15, ratePriorMin: 20, minutesNoise: 0, usageNoise: 0 },
 };
 
 export function isUnavailable(p: PlayerProfile, opts: Pick<BuildOptions, 'outs' | 'ins' | 'healthy' | 'minutesMode'>): boolean {

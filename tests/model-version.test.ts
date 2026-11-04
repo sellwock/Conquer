@@ -24,4 +24,4 @@ describe('model version', () => {
   });
 });
 
-const FINGERPRINT = ['nba:0.6275:115.72:111.63', 'ncaam:0.5275:72.56:71.09'];
+const FINGERPRINT = ['nba:0.6275:115.72:111.63', 'ncaam:0.5525:72.69:70.70'];
