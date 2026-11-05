@@ -10,6 +10,7 @@ import { loadForwardLog, loadPropLog, type ForwardLog } from '../track/forward';
 import { runBacktest, type BacktestProgress } from '../track/backtest';
 import type { Entry, PropEntry, PropSnap } from '../track/types';
 import { Reliability } from './charts';
+import { propMixText } from './parlays';
 import { lineText, one, pct, signed1 } from './format';
 
 type Source = 'log' | 'backtest';
@@ -201,7 +202,7 @@ function PropStats({ s, when }: { s: PropSummary; when: PropWhen }) {
           <span class="kicker">Top picks</span>
           <strong>{rate(s.top)}</strong>
           <span class="muted">
-            {record3(s.top)} · the sim's best {TOP_PER_GAME} per game
+            {record3(s.top)} · the app's best {TOP_PER_GAME} per game
           </span>
         </div>
         <div class="stat">
@@ -229,9 +230,10 @@ function PropStats({ s, when }: { s: PropSummary; when: PropWhen }) {
           <p class="muted">Every graded line pushed, so there's nothing to compare yet.</p>
         )}
         <p class="muted small">
-          Props in one game move together (a fast pace lifts every over), so each game counts once in the comparison. Top picks are ranked the way the app ranks single bets: positive
-          sim return, at least a 40% hit chance, no longer than +200.{when === 'live' ? ' Live lines are the book\'s in-game prices at the moment shown.' : ''} Units are
-          hypothetical, staking 1 unit on every pick at the listed price. Not advice.
+          Props in one game move together (a fast pace lifts every over), so each game counts once in the comparison. Top picks are ranked the way the app ranks single bets
+          now, with props at {propMixText()}: a positive return, at least a 40% hit chance and no price longer than +200. The Sim column, Every line and the comparison above
+          use the simulation's own chances, so they show when it earns more say.{when === 'live' ? ' Live lines are the book\'s in-game prices at the moment shown.' : ''}{' '}
+          Units are hypothetical, staking 1 unit on every pick at the listed price. Not advice.
         </p>
       </section>
     </>

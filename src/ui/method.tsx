@@ -1,7 +1,7 @@
 import { LEAGUES } from '../model/leagues';
 import { MODEL_WEIGHT, modelHasSay } from '../model/parlays';
 import type { GameData } from '../model/types';
-import { blendText } from './parlays';
+import { blendText, propMixText } from './parlays';
 
 export function Method(props: { game: GameData }) {
   const g = props.game;
@@ -77,7 +77,8 @@ export function Method(props: { game: GameData }) {
           : ", so no weighted suggestion can beat the vig. The tab therefore opens on the simulation's own picks, ranked by its chances alone and labeled as such; their expected returns are likely overstated."}{' '}
         A switch on the tab moves between the two rankings. A suggestion needs positive expected value, a minimum hit chance and a capped price. Player props use the
         book's posted lines from ESPN and each player's line in every simulation, so a prop and the game result are scored together. Props have no backtest, so only the
-        simulation-only ranking can pick them, and players projected under 15 minutes are left out. Simulating the slate fetches every game's props too; lines for
+        simulation's ranking can pick them, and there they count {propMixText()}: the first graded props showed the simulation projecting stars under their lines
+        and far too sure of itself. Players projected under 15 minutes are left out. Simulating the slate fetches every game's props too; lines for
         games other than the open one are as of that game's simulation, cached for 30 minutes. During a game simulated from now, the book's in-game prop
         lines are read every two minutes and priced as each player's stats so far plus the simulated rest of the game. "All live games" does the same for
         every game in progress (2,000 sims each from its current state, refreshed every two minutes while open) and builds live parlays across them. The

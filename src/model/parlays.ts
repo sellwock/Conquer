@@ -111,13 +111,25 @@ export const MODEL_WEIGHT: Record<LeagueId, BlendWeights> = {
 /** False when the market alone ranks every bet in this league, so no leg can beat the vig. */
 export const modelHasSay = (league: LeagueId) => Object.values(MODEL_WEIGHT[league]).some((w) => w > 0);
 
-/** The simulation's chances alone, ignoring the market: its own picks, unproven against the market. */
+/** The simulation's chances alone on every bet, ignoring the market. The track record grades these. */
 export const SIM_ONLY: BlendWeights = { ml: 1, spread: 1, total: 1, prop: 1 };
 
-/** "blend" ranks by the backtested weights; "sim" by the simulation alone. */
+/**
+ * How much the simulation counts on player props in its own ranking; the rest is the book's no-vig
+ * odds. The first graded props (two NBA games, 310 lines, Nov 1 2026) scored worse than the book's
+ * odds by Brier (0.307 vs 0.251, where 25% simulation scored 0.258), and its top picks went 7–13 at
+ * simulated chances of 78% to 98%: it projected stars under their lines and was far too sure of
+ * itself. So props lean on the book until the track record shows the simulation earns more say.
+ */
+export const PROP_SIM_WEIGHT = 0.25;
+
+/** The simulation's own ranking: its chances on game lines, and on props mixed with the book's. */
+export const SIM_PICKS: BlendWeights = { ml: 1, spread: 1, total: 1, prop: PROP_SIM_WEIGHT };
+
+/** "blend" ranks by the backtested weights; "sim" by the simulation (SIM_PICKS). */
 export type PickMode = 'blend' | 'sim';
 
-export const weightsFor = (league: LeagueId, mode: PickMode): BlendWeights => (mode === 'sim' ? SIM_ONLY : MODEL_WEIGHT[league]);
+export const weightsFor = (league: LeagueId, mode: PickMode): BlendWeights => (mode === 'sim' ? SIM_PICKS : MODEL_WEIGHT[league]);
 
 /** The blend where it can find anything, else the simulation's own picks. */
 export const defaultPickMode = (league: LeagueId): PickMode => (modelHasSay(league) ? 'blend' : 'sim');
