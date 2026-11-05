@@ -67,7 +67,8 @@ describe('slate board', () => {
     expect(r.best!.legs[0].prop).toBeUndefined();
     expect(r.best!.legs.map((l) => l.key)).toEqual(boardRow(nba).best!.legs.map((l) => l.key));
     expect(r.bestProp!.legs[0].label).toBe('A. Player over 20.5 points');
-    expect(r.bestProp!.pHit).toBeCloseTo(0.9, 2);
+    // Props lean on the book: 25% of the simulation's 90% and 75% of the book's 50%.
+    expect(r.bestProp!.pHit).toBeCloseTo(0.25 * 0.9 + 0.75 * 0.5, 2);
     expect(boardRow(nba)).toMatchObject({ hasProps: false, bestProp: undefined });
   });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { americanOf, parsePropBets, pickPropBook } from '../src/data/espn/props';
 import { propMarkets, MIN_MINUTES, type SoFar } from '../src/model/props';
-import { evaluate, legsForGame, suggestParlays, SIM_ONLY, type GameMarket } from '../src/model/parlays';
+import { evaluate, legsForGame, suggestParlays, weightsFor, SIM_ONLY, type GameMarket } from '../src/model/parlays';
 import { packMarket, unpackMarket } from '../src/model/slate';
 import { runOutcomes } from '../src/sim/quick';
 import { buildSpec } from '../src/model/build';
@@ -115,6 +115,12 @@ describe('player props in parlays', () => {
     const sim = legsForGame(market, SIM_ONLY).find((l) => l.key === over.key)!;
     expect(sim.pBlend).toBe(sim.pModel);
     expect(sim.ev).toBeGreaterThan(0.5);
+    // The simulation's ranking leans on the book for props: a 90%+ lean shows as about 60%.
+    const pick = legsForGame(market, weightsFor('nba', 'sim')).find((l) => l.key === over.key)!;
+    expect(pick.pBlend).toBeCloseTo(0.25 * pick.pModel + 0.75 * pick.pFair, 9);
+    expect(pick.pBlend).toBeLessThan(0.65);
+    expect(pick.ev).toBeGreaterThan(0);
+    expect(pick.ev).toBeLessThan(sim.ev / 3);
   });
 
   it('scores a prop together with the game total, and never pairs two props on one player', () => {
