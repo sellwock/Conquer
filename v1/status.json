@@ -1,14 +1,14 @@
 {
-"lastRun": "2026-11-05T03:00:23.282Z",
+"lastRun": "2026-11-05T03:15:18.234Z",
 "model": "1.1.0",
-"requests": 44,
+"requests": 18,
 "snapshots": 0,
-"refreshed": 1,
-"graded": 2,
+"refreshed": 0,
+"graded": 3,
 "voided": 0,
 "results": 0,
-"propsPre": 1,
+"propsPre": 0,
 "propsLive": 0,
-"propsGraded": 2,
+"propsGraded": 1,
 "errors": ["ncaam 401920377: Couldn't load the Mercer Bears roster."]
 }
