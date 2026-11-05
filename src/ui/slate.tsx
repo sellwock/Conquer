@@ -15,6 +15,8 @@ import { dateLabel, lineText, pct, perHundred, tipTime } from './format';
 import type { Slate } from './useSlate';
 import type { LiveSlate } from './liveSlate';
 import { blendText, LiveStatus, propMixText } from './parlays';
+import { NewsCard } from './newsCard';
+import type { NewsScan } from './news';
 
 type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge' | 'prop';
 
@@ -78,6 +80,8 @@ export function SlateBoard(props: {
   onOpen: (id: string) => void;
   /** Games in progress priced from their in-game lines and props. */
   live?: { slate: LiveSlate; markets: Record<string, GameMarket> };
+  /** Injury news for the upcoming games (NBA). */
+  news?: NewsScan;
 }) {
   const { slate, board } = props;
   const liveMarkets = props.live?.markets;
@@ -129,6 +133,7 @@ export function SlateBoard(props: {
 
   return (
     <div class="slate">
+      {props.news && (props.news.watching > 0 || props.news.items.length > 0) && <NewsCard news={props.news} games={board.games} onOpen={props.onOpen} />}
       <section class="card">
         <header class="card-head">
           <h2>Slate · {dateLabel(props.date)}</h2>

@@ -27,6 +27,7 @@ import { TrackRecord } from './record';
 import { SlateBoard } from './slate';
 import { marketFrom, useSlate } from './useSlate';
 import { useLiveSlate } from './liveSlate';
+import { useNews } from './news';
 
 export interface SimState {
   status: 'idle' | 'running' | 'done' | 'error';
@@ -318,6 +319,8 @@ export function App() {
   const [liveScope, setLiveScope] = useState<'game' | 'all'>('game');
   const liveWanted = (url.view === 'game' && url.tab === 'parlays' && liveScope === 'all') || url.view === 'slate';
   const liveSlate = useLiveSlate(url.league, board.status === 'ok' ? board.games : NO_GAMES, liveMarket?.gameId, liveWanted, url.seed);
+  // Injury news for the board's upcoming NBA games, while the slate is open.
+  const news = useNews(url.league, board.status === 'ok' ? board.games : NO_GAMES, url.view === 'slate' && url.league === 'nba' && !offline);
   const liveMarkets = useMemo(() => ({ ...liveSlate.markets, ...(liveMarket ? { [liveMarket.gameId]: liveMarket } : {}) }), [liveSlate.markets, liveMarket]);
 
   // The open game's market for the parlays tab: the simulation's outcomes plus any props.
@@ -409,6 +412,7 @@ export function App() {
           openGame={url.game}
           onOpen={(id) => update({ view: 'game', game: id, outs: [], ins: [], from: 'auto', mode: 'projected' })}
           live={{ slate: liveSlate, markets: liveMarkets }}
+          news={url.league === 'nba' ? news : undefined}
         />
       ) : (
         <>

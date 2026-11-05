@@ -1,6 +1,6 @@
 // Reads the forward log the scheduled job writes to the `data` branch.
 import type { LeagueId } from '../model/types';
-import type { Entry, LogFile, PropEntry, PropLogFile } from './types';
+import type { Entry, InjuryLog, LogFile, PropEntry, PropLogFile } from './types';
 
 const BASES = ['https://raw.githubusercontent.com/sellwock/Conquer/data/v1', 'https://cdn.jsdelivr.net/gh/sellwock/Conquer@data/v1'];
 
@@ -48,4 +48,9 @@ export async function loadPropLog(league: LeagueId, signal?: AbortSignal): Promi
   const files = (index?.files ?? []).filter((f) => f.startsWith(`props/${league}/`));
   const logs = await Promise.all(files.map((f) => getData<PropLogFile>(f, signal)));
   return logs.flatMap((l) => Object.values(l ?? {})).sort((a, b) => Date.parse(b.tip) - Date.parse(a.tip));
+}
+
+/** The last injury report the scheduled job saw, and the news it found (NBA). */
+export async function loadInjuryLog(league: LeagueId, signal?: AbortSignal): Promise<InjuryLog | undefined> {
+  return getData<InjuryLog>(`injuries/${league}.json`, signal);
 }
