@@ -1,14 +1,14 @@
 {
-"lastRun": "2026-11-05T23:45:20.962Z",
+"lastRun": "2026-11-06T00:00:24.864Z",
 "model": "1.1.0",
-"requests": 219,
-"snapshots": 6,
-"refreshed": 0,
+"requests": 1531,
+"snapshots": 26,
+"refreshed": 20,
 "graded": 0,
 "voided": 0,
 "results": 0,
-"propsPre": 0,
+"propsPre": 2,
 "propsLive": 0,
 "propsGraded": 0,
-"errors": ["ncaam 401920377: Couldn't load the Mercer Bears roster."]
+"errors": ["ncaam: request budget reached; CBU @ ORST skipped"]
 }
