@@ -1,14 +1,14 @@
 {
-"lastRun": "2026-11-06T00:00:24.864Z",
+"lastRun": "2026-11-06T00:07:36.012Z",
 "model": "1.1.0",
-"requests": 1531,
-"snapshots": 26,
-"refreshed": 20,
+"requests": 214,
+"snapshots": 5,
+"refreshed": 1,
 "graded": 0,
 "voided": 0,
 "results": 0,
-"propsPre": 2,
+"propsPre": 0,
 "propsLive": 0,
 "propsGraded": 0,
-"errors": ["ncaam: request budget reached; CBU @ ORST skipped"]
+"errors": []
 }
