@@ -51,6 +51,13 @@ export function pickWeighted(rng: Rng, weights: ArrayLike<number>, count = weigh
   return -1;
 }
 
+/** A standard normal draw (Box-Muller). */
+export function normal(rng: Rng): number {
+  let u = 0;
+  while (u === 0) u = rng();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng());
+}
+
 /** Gamma(k, theta) for small integer k (sum of exponentials). */
 export function gammaInt(rng: Rng, k: number, theta: number): number {
   let p = 1;

@@ -4,7 +4,7 @@
 // rotations driven by projected minutes, foul trouble and foul-outs, shot zones, assists from a
 // passing network, blocks, offensive rebounds, bonus free throws, and late-game clock strategy.
 import { regulationSec } from '../model/leagues';
-import { pickWeighted, gammaInt, uniform, type Rng } from '../lib/rng';
+import { pickWeighted, gammaInt, normal, uniform, type Rng } from '../lib/rng';
 import { clamp } from '../lib/stats';
 import { BF, NBF, type GameResult, type LogEvent, type SimPlayer, type SimSpec, type SimTeam } from './types';
 
@@ -25,6 +25,10 @@ interface TeamState {
   teamFouls: number;
   /** Lineup-level usage weights, cached per lineup. */
   usageW: Float64Array;
+  /** This game's minutes target per player: the projection, varied by spec.noise. */
+  target: Float64Array;
+  /** This game's multiplier on each player's usage (spec.noise). */
+  useMult: Float64Array;
 }
 
 export const fmtClock = (s: number) => {
@@ -115,7 +119,7 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
         pri.push(-1e9);
         continue;
       }
-      const target = p.targetMin * 60;
+      const target = ts.target[i] * 60;
       let v: number;
       if (halfStart && p.starter) v = 1e6 + target;
       else if (garbage) v = 1000 - target / 60 + rng() * 2;
@@ -489,6 +493,12 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
       ts.sec[i] = ts.t.players[i].initSec;
     }
   }
+  // Game-to-game variation: some nights a player's minutes or touches run long, some short. A
+  // game in progress varies only what's left of it.
+  if (spec.noise) {
+    const left = spec.start ? 1 - clamp(elapsedTotal() / regSec, 0, 1) : 1;
+    for (const ts of teams) vary(ts, spec.noise, left);
+  }
   subCheck(true);
   forceSubs = false;
   if (log && !spec.start) emit(-1, `Tip-off. ${teams[off].t.abbr} wins the tip.`);
@@ -550,12 +560,38 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
       box: new Float64Array(n * NBF),
       teamFouls: 0,
       usageW: new Float64Array(n),
+      target: Float64Array.from(t.players, (p) => Math.max(0, p.targetMin)),
+      useMult: new Float64Array(n).fill(1),
     };
+  }
+
+  /**
+   * Draws this game's minutes target and usage multiplier per player. Minutes vary by about
+   * 2 + 0.1 × the projection (more, relatively, for the bench), scaled by `noise.minutes` and by how
+   * much of the game is left. The draw is a multiplier with a mean of 1, so each player keeps his
+   * projection on average (a cut-off normal would hand the bench minutes and take them from
+   * stars), and the team's total stays the same.
+   */
+  function vary(ts: TeamState, noise: { minutes: number; usage: number }, left: number) {
+    let before = 0, after = 0;
+    for (let i = 0; i < ts.n; i++) {
+      const t = ts.t.players[i].targetMin;
+      if (t <= 0 || ts.out[i]) continue;
+      before += t;
+      if (noise.minutes > 0) {
+        const cv = Math.min(1, (noise.minutes * left * (2 + 0.1 * t)) / t);
+        const sigma = Math.sqrt(Math.log(1 + cv * cv));
+        ts.target[i] = t * Math.exp(sigma * normal(rng) - (sigma * sigma) / 2);
+      }
+      after += ts.target[i];
+      if (noise.usage > 0) ts.useMult[i] = Math.exp(noise.usage * normal(rng) - (noise.usage * noise.usage) / 2);
+    }
+    if (after > 0) for (let i = 0; i < ts.n; i++) if (ts.t.players[i].targetMin > 0 && !ts.out[i]) ts.target[i] *= before / after;
   }
 
   function refreshUsage(ts: TeamState) {
     ts.usageW.fill(0);
-    for (const i of ts.onCourt) ts.usageW[i] = ts.t.players[i].usage;
+    for (const i of ts.onCourt) ts.usageW[i] = ts.t.players[i].usage * ts.useMult[i];
   }
 
   function outList(ts: TeamState, limit: number) {
@@ -566,13 +602,15 @@ export function simulateGame(spec: SimSpec, rng: Rng, withLog = false): GameResu
 }
 
 /**
- * Usage/efficiency trade-off. When the five on the floor don't normally use a full possession's
- * worth of usage (a star is sitting), everyone has to create more and shoots a little worse.
+ * Usage/efficiency trade-off. When the five on the floor don't normally create a full possession's
+ * worth of shots (a star is sitting), everyone has to create more and shoots a little worse. It
+ * reads `creation`, not `usage`: who ends a possession follows each player's own recent share, but
+ * how much a lineup creates counts unproven players as below-average creators.
  */
 function lineupEfficiency(ts: { onCourt: number[]; t: SimTeam }, lgAst: number) {
   let s = 0, ast = 0;
   for (const i of ts.onCourt) {
-    s += ts.t.players[i].usage;
+    s += ts.t.players[i].creation;
     ast += ts.t.players[i].ast;
   }
   if (s <= 0) return { make: 0.9, to: 1.2 };

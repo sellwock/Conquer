@@ -2,7 +2,7 @@
 // redistributed, and per-player shot, usage and counting-stat rates (shrunk toward priors).
 import { clamp, shrink } from '../lib/stats';
 import { LEAGUES, regulationSec, type LeagueConfig } from './leagues';
-import { ZONES, type GameData, type GameSnapshot, type PlayerProfile, type PosGroup, type TeamProfile, type Zone } from './types';
+import { ZONES, type GameData, type GameSnapshot, type LeagueId, type PlayerProfile, type PosGroup, type TeamProfile, type Zone } from './types';
 import type { SimPlayer, SimSpec, SimTeam } from '../sim/types';
 
 export type MinutesMode = 'projected' | 'actual';
@@ -35,7 +35,43 @@ const SHOT_PRIOR: Record<PosGroup, { r3: number; two: [number, number, number]; 
 
 const FTA_PER_TRIP = 1.87;
 const AND_ONE = 0.2;
-const PRIOR_MIN = 180;
+
+export interface PlayerTuning {
+  /** Minutes of position-prior usage mixed into each player's own usage: who ends possessions. */
+  usagePriorMin: number;
+  /** That prior, as a share of the position group's usage (an unproven player creates less). */
+  usagePriorScale: number;
+  /**
+   * The same prior's weight when the engine judges how much a lineup creates (its usage/efficiency
+   * trade-off). In the NBA it stays heavy: counting unproven, low-minute players as below-average
+   * creators keeps teams that lean on them from looking stronger than they are.
+   */
+  creationPriorMin: number;
+  /** Minutes of position-prior rates mixed into each player's per-minute counting stats. */
+  ratePriorMin: number;
+  /** How much each player's minutes vary from one simulation to the next: 1 means about 2 + 0.1 × his projection. */
+  minutesNoise: number;
+  /** How much each player's share of his team's possessions varies from one simulation to the next (lognormal sd). */
+  usageNoise: number;
+}
+
+/**
+ * Player-level knobs by league, fitted against real box scores with scripts/players.ts (model
+ * 1.2.0), which grades every player's simulated points, rebounds and assists by CRPS against his
+ * box score and every game's win, margin and total predictions against the result. Until then usage
+ * leaned on 120 minutes of position average and per-minute rates on 180, which pulled stars toward
+ * the middle, and every player's minutes were the same in every simulation, which made his lines
+ * far too narrow. On last season's 600 NBA backtest games: PRA CRPS 4.75 → 4.58, scoring lines
+ * inside the middle 80% 74% → 81%, stars' points bias −1.39 → −0.92, with no clear change in any
+ * game metric. That needed creation kept on the old 120 minutes: with the light prior there too,
+ * NBA margins and win chances got significantly worse. College is the other way round: the light
+ * prior there made its game lines significantly better (Brier −0.003), and varying minutes didn't
+ * help. Changing a value changes the simulation's output, so MODEL_VERSION moves with it.
+ */
+export const PLAYER_TUNING: Record<LeagueId, PlayerTuning> = {
+  nba: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 120, ratePriorMin: 20, minutesNoise: 1.5, usageNoise: 0 },
+  ncaam: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 15, ratePriorMin: 20, minutesNoise: 0, usageNoise: 0 },
+};
 
 export function isUnavailable(p: PlayerProfile, opts: Pick<BuildOptions, 'outs' | 'ins' | 'healthy' | 'minutesMode'>): boolean {
   if (opts.minutesMode === 'actual' && p.actual) return !p.actual.played || (!opts.healthy && opts.outs.has(p.id));
@@ -126,6 +162,7 @@ export function planMinutes(team: TeamProfile, lg: LeagueConfig, opts: BuildOpti
 
 interface Rates {
   usage: number;
+  creation: number;
   pTO: number;
   pTrip: number;
   zoneShare: number[];
@@ -147,11 +184,16 @@ export function playerRates(p: PlayerProfile, lg: LeagueConfig): Rates {
   const min = b?.min ?? 0;
   // Usage rate: share of the team's plays this player ends while on the floor.
   const teamPlaysPerMin = (lg.pace * lg.playsPerPoss) / (regulationSec(lg) / 60);
-  const perMin = (v: number | undefined, pri: number) => ((v ?? 0) + pri * PRIOR_MIN) / (min + PRIOR_MIN);
+  const tuning = PLAYER_TUNING[lg.id];
+  const priorMin = tuning.ratePriorMin;
+  const perMin = (v: number | undefined, pri: number) => ((v ?? 0) + pri * priorMin) / (min + priorMin);
 
   const fga = b?.fga ?? 0, fta = b?.fta ?? 0, tov = b?.tov ?? 0;
   const rawUsage = min > 0 ? (fga + 0.44 * fta + tov) / min / teamPlaysPerMin : prior.usage * 0.8;
-  const usage = (rawUsage * min + prior.usage * 0.85 * 120) / (min + 120);
+  const { usagePriorScale: uScale } = tuning;
+  const withPrior = (priorMin: number) => (rawUsage * min + prior.usage * uScale * priorMin) / (min + priorMin);
+  const usage = withPrior(tuning.usagePriorMin);
+  const creation = withPrior(tuning.creationPriorMin);
 
   const trips = fta / FTA_PER_TRIP;
   const shootTrips = trips * (1 - lg.bonusTripShare);
@@ -202,6 +244,7 @@ export function playerRates(p: PlayerProfile, lg: LeagueConfig): Rates {
 
   return {
     usage: clamp(usage, 0.06, 0.42),
+    creation: clamp(creation, 0.06, 0.42),
     pTO: clamp(pTO, 0.03, 0.3),
     pTrip: clamp(pTrip, 0.01, 0.3),
     zoneShare,
@@ -263,6 +306,7 @@ function buildTeam(t: TeamProfile, lg: LeagueConfig, plan: MinutesPlan, makeMult
       starter: plan.starters.has(p.id),
       targetMin: plan.unavailable.has(p.id) ? 0 : plan.minutes[p.id] ?? 0,
       usage: r.usage,
+      creation: r.creation,
       pTO: r.pTO,
       pTrip: r.pTrip,
       zoneCum: cum,
@@ -291,6 +335,7 @@ export interface BuiltSpec {
 
 export function buildSpec(game: GameData, opts: BuildOptions): BuiltSpec {
   const lg = LEAGUES[game.league];
+  const tuning = PLAYER_TUNING[game.league];
   const homePlan = planMinutes(game.home, lg, opts);
   const awayPlan = planMinutes(game.away, lg, opts);
   const pace = (teamPace(game.home, lg) * teamPace(game.away, lg)) / lg.pace;
@@ -306,6 +351,7 @@ export function buildSpec(game: GameData, opts: BuildOptions): BuiltSpec {
     away,
     pace,
     whistle: opts.whistle,
+    ...(tuning.minutesNoise || tuning.usageNoise ? { noise: { minutes: tuning.minutesNoise, usage: tuning.usageNoise } } : {}),
     start: opts.start
       ? {
           period: opts.start.period,
