@@ -22,14 +22,14 @@ jobs:
           key: bt-espn-nba-props-${{ github.run_id }}
           restore-keys: bt-espn-nba-
       - name: A season of kept prop lines, fitted and tested
-        run: npx tsx scripts/props-backtest.ts --league nba --ranges 20251115-20260412,20261021-20261109 --max 1500 --sims 1000 --cache bt-cache --out props.md --json entries.json
+        run: npx tsx scripts/props-backtest.ts --league nba --ranges 20260101-20260131,20261021-20261109 --max 1500 --sims 1000 --cache bt-cache --out props.md --json entries.json --tuning "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,creationPriorMin=120"
       - name: Keep the rows on this branch for a closer look
         if: always()
         run: |
           [ -f entries.json ] || exit 0
           mkdir -p data
-          gzip -9 -c entries.json > data/props-history-nba.json.gz
-          cp props.md data/props-history-nba.md
+          gzip -9 -c entries.json > data/props-history-nba-110.json.gz
+          cp props.md data/props-history-nba-110.md
           ls -la data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
