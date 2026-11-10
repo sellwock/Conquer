@@ -1,106 +1,144 @@
 {
-  "timestamp": "2026-01-15T15:04:11Z",
-  "status": "success",
-  "season": {
-    "year": 2026,
-    "type": 2,
-    "name": "Regular Season",
-    "displayName": "2025-26"
-  },
-  "injuries": [
+ "timestamp": "2026-01-16T23:00:00Z",
+ "status": "success",
+ "season": {
+  "year": 2026
+ },
+ "injuries": [
+  {
+   "id": "18",
+   "displayName": "New York Knicks",
+   "injuries": [
     {
-      "id": "2",
-      "displayName": "Boston Celtics",
-      "logo": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
-      "injuries": [
-        {
-          "id": "900001",
-          "status": "Out",
-          "date": "2026-01-14T18:22Z",
-          "athlete": {
-            "id": "4432110",
-            "uid": "s:40~l:46~a:4432110",
-            "displayName": "Caleb Northrup",
-            "shortName": "Caleb Northrup",
-            "links": [],
-            "headshot": {
-              "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432110.png",
-              "alt": "Caleb Northrup"
-            },
-            "position": {
-              "name": "Shooting Guard",
-              "displayName": "Shooting Guard",
-              "abbreviation": "SG"
-            }
-          },
-          "type": {
-            "id": "21",
-            "name": "INJURY_STATUS_OUT",
-            "description": "out",
-            "abbreviation": "O"
-          },
-          "details": {
-            "fantasyStatus": {
-              "description": "OUT",
-              "abbreviation": "OUT"
-            },
-            "type": "Knee",
-            "location": "Leg",
-            "detail": "Sprain",
-            "side": "Left",
-            "returnDate": "2026-01-28"
-          },
-          "longComment": "Northrup (knee) will miss at least the next two weeks.",
-          "shortComment": "Northrup is out with a left knee sprain."
-        }
-      ]
+     "id": "44321019",
+     "longComment": "Hale (ankle) won't play Friday.",
+     "shortComment": "Hale (ankle) won't play Friday.",
+     "status": "Out",
+     "date": "2026-01-16T22:10Z",
+     "athlete": {
+      "firstName": "Marcus",
+      "lastName": "Hale",
+      "displayName": "Marcus Hale",
+      "shortName": "M. Hale",
+      "links": [
+       {
+        "rel": [
+         "playercard",
+         "desktop",
+         "athlete"
+        ],
+        "href": "https://www.espn.com/nba/player/_/id/4432101/x"
+       }
+      ],
+      "headshot": {
+       "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432101.png"
+      },
+      "position": {
+       "abbreviation": "G"
+      },
+      "team": {
+       "id": "18",
+       "abbreviation": "NY"
+      }
+     },
+     "type": {
+      "description": "out"
+     },
+     "details": {
+      "type": "Ankle",
+      "detail": "Sprain",
+      "side": "Left"
+     }
     },
     {
-      "id": "13",
-      "displayName": "Los Angeles Lakers",
-      "logo": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png",
-      "injuries": [
-        {
-          "id": "900002",
-          "status": "Day-To-Day",
-          "date": "2026-01-14T18:22Z",
-          "athlete": {
-            "id": "4432210",
-            "uid": "s:40~l:46~a:4432210",
-            "displayName": "Marco Velez",
-            "shortName": "Marco Velez",
-            "links": [],
-            "headshot": {
-              "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432210.png",
-              "alt": "Marco Velez"
-            },
-            "position": {
-              "name": "Forward",
-              "displayName": "Forward",
-              "abbreviation": "F"
-            }
-          },
-          "type": {
-            "id": "22",
-            "name": "INJURY_STATUS_DAYTODAY",
-            "description": "day-to-day",
-            "abbreviation": "D"
-          },
-          "details": {
-            "fantasyStatus": {
-              "description": "GTD",
-              "abbreviation": "GTD"
-            },
-            "type": "Ankle",
-            "location": "Leg",
-            "detail": "Soreness",
-            "side": "Right",
-            "returnDate": "2026-01-17"
-          },
-          "longComment": "Velez is listed as questionable for Saturday's game.",
-          "shortComment": "Velez is day-to-day with right ankle soreness."
-        }
-      ]
+     "id": "44321109",
+     "longComment": "Northrup remains out.",
+     "shortComment": "Northrup remains out.",
+     "status": "Out",
+     "date": "2025-12-20T18:00Z",
+     "athlete": {
+      "firstName": "Caleb",
+      "lastName": "Northrup",
+      "displayName": "Caleb Northrup",
+      "shortName": "C. Northrup",
+      "links": [
+       {
+        "rel": [
+         "playercard",
+         "desktop",
+         "athlete"
+        ],
+        "href": "https://www.espn.com/nba/player/_/id/4432110/x"
+       }
+      ],
+      "headshot": {
+       "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432110.png"
+      },
+      "position": {
+       "abbreviation": "G"
+      },
+      "team": {
+       "id": "18",
+       "abbreviation": "NY"
+      }
+     },
+     "type": {
+      "description": "out"
+     },
+     "details": {
+      "type": "Ankle",
+      "detail": "Sprain",
+      "side": "Left"
+     }
     }
-  ]
+   ]
+  },
+  {
+   "id": "17",
+   "displayName": "Brooklyn Nets",
+   "injuries": [
+    {
+     "id": "44321049",
+     "longComment": "Okafor is questionable.",
+     "shortComment": "Okafor is questionable.",
+     "status": "Day-To-Day",
+     "date": "2026-01-16T20:00Z",
+     "athlete": {
+      "firstName": "Jamal",
+      "lastName": "Okafor",
+      "displayName": "Jamal Okafor",
+      "shortName": "J. Okafor",
+      "links": [
+       {
+        "rel": [
+         "playercard",
+         "desktop",
+         "athlete"
+        ],
+        "href": "https://www.espn.com/nba/player/_/id/4432104/x"
+       }
+      ],
+      "headshot": {
+       "href": "https://a.espncdn.com/i/headshots/nba/players/full/4432104.png"
+      },
+      "position": {
+       "abbreviation": "G"
+      },
+      "team": {
+       "id": "17",
+       "abbreviation": "BKN"
+      }
+     },
+     "type": {
+      "description": "day-to-day"
+     },
+     "details": {
+      "type": "Ankle",
+      "detail": "Sprain",
+      "side": "Left"
+     }
+    }
+   ]
+  }
+ ]
 }

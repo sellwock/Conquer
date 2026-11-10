@@ -86,6 +86,8 @@ export interface Injury {
   detail?: string;
   /** True when the status means the player will not play. */
   out: boolean;
+  /** When ESPN last updated the entry (it refreshes long-term injuries too, so this alone isn't news). */
+  since?: string;
 }
 
 export interface PlayerProfile {

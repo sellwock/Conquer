@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultPickMode, evaluate, legsForGame, modelHasSay, suggestParlays, toAmerican, toDecimal, weightsFor, HIT_FLOOR, MAX_PRICE, SIM_ONLY, type GameMarket } from '../src/model/parlays';
+import { defaultPickMode, evaluate, legsForGame, modelHasSay, suggestParlays, toAmerican, toDecimal, weightsFor, HIT_FLOOR, MAX_PRICE, PROP_SIM_WEIGHT, SIM_ONLY, SIM_PICKS, type GameMarket } from '../src/model/parlays';
 import { makeRng } from '../src/lib/rng';
 import type { LeagueId } from '../src/model/types';
 
@@ -86,7 +86,7 @@ describe('parlay math', () => {
     const spread = legs.find((l) => l.key.endsWith('spread:home'))!;
     expect(ml.pModel).toBe(1);
     expect(ml.pBlend).toBeCloseTo(0.5); // college moneylines: market alone
-    expect(spread.pBlend).toBeCloseTo(0.25 * 1 + 0.75 * 0.5); // college spreads: a quarter model
+    expect(spread.pBlend).toBeCloseTo(0.2 * 1 + 0.8 * 0.5); // college spreads: a fifth model
     expect(legsForGame(g, HALF).find((l) => l.key.endsWith('ml:home'))!.pBlend).toBeCloseTo(0.75);
   });
 
@@ -102,11 +102,14 @@ describe('parlay math', () => {
     expect(s.bySize[1].length + s.bySize[2].length + s.bySize[3].length).toBe(0);
   });
 
-  it("ranks by the simulation alone on request, and by default where the blend finds nothing", () => {
+  it("ranks by the simulation on request (props leaning on the book), and by default where the blend finds nothing", () => {
     expect(defaultPickMode('nba')).toBe('sim');
     expect(defaultPickMode('ncaam')).toBe('blend');
-    expect(weightsFor('nba', 'sim')).toEqual(SIM_ONLY);
-    expect(weightsFor('ncaam', 'blend')).toEqual({ ml: 0, spread: 0.25, total: 0.25, prop: 0 });
+    // Game lines by the simulation alone; props lean on the book.
+    expect(weightsFor('nba', 'sim')).toEqual(SIM_PICKS);
+    expect(SIM_PICKS).toEqual({ ml: 1, spread: 1, total: 1, prop: PROP_SIM_WEIGHT });
+    expect(PROP_SIM_WEIGHT).toBe(0.25);
+    expect(weightsFor('ncaam', 'blend')).toEqual({ ml: 0, spread: 0.2, total: 0.2, prop: 0 });
 
     // Home wins and covers in every sim; the market says a coin flip.
     const g = market('1', Array(100).fill(10), Array(100).fill(200), evenOdds, 'nba');

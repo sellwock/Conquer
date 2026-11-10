@@ -14,7 +14,9 @@ import type { Entry } from '../track/types';
 import { dateLabel, lineText, pct, perHundred, tipTime } from './format';
 import type { Slate } from './useSlate';
 import type { LiveSlate } from './liveSlate';
-import { blendText, LiveStatus } from './parlays';
+import { blendText, LiveStatus, propMixText } from './parlays';
+import { NewsCard } from './newsCard';
+import type { NewsScan } from './news';
 
 type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge' | 'prop';
 
@@ -78,6 +80,8 @@ export function SlateBoard(props: {
   onOpen: (id: string) => void;
   /** Games in progress priced from their in-game lines and props. */
   live?: { slate: LiveSlate; markets: Record<string, GameMarket> };
+  /** Injury news for the upcoming games (NBA). */
+  news?: NewsScan;
 }) {
   const { slate, board } = props;
   const liveMarkets = props.live?.markets;
@@ -129,6 +133,7 @@ export function SlateBoard(props: {
 
   return (
     <div class="slate">
+      {props.news && (props.news.watching > 0 || props.news.items.length > 0) && <NewsCard news={props.news} games={board.games} onOpen={props.onOpen} />}
       <section class="card">
         <header class="card-head">
           <h2>Slate · {dateLabel(props.date)}</h2>
@@ -144,8 +149,8 @@ export function SlateBoard(props: {
             : `Line picks rank by the simulation alone and clear the same bar as the parlays tab's singles. In backtests the market's odds were more accurate than the simulation's on ${LEAGUES[props.league].label} games, so treat them as the simulation's leans.`}
           {showProps &&
             (hasSay
-              ? ' Props have no backtest, so the blend leaves them to the market and the prop column passes; switch the parlays tab to Simulation only to see prop leans.'
-              : " Prop picks are the simulation's best player prop for each game, also unbacktested.")}{' '}
+              ? ' Props have no backtest, so the blend leaves them to the market and the prop column passes; switch the parlays tab to Simulation to see prop leans.'
+              : ` Prop picks are each game's best player prop at ${propMixText()}: the first graded props showed the simulation far too sure of itself.`)}{' '}
           Suggestions, not advice.
         </p>
         <div class="scan">

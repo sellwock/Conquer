@@ -4,6 +4,7 @@ import {
   HIT_FLOOR,
   MAX_PRICE,
   MODEL_WEIGHT,
+  PROP_SIM_WEIGHT,
   defaultPickMode,
   evaluate,
   legsForGame,
@@ -35,7 +36,7 @@ const SIZE_TITLE: Record<1 | 2 | 3, string> = { 1: 'Singles', 2: '2-leg parlays'
 
 const KIND_WORDS: Record<LegKind, string> = { ml: 'moneylines', spread: 'spreads', total: 'totals', prop: 'player props' };
 
-/** "moneylines use the market's no-vig odds alone; spreads and totals blend 25% simulation with 75% market" */
+/** "moneylines use the market's no-vig odds alone; spreads and totals blend 20% simulation with 80% market" */
 export function blendText(w: BlendWeights): string {
   const byWeight = new Map<number, string[]>();
   for (const k of ['ml', 'spread', 'total', 'prop'] as LegKind[]) byWeight.set(w[k], [...(byWeight.get(w[k]) ?? []), KIND_WORDS[k]]);
@@ -68,10 +69,13 @@ export function NoEdgeNote(props: { league: LeagueId; onSim?: () => void }) {
   );
 }
 
-/** Why simulation-only picks deserve less trust than their numbers suggest. */
+/** "25% simulation, 75% the book's no-vig odds": how player props are priced in the simulation's ranking. */
+export const propMixText = () => `${pct(PROP_SIM_WEIGHT, 0)} simulation, ${pct(1 - PROP_SIM_WEIGHT, 0)} the book's no-vig odds`;
+
+/** Why the simulation's picks deserve less trust than their numbers suggest. */
 export function simOnlyText(league: LeagueId): string {
   const label = LEAGUES[league].label;
-  return `Ranked by the simulation alone: its chances replace the market's entirely. In backtests the market's odds were more accurate than the simulation's on ${label} games, so read these expected returns as the simulation's opinion, and expect them to be overstated.`;
+  return `Ranked by the simulation: its chances replace the market's on moneylines, spreads and totals. Player props count ${propMixText()}, because the first graded props showed the simulation far too sure of itself. In backtests the market's odds were more accurate than the simulation's on ${label} games, so read these expected returns as the simulation's opinion, and expect them to be overstated.`;
 }
 
 const barText = () =>
@@ -80,6 +84,9 @@ const barText = () =>
 function ParlayCard(props: { p: Parlay; mode: PickMode; showGame: boolean; markets: Record<string, GameMarket>; onOpen: (id: string) => void }) {
   const { p } = props;
   const sim = props.mode === 'sim';
+  // Prop legs mix the book's odds in, so the card isn't the simulation's alone.
+  const mixed = sim && p.legs.some((l) => l.prop);
+  const simOnly = sim && !mixed;
   const assumed = p.legs.some((l) => {
     const o = props.markets[l.gameId]?.odds;
     if (!o) return false;
@@ -93,7 +100,7 @@ function ParlayCard(props: { p: Parlay; mode: PickMode; showGame: boolean; marke
         <strong class="p-price">{fmtAmerican(p.price)}</strong>
         <span class="chip">{p.legs.length === 1 ? 'Single' : `${p.legs.length} legs`}</span>
         {p.sameGame && <span class="chip">{p.maxFromOneGame === p.legs.length ? 'Same game' : `${p.maxFromOneGame} from one game`}</span>}
-        {sim && <span class="chip warn">Sim only</span>}
+        {sim && <span class="chip warn">{mixed ? 'Sim + book' : 'Sim only'}</span>}
       </header>
       <ol class="p-legs">
         {p.legs.map((l) => (
@@ -110,7 +117,7 @@ function ParlayCard(props: { p: Parlay; mode: PickMode; showGame: boolean; marke
       </ol>
       <dl class="p-metrics">
         <div>
-          <dt>{sim ? 'Sim hit chance' : 'Hit chance'}</dt>
+          <dt>{simOnly ? 'Sim hit chance' : 'Hit chance'}</dt>
           <dd>{pct(p.pHit, 0)}</dd>
         </div>
         <div>
@@ -129,12 +136,13 @@ function ParlayCard(props: { p: Parlay; mode: PickMode; showGame: boolean; marke
           </div>
         )}
         <div>
-          <dt>{sim ? 'Sim expected return' : 'Expected return'}</dt>
+          <dt>{simOnly ? 'Sim expected return' : 'Expected return'}</dt>
           <dd class={p.ev > 0 ? 'pos' : 'neg'}>{perHundred(p.ev)}</dd>
         </div>
       </dl>
-      {(p.correlation != null && Math.abs(p.correlation) >= 0.03) || assumed ? (
+      {(p.correlation != null && Math.abs(p.correlation) >= 0.03) || assumed || mixed ? (
         <p class="p-note">
+          {mixed && <>Prop legs count {propMixText()}. </>}
           {p.correlation != null && Math.abs(p.correlation) >= 0.03 && (
             <>These legs land together {Math.round(Math.abs(p.correlation) * 100)}% {p.correlation > 0 ? 'more' : 'less'} often than if they were unrelated. </>
           )}
@@ -221,7 +229,7 @@ export function Parlays(props: {
               Backtest blend
             </button>
             <button type="button" role="radio" aria-checked={mode === 'sim'} class={mode === 'sim' ? 'on' : ''} onClick={() => setMode('sim')}>
-              Simulation only
+              Simulation
             </button>
           </div>
         </div>
@@ -231,7 +239,8 @@ export function Parlays(props: {
           <>
             <p class="note caution">{simOnlyText(g.league)}</p>
             <p class="muted small">
-              One to three legs from moneylines, spreads, totals and this game's player props. A pick needs positive expected value by the simulation's own chances. {barText()}
+              One to three legs from moneylines, spreads, totals and this game's player props. A pick needs positive expected value by the simulation's chances (on props,{' '}
+              {propMixText()}). {barText()}
             </p>
           </>
         ) : (
@@ -396,8 +405,9 @@ function PropPicks(props: {
       </header>
       {props.mode === 'sim' && (slate ? priced.length > 0 : posted > 0 && !!open) && (
         <p class="note caution">
-          Props are priced by the simulation alone and have never been backtested. Player minutes drive every prop, and the simulation's minutes are a projection, so treat these
-          as leans. Players projected under 15 minutes are left out. Props also go into the parlays below when they clear the bar.
+          Prop chances here are {propMixText()}. The first graded props went badly: the simulation projected stars under their lines and was far too sure of itself, so it
+          gets a small say until the <a href={`#view=record&league=${g.league}`}>track record</a> shows it earns more. Treat these as leans. Players projected under 15
+          minutes are left out. Props also go into the parlays below when they clear the bar.
           {slate && ' Lines for games other than the open one are as of when that game was simulated.'}
         </p>
       )}
@@ -425,14 +435,14 @@ function PropTable(props: { singles: Parlay[]; onOpen?: (id: string) => void; li
             <th scope="col" class="num" title={props.live ? 'The player\'s average final line in the simulations, from now' : "The player's average in the simulations"}>
               Sim avg
             </th>
-            <th scope="col" class="num">
-              Sim hit
+            <th scope="col" class="num" title={`The chance picks are ranked by: ${propMixText()}`}>
+              Hit
             </th>
             <th scope="col" class="num" title="The book's no-vig chance">
               Market
             </th>
-            <th scope="col" class="num">
-              Sim return
+            <th scope="col" class="num" title="Expected return per $100 at that hit chance">
+              Return
             </th>
           </tr>
         </thead>
@@ -610,9 +620,9 @@ function LiveProps(props: {
           {status}
           {ready && props.mode === 'sim' && (
             <p class="note caution">
-              Live lines move fast and the book's prices here can trail the real ones by a minute or two. Each player's final line is what they have now plus the simulated rest
-              of the game, from the simulation's minutes. Live spreads and totals are full-game lines, priced from the simulation's final scores starting at the current one.
-              None of this has been backtested. Treat these as leans.{all && ' Legs from different games are treated as independent.'}
+              Live lines move fast, and the in-game prices ESPN relays can lag the book's by several minutes: check the book before betting. Each player's final line is what they have now plus the simulated rest
+              of the game, from the simulation's minutes, and live prop chances count {propMixText()}. Live spreads and totals are full-game lines, priced from the
+              simulation's final scores starting at the current one. None of this has been backtested. Treat these as leans.{all && ' Legs from different games are treated as independent.'}
               {all && ' Pricing every live game costs about 1 MB per game per refresh; pause to stop.'}
             </p>
           )}
@@ -731,8 +741,10 @@ export function LiveBetsPreview(props: { game: GameData; market?: GameMarket; st
       </header>
       {props.fromNow && m && posted && (lines.length > 0 || picks.length > 0) && (
         <p class="note caution">
-          {mode === 'sim' ? "The simulation's own leans from the current score, never backtested." : 'Weighted toward the market by what the simulation earned in backtests.'} Suggestions,
-          not advice.
+          {mode === 'sim'
+            ? `The simulation's leans from the current score, never backtested; prop chances count ${propMixText()}.`
+            : 'Weighted toward the market by what the simulation earned in backtests.'}{' '}
+          Suggestions, not advice.
         </p>
       )}
       {body}

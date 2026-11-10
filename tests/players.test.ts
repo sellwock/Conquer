@@ -37,8 +37,8 @@ describe('game-to-game variation', () => {
   it('varies NBA minutes by default, and not college minutes, as fitted against box scores', () => {
     expect(buildSpec(leagueAverageGame('nba'), OPTS).spec.noise).toEqual({ minutes: 1.5, usage: 0 });
     expect(buildSpec(leagueAverageGame('ncaam'), OPTS).spec.noise).toBeUndefined();
-    expect(PLAYER_TUNING.nba).toMatchObject({ usagePriorMin: 15, ratePriorMin: 20 });
-    expect(PLAYER_TUNING.ncaam).toMatchObject({ usagePriorMin: 15, ratePriorMin: 20 });
+    expect(PLAYER_TUNING.nba).toMatchObject({ usagePriorMin: 15, creationPriorMin: 120, ratePriorMin: 20 });
+    expect(PLAYER_TUNING.ncaam).toMatchObject({ usagePriorMin: 15, creationPriorMin: 15, ratePriorMin: 20 });
   });
 
   it('widens each player\'s lines while keeping his average minutes', () => {
