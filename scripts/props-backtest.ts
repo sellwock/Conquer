@@ -5,6 +5,7 @@
 //
 //   npx tsx scripts/props-backtest.ts --league nba --ranges 20251201-20260412 [--max 1200]
 //       [--sims 1000] [--book draft] [--cache .cache/bt] [--out props.md] [--json entries.json]
+//       [--tuning "usagePriorMin=120,ratePriorMin=180,minutesNoise=0"]   (PLAYER_TUNING overrides)
 //
 // Two caveats when reading it. The rebuilt games know who actually played (the box score), which
 // the simulation wouldn't have known for sure before tip, so the simulation's term here is an upper
@@ -15,7 +16,7 @@ import { mapLimit, requestCount, setStore } from '../src/data/espn/client';
 import { loadGame, loadScoreboard, pregameView } from '../src/data/espn/load';
 import { loadProps, type PropLine } from '../src/data/espn/props';
 import { makeRng } from '../src/lib/rng';
-import { buildSpec } from '../src/model/build';
+import { buildSpec, PLAYER_TUNING } from '../src/model/build';
 import { noVig, toDecimal } from '../src/model/parlays';
 import { REF_LINE } from '../src/model/propFit';
 import { PARTS, propMarkets, rosterNames } from '../src/model/props';
@@ -95,6 +96,8 @@ async function main() {
   const book = new RegExp(String(a.book ?? 'draft'), 'i');
   const store = fileStore(String(a.cache ?? '.cache/bt'));
   setStore(store);
+  const tuning = typeof a.tuning === 'string' ? Object.fromEntries(a.tuning.split(',').map((kv) => [kv.split('=')[0].trim(), Number(kv.split('=')[1])])) : {};
+  Object.assign(PLAYER_TUNING[league], tuning);
   const ranges = String(a.ranges ?? '20260105-20260331').split(',').map((r) => r.split('-') as [string, string]);
 
   // --- Finished games ------------------------------------------------------------------------------
@@ -178,7 +181,8 @@ async function main() {
   const byMonth: Record<string, number> = {};
   for (const e of entries) byMonth[e.tip.slice(0, 7)] = (byMonth[e.tip.slice(0, 7)] ?? 0) + 1;
 
-  let md = `## Props backtest, ${league.toUpperCase()}: ${entries.length} games, ${closeRows.length} decided closing lines, ${sims} sims per game (model ${MODEL_VERSION})\n\n`;
+  const tuned = Object.keys(tuning).length ? `, with ${Object.entries(tuning).map(([k, v]) => `${k}=${v}`).join(' ')}` : '';
+  let md = `## Props backtest, ${league.toUpperCase()}: ${entries.length} games, ${closeRows.length} decided closing lines, ${sims} sims per game (model ${MODEL_VERSION}${tuned})\n\n`;
   md += `Games by month: ${Object.entries(byMonth).map(([m, n]) => `${m} ${n}`).join(', ')}. Left out: ${Object.entries(skipped).map(([k, n]) => `${n} ${k}`).join('; ') || 'none'}.\n\n`;
   md += `### The pick model, each day scored by a fit of earlier days (picks need ${pct(fit.minEdge, 0)} expected return)\n\n`;
   md += partLines('With the simulation', fit.pre);
