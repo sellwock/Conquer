@@ -43,7 +43,7 @@ const test = (name: string, t?: FitTest) => {
 const part = (name: string, p?: FitPart) => {
   if (!p) return console.log(`${name}: fewer than ${fit.minTrainGames} graded games`);
   console.log(`${name}: ${p.lines} lines in ${p.games} games ${JSON.stringify(p.models)}`);
-  console.log(`  coefficients [constant, book, simulation's disagreement, line size]: ${p.coef.join(', ')}`);
+  console.log(`  coefficients [constant, book, simulation's disagreement]: ${p.coef.join(', ')}`);
   test('walk-forward', p.test);
   if (name === 'pre-game') test('first snapshot ("open")', p.open);
 };

@@ -253,6 +253,7 @@ function PropStats({ s, when }: { s: PropSummary; when: PropWhen }) {
   );
 }
 
+const signed4 = (x: number) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${Math.abs(x).toFixed(4)}`;
 const signedPct = (x: number) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${pct(Math.abs(x))}`;
 
 function FitTestStats({ t, what }: { t: FitTest; what: string }) {
@@ -276,10 +277,10 @@ function FitTestStats({ t, what }: { t: FitTest; what: string }) {
       </div>
       <div class="stat">
         <span class="kicker">Every line, against the book</span>
-        <strong class={t.brier.hi < 0 ? 'pos' : t.brier.lo > 0 ? 'neg' : ''}>{signed(t.brier.diff)}</strong>
+        <strong class={t.brier.hi < 0 ? 'pos' : t.brier.lo > 0 ? 'neg' : ''}>{signed4(t.brier.diff)}</strong>
         <span class="muted">
-          Brier score on the over: fit {t.brier.fit.toFixed(4)}, book {t.brier.market.toFixed(4)} over {t.lines} lines (negative is better; range {signed(t.brier.lo)} to{' '}
-          {signed(t.brier.hi)})
+          Brier score on the over: fit {t.brier.fit.toFixed(4)}, book {t.brier.market.toFixed(4)} over {t.lines} lines (negative is better; range {signed4(t.brier.lo)} to{' '}
+          {signed4(t.brier.hi)})
         </span>
       </div>
       {t.moved && moved ? (
@@ -300,8 +301,8 @@ function FitRecord({ part, live }: { part: FitPart; live: boolean }) {
   const t = part.test;
   const verdict = fitVerdict(t?.picks);
   const head = !t ? 'Not enough days to test yet' : verdict === 'tested' ? 'Tested: ahead, beyond luck' : verdict === 'promising' ? 'Ahead so far, not proven' : 'Not ahead';
-  // The fit in plain numbers: an over the book calls a coin flip, on a typical line, a small one, and where the simulation disagrees.
-  const at = (sim: number, size: number) => fittedFrom(part.coef, [1, 0, logit(sim) - logit(0.5), Math.log(size)]);
+  // The fit in plain numbers: an over the book calls a coin flip, where the simulation agrees and where it doesn't.
+  const at = (sim: number) => fittedFrom(part.coef, [1, 0, logit(sim) - logit(0.5)]);
   return (
     <>
       <section class="card">
@@ -311,16 +312,16 @@ function FitRecord({ part, live }: { part: FitPart; live: boolean }) {
         <div class="verdict">
           <strong class={verdict === 'tested' ? 'pos' : ''}>{head}</strong>
           <span class="muted">
-            A small model fitted to {part.lines} graded {live ? 'live' : 'pre-game'} lines from {part.games} games: the book's own odds, how far the simulation disagrees, and how big the line
-            is. Each day's picks come from a fit of earlier days only, so this record is one it couldn't have seen coming.{' '}
+            A small model fitted to {part.lines} graded {live ? 'live' : 'pre-game'} lines from {part.games} games: the book's own odds and how far the simulation disagrees with them.
+            Each day's picks come from a fit of earlier days only, so this record is one it couldn't have seen coming.{' '}
             {verdict === 'tested'
               ? ''
               : `"Tested" needs ${TESTED_MIN_PICKS} picks and a return whose whole range is above zero.`}
           </span>
         </div>
         <p class="muted small">
-          What it has learned so far: where the book prices an over at 50%, the fit puts it at {pct(at(0.5, 1), 0)} on a typical line, {pct(at(0.5, 0.5), 0)} on one half that size,
-          and {pct(at(0.65, 1), 0)} when the simulation says 65%. A pick is one bet per player per game with at least a 3% expected return at the listed price. Not advice.
+          What it has learned so far: where the book prices an over at 50%, the fit puts it at {pct(at(0.5), 0)} when the simulation agrees, {pct(at(0.35), 0)} when the simulation
+          says 35% and {pct(at(0.65), 0)} when it says 65%. A pick is one bet per player per game with at least a 3% expected return at the listed price. Not advice.
         </p>
       </section>
       {t && <FitTestStats t={t} what={live ? 'mid-game' : 'before tip-off'} />}

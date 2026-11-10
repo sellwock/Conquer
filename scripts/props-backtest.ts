@@ -18,7 +18,6 @@ import { loadProps, type PropLine } from '../src/data/espn/props';
 import { makeRng } from '../src/lib/rng';
 import { buildSpec, PLAYER_TUNING } from '../src/model/build';
 import { noVig, toDecimal } from '../src/model/parlays';
-import { REF_LINE } from '../src/model/propFit';
 import { PARTS, propMarkets, rosterNames } from '../src/model/props';
 import { seasonYear } from '../src/data/espn/parse';
 import type { GameData, LeagueId, PropStat } from '../src/model/types';
@@ -78,7 +77,7 @@ function testLine(t?: FitTest): string {
 
 function partLines(name: string, p?: FitPart): string {
   if (!p) return `- **${name}:** too few games\n`;
-  return `- **${name}:** ${p.lines} lines, ${p.games} games. Coefficients [constant, book, simulation's disagreement, line size]: ${p.coef.join(', ')}\n  - At the close: ${testLine(p.test)}\n  - At the open: ${testLine(p.open)}\n`;
+  return `- **${name}:** ${p.lines} lines, ${p.games} games. Coefficients [constant, book, simulation's disagreement]: ${p.coef.join(', ')}\n  - At the close: ${testLine(p.test)}\n  - At the open: ${testLine(p.open)}\n`;
 }
 
 /** The same entries with the simulation's chance replaced by the book's, so its term can't matter. */
@@ -186,8 +185,10 @@ async function main() {
   md += `Games by month: ${Object.entries(byMonth).map(([m, n]) => `${m} ${n}`).join(', ')}. Left out: ${Object.entries(skipped).map(([k, n]) => `${n} ${k}`).join('; ') || 'none'}.\n\n`;
   md += `### The pick model, each day scored by a fit of earlier days (picks need ${pct(fit.minEdge, 0)} expected return)\n\n`;
   md += partLines('With the simulation', fit.pre);
-  md += partLines("Book's odds and line size only", blind.pre);
+  md += partLines("Book's odds only", blind.pre);
 
+  // Typical posted lines per stat (the log's medians, November 2026), to sort lines by size.
+  const REF_LINE: Record<PropStat, number> = { pts: 12.5, reb: 4.5, ast: 3.5, tpm: 1.5, pra: 23.5, pr: 18.5, pa: 18.5, ar: 8.5 };
   const scoring = (s: PropStat) => PARTS[s].includes('pts');
   const small = (r: FitRow) => r.line < REF_LINE[r.stat] * 0.8;
   md += `\n### Flat bets, no model (record, return per bet, 95% range by game)\n\n| Rule | At the close | At the open |\n|---|---|---|\n`;

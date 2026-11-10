@@ -1,33 +1,28 @@
 // The chance a prop's over wins, as fitted to the forward log (src/track/fit.ts): a small logistic
-// model of the book's own odds, how far the simulation disagrees with them, and how big the line
-// is. This file is the model's shape only, with no data, so pricing and training share it.
-import type { PropStat } from './types';
-
-/** A typical posted line per stat (the log's medians, November 2026); a line's size is measured against it. */
-export const REF_LINE: Record<PropStat, number> = { pts: 12.5, reb: 4.5, ast: 3.5, tpm: 1.5, pra: 23.5, pr: 18.5, pa: 18.5, ar: 8.5 };
+// model of the book's own odds and how far the simulation disagrees with them. This file is the
+// model's shape only, with no data, so pricing and training share it.
 
 /**
  * The over's log-odds are coef · [1, the book's no-vig log-odds, the simulation's log-odds minus
- * the book's, ln(line / typical line)]. Deliberately small: on the first 66 logged games, a
- * variant with separate size terms for scoring and other stats moved the picks' out-of-sample
- * return by five points, which is noise, so the shape isn't tuned further until there's far more
- * data to tune it on.
+ * the book's]. Deliberately small. A line-size term looked strong on the first 66 logged games
+ * (unders on small scoring lines won 59%) and vanished on the next 98, so it was dropped: the
+ * shape only grows when an effect holds on games it wasn't found on.
  */
-export type FitCoef = [constant: number, market: number, sim: number, size: number];
+export type FitCoef = [constant: number, market: number, sim: number];
 
 /** "The book is right": what a fit is pulled toward, and what little data falls back to. */
-export const TRUST_BOOK: FitCoef = [0, 1, 0, 0];
+export const TRUST_BOOK: FitCoef = [0, 1, 0];
 
-export type FitFeatures = [number, number, number, number];
+export type FitFeatures = [number, number, number];
 
 const clampP = (p: number) => Math.min(0.98, Math.max(0.02, p));
 export const logit = (p: number) => Math.log(clampP(p) / (1 - clampP(p)));
 const sigmoid = (z: number) => 1 / (1 + Math.exp(-z));
 
 /** `pMarket` and `pSim` are chances of the over among decided outcomes (pushes left out). */
-export function fitFeatures(pMarket: number, pSim: number, stat: PropStat, line: number): FitFeatures {
-  const disagree = Math.max(-2.5, Math.min(2.5, logit(pSim) - logit(pMarket)));
-  return [1, logit(pMarket), disagree, Math.log(Math.max(0.5, line) / REF_LINE[stat])];
+export function fitFeatures(pMarket: number, pSim: number): FitFeatures {
+  // Capped, so one wild simulated chance can't swamp a fit.
+  return [1, logit(pMarket), Math.max(-2.5, Math.min(2.5, logit(pSim) - logit(pMarket)))];
 }
 
 export function fittedFrom(coef: FitCoef, x: ArrayLike<number>): number {
@@ -37,8 +32,8 @@ export function fittedFrom(coef: FitCoef, x: ArrayLike<number>): number {
 }
 
 /** The fitted chance of the over, pushes left out. */
-export function fittedOver(coef: FitCoef, pMarket: number, pSim: number, stat: PropStat, line: number): number {
-  return fittedFrom(coef, fitFeatures(pMarket, pSim, stat, line));
+export function fittedOver(coef: FitCoef, pMarket: number, pSim: number): number {
+  return fittedFrom(coef, fitFeatures(pMarket, pSim));
 }
 
 /** How far a fit's picks have been borne out on days it never saw. */

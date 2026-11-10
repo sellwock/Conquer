@@ -51,7 +51,7 @@ export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | 'live'): Fit
       if (final === line) continue;
       const pMarket = noVig(over, under)[0];
       const pSim = pPush < 1 ? pOver / (1 - pPush) : 0.5;
-      out.push({ gameId: e.id, day, athleteId, stat, line, over, under, pMarket, pSim, won: final > line ? 1 : 0, x: fitFeatures(pMarket, pSim, stat, line), model: snap.model });
+      out.push({ gameId: e.id, day, athleteId, stat, line, over, under, pMarket, pSim, won: final > line ? 1 : 0, x: fitFeatures(pMarket, pSim), model: snap.model });
     }
   }
   return out;

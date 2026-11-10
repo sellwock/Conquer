@@ -8,7 +8,7 @@ import type { PropEntry, PropRow } from '../src/track/types';
 
 const row = (o: Partial<FitRow> & { pMarket: number; pSim: number }): FitRow => {
   const stat = o.stat ?? 'pts', line = o.line ?? 12.5;
-  return { gameId: 'g1', day: '20261101', athleteId: 'a', stat, line, over: -110, under: -110, won: 1, model: '1.2.0', x: fitFeatures(o.pMarket, o.pSim, stat, line), ...o };
+  return { gameId: 'g1', day: '20261101', athleteId: 'a', stat, line, over: -110, under: -110, won: 1, model: '1.2.0', x: fitFeatures(o.pMarket, o.pSim), ...o };
 };
 
 /** Lines whose over wins by `truth`, spread over `games` games a day. */
@@ -25,16 +25,17 @@ function synthetic(truth: FitCoef, n: number, days = 1, games = 30): FitRow[] {
 
 describe('the pick model', () => {
   it('reads "the book is right" as the book\'s own chance', () => {
-    expect(fittedOver(TRUST_BOOK, 0.57, 0.2, 'reb', 9.5)).toBeCloseTo(0.57, 9);
+    expect(fittedOver(TRUST_BOOK, 0.57, 0.2)).toBeCloseTo(0.57, 9);
     // The simulation's disagreement is capped, so one wild chance can't swamp the fit.
-    expect(fitFeatures(0.5, 0.999, 'pts', 12.5)[2]).toBe(2.5);
-    // Size is measured against a typical line for the stat.
-    expect(fitFeatures(0.5, 0.5, 'pts', 12.5)[3]).toBeCloseTo(0, 9);
-    expect(fitFeatures(0.5, 0.5, 'pts', 6.5)[3]).toBeLessThan(0);
+    expect(fitFeatures(0.5, 0.999)[2]).toBe(2.5);
+    expect(fitFeatures(0.5, 0.5)).toEqual([1, 0, 0]);
+    // A fit that listens to the simulation moves toward it.
+    expect(fittedOver([0, 1, 0.3], 0.5, 0.7)).toBeGreaterThan(0.5);
+    expect(fittedOver([0, 1, 0.3], 0.5, 0.7)).toBeLessThan(0.7);
   });
 
   it('recovers known coefficients from enough lines', () => {
-    const truth: FitCoef = [-0.12, 1, 0.2, 0.3];
+    const truth: FitCoef = [-0.12, 1, 0.2];
     const coef = fitLogistic(synthetic(truth, 40000), 1);
     for (const [i, v] of truth.entries()) expect(Math.abs(coef[i] - v)).toBeLessThan(0.08);
   });
@@ -45,7 +46,6 @@ describe('the pick model', () => {
     const coef = fitLogistic(Array.from({ length: 20 }, (_, i) => row({ pMarket: 0.5, pSim: 0.8, line: 6.5 + i, won: 1 })));
     expect(Math.abs(coef[1] - 1)).toBeLessThan(0.05);
     expect(Math.abs(coef[2])).toBeLessThan(0.3);
-    expect(Math.abs(coef[3])).toBeLessThan(0.3);
   });
 
   it('calls a record tested only with enough picks and a range clear of zero', () => {
@@ -59,7 +59,7 @@ describe('the pick model', () => {
 
 describe('the walk-forward test', () => {
   it('scores a day only with a fit of earlier days, once those hold enough games', () => {
-    const rows = synthetic([-0.1, 1, 0.1, 0.2], 3000, 3, MIN_TRAIN_GAMES);
+    const rows = synthetic([-0.1, 1, 0.1], 3000, 3, MIN_TRAIN_GAMES);
     const scored = walkForward(rows);
     // Day 1 has nothing before it; days 2 and 3 are scored.
     expect(new Set(scored.map((s) => s.row.day))).toEqual(new Set(['20261102', '20261103']));
@@ -72,12 +72,12 @@ describe('the walk-forward test', () => {
   });
 
   it('waits for enough games', () => {
-    expect(walkForward(synthetic([0, 1, 0, 0], 600, 2, MIN_TRAIN_GAMES - 1))).toEqual([]);
+    expect(walkForward(synthetic([0, 1, 0], 600, 2, MIN_TRAIN_GAMES - 1))).toEqual([]);
   });
 
   it('can score other lines (the first snapshot) with the pre-game rows\' fit', () => {
-    const rows = synthetic([-0.1, 1, 0.1, 0.2], 2000, 2, MIN_TRAIN_GAMES);
-    const open = rows.filter((r) => r.day === '20261102').slice(0, 5).map((r) => ({ ...r, line: r.line + 1, x: fitFeatures(r.pMarket, r.pSim, r.stat, r.line + 1) }));
+    const rows = synthetic([-0.1, 1, 0.1], 2000, 2, MIN_TRAIN_GAMES);
+    const open = rows.filter((r) => r.day === '20261102').slice(0, 5).map((r) => ({ ...r, line: r.line + 1, pMarket: r.pMarket - 0.05, x: fitFeatures(r.pMarket - 0.05, r.pSim) }));
     const scored = walkForward(rows, open);
     expect(scored).toHaveLength(5);
     expect(scored[0].pOver).toBeCloseTo(fittedFrom(fitLogistic(rows.filter((r) => r.day < '20261102')), open[0].x), 12);
@@ -171,7 +171,7 @@ describe('fitting the log', () => {
     );
     const fit = buildFit(many, 'nba', new Date('2026-11-04T00:00:00Z'));
     expect(fit.pre).toMatchObject({ lines: 4 * MIN_TRAIN_GAMES, games: 2 * MIN_TRAIN_GAMES, models: { '1.2.0': 4 * MIN_TRAIN_GAMES } });
-    expect(fit.pre!.coef).toHaveLength(4);
+    expect(fit.pre!.coef).toHaveLength(3);
     // Every over won, so the constant is well above zero.
     expect(fit.pre!.coef[0]).toBeGreaterThan(0.5);
     // The second day is scored by the first day's fit; its over picks saw the line rise by the close.
