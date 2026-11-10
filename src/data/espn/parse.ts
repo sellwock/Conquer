@@ -381,11 +381,15 @@ export function parsePlays(summary: J): Play[] {
 
 const OUT_STATUSES = /^(out|o|suspended|suspension|inactive|injured reserve|ir)$/i;
 
-export function injuryFrom(status: unknown, detail?: unknown): Injury | undefined {
+export function injuryFrom(status: unknown, detail?: unknown, since?: unknown): Injury | undefined {
   const s = String(status ?? '').trim();
   if (!s || /^active$/i.test(s)) return undefined;
-  return { status: s, detail: typeof detail === 'string' ? detail : undefined, out: OUT_STATUSES.test(s) };
+  const v: Injury = { status: s, detail: typeof detail === 'string' ? detail : undefined, out: OUT_STATUSES.test(s) };
+  if (typeof since === 'string' && since) v.since = since;
+  return v;
 }
+
+const injuryDetail = (inj: J) => [inj?.details?.type, inj?.details?.detail, inj?.details?.side].filter(Boolean).join(' ') || inj?.shortComment || inj?.type?.description;
 
 export function parseInjuries(summary: J): Record<string, Injury> {
   const out: Record<string, Injury> = {};
@@ -394,9 +398,37 @@ export function parseInjuries(summary: J): Record<string, Injury> {
     for (const inj of g?.injuries ?? []) {
       const id = inj?.athlete?.id;
       if (!id) continue;
-      const detail = [inj?.details?.type, inj?.details?.detail, inj?.details?.side].filter(Boolean).join(' ') || inj?.shortComment || inj?.type?.description;
-      const v = injuryFrom(inj?.status ?? inj?.type?.description, detail);
+      const v = injuryFrom(inj?.status ?? inj?.type?.description, injuryDetail(inj), inj?.date);
       if (v) out[String(id)] = v;
+    }
+  }
+  return out;
+}
+
+export interface InjuryReport {
+  teamId: string;
+  athleteId: string;
+  name: string;
+  injury: Injury;
+  /** ESPN's one-line note, e.g. "Hale (ankle) won't play Friday." */
+  note?: string;
+}
+
+/**
+ * ESPN's league-wide injury report (site API `/injuries`): every team's list in one request. The
+ * entries carry no athlete id, so it's read from the player-card link (or the headshot URL).
+ */
+export function parseInjuryFeed(json: J): InjuryReport[] {
+  const out: InjuryReport[] = [];
+  for (const team of Array.isArray(json?.injuries) ? json.injuries : []) {
+    for (const inj of team?.injuries ?? []) {
+      const a = inj?.athlete ?? {};
+      const fromLinks = (a.links ?? []).map((l: J) => /\/id\/(\d+)/.exec(String(l?.href ?? ''))?.[1]).find(Boolean);
+      const athleteId = String(a.id ?? fromLinks ?? /\/(\d+)\.png/.exec(String(a.headshot?.href ?? ''))?.[1] ?? '');
+      const teamId = String(a.team?.id ?? team?.id ?? '');
+      const injury = injuryFrom(inj?.status ?? inj?.type?.description, injuryDetail(inj), inj?.date);
+      if (!athleteId || !teamId || !injury) continue;
+      out.push({ teamId, athleteId, name: a.displayName ?? a.shortName ?? athleteId, injury, ...(inj?.shortComment ? { note: String(inj.shortComment) } : {}) });
     }
   }
   return out;

@@ -1728,3 +1728,20 @@ table.board td.best {
   white-space: normal;
   min-width: 12em;
 }
+.news-item {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: 10px;
+  min-width: 0;
+}
+.news-item p {
+  margin: 0 0 6px;
+}
+.news-head {
+  overflow-wrap: anywhere;
+}
+.news-item table.data th,
+.news-item table.data td {
+  padding-left: 4px;
+  padding-right: 4px;
+}
