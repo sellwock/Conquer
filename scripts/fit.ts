@@ -8,7 +8,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { LeagueId } from '../src/model/types';
-import { buildFit, type FitPart, type FitTest } from '../src/track/fit';
+import { MODEL_VERSION } from '../src/model/version';
+import { buildFit, type FitPart, type FitTest, type PropHistory } from '../src/track/fit';
 import type { PropLogFile } from '../src/track/types';
 import { args } from './cli';
 
@@ -29,7 +30,9 @@ const read = <T>(path: string): T | undefined => {
 
 const files = (read<{ files: string[] }>('index.json')?.files ?? []).filter((f) => f.startsWith(`props/${league}/`));
 const entries = files.flatMap((f) => Object.values(read<PropLogFile>(f) ?? {}));
-const fit = buildFit(entries, league, new Date());
+// The job's inputs: a re-simulated history counts only when the current model made it.
+const history = read<PropHistory>(`history/props/${league}.json`);
+const fit = buildFit(entries, league, new Date(), { model: MODEL_VERSION, history: history?.model === MODEL_VERSION ? history : undefined });
 
 const pct = (x: number) => `${(100 * x).toFixed(1)}%`;
 const test = (name: string, t?: FitTest) => {
@@ -42,7 +45,7 @@ const test = (name: string, t?: FitTest) => {
 };
 const part = (name: string, p?: FitPart) => {
   if (!p) return console.log(`${name}: fewer than ${fit.minTrainGames} graded games`);
-  console.log(`${name}: ${p.lines} lines in ${p.games} games ${JSON.stringify(p.models)}`);
+  console.log(`${name}: ${p.lines} lines in ${p.games} games ${JSON.stringify(p.models)}${p.resimulated != null ? `, ${p.resimulated} games re-simulated` : ''}`);
   console.log(`  coefficients [constant, book, simulation's disagreement]: ${p.coef.join(', ')}`);
   test('walk-forward', p.test);
   if (name === 'pre-game') test('first snapshot ("open")', p.open);

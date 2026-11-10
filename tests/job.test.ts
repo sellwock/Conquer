@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setFetch, setStore } from '../src/data/espn/client';
-import { easternYmd, fitPath, injuryLogPath, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
+import { easternYmd, fitPath, historyPath, injuryLogPath, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
 import type { Entry, InjuryLog, LogFile, PropEntry, PropLogFile } from '../src/track/types';
 import { gradeProps } from '../src/track/propGrade';
 import { MODEL_VERSION } from '../src/model/version';
@@ -431,6 +431,17 @@ describe('player props in the forward log', () => {
     expect(files.get(fitPath('nba'))).toEqual({ updatedAt: '2026-01-15T04:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: 20 });
     // Nothing new to grade: the fit is left alone.
     expect((await run(io, '2026-01-15T04:15:00Z')).fit).toBe(0);
+    // A re-simulated history by the current model arrives: refit once, and say what it used.
+    const replayed: PropEntry = { ...props, status: 'final', box: { '4432201': [27, 8, 7, 2], '4432209': null } };
+    files.set(historyPath('nba'), { model: MODEL_VERSION, updatedAt: '2026-01-15T05:00:00.000Z', entries: [replayed] });
+    expect((await run(io, '2026-01-15T05:15:00Z')).fit).toBe(1);
+    expect((files.get(fitPath('nba')) as { history?: unknown }).history).toEqual({ model: MODEL_VERSION, updatedAt: '2026-01-15T05:00:00.000Z' });
+    expect((await run(io, '2026-01-15T05:30:00Z')).fit).toBe(0);
+    // One by another model version is not this model's history.
+    files.set(historyPath('nba'), { model: '0.0.1', updatedAt: '2026-01-15T06:00:00.000Z', entries: [replayed] });
+    expect((await run(io, '2026-01-15T06:15:00Z')).fit).toBe(1);
+    expect((files.get(fitPath('nba')) as { history?: unknown }).history).toBeUndefined();
+    expect((await run(io, '2026-01-15T06:30:00Z')).fit).toBe(0);
   });
 });
 

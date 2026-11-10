@@ -3,15 +3,22 @@
 // them, prices those lines, and runs the same fit and walk-forward test the forward log gets
 // (src/track/fit.ts) over hundreds of games instead of a few weeks' worth.
 //
-//   npx tsx scripts/props-backtest.ts --league nba --ranges 20251201-20260412 [--max 1200]
+//   npx tsx scripts/props-backtest.ts --league nba [--ranges 20251201-20260412 | --season] [--max 1200]
 //       [--sims 1000] [--book draft] [--cache .cache/bt] [--out props.md] [--json entries.json]
+//       [--history data/v1/history/props/nba.json]
 //       [--tuning "usagePriorMin=120,ratePriorMin=180,minutesNoise=0"]   (PLAYER_TUNING overrides)
+//
+// --season covers the current season up to yesterday. --history writes the closing-line rows the
+// forward job's fit trains on (src/track/fit.ts, PropHistory), and first reads the file it's about
+// to replace: ESPN drops old games' lines eventually, and the file keeps them, so a later model
+// version can still replay those games. Run by .github/workflows/props-history.yml.
 //
 // Two caveats when reading it. The rebuilt games know who actually played (the box score), which
 // the simulation wouldn't have known for sure before tip, so the simulation's term here is an upper
 // bound. And closing lines are the hardest to beat; the "open" rows show the same picks at the
 // book's first prices.
-import { appendFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { mapLimit, requestCount, setStore } from '../src/data/espn/client';
 import { loadGame, loadScoreboard, pregameView } from '../src/data/espn/load';
 import { loadProps, type PropLine } from '../src/data/espn/props';
@@ -23,7 +30,7 @@ import { seasonYear } from '../src/data/espn/parse';
 import type { GameData, LeagueId, PropStat } from '../src/model/types';
 import { MODEL_VERSION } from '../src/model/version';
 import { runOutcomes } from '../src/sim/quick';
-import { buildFit, fitRows, type FitPart, type FitRow, type FitTest } from '../src/track/fit';
+import { buildFit, fitRows, type FitPart, type FitRow, type FitTest, type PropHistory } from '../src/track/fit';
 import { propRows } from '../src/track/job';
 import { evenly, finalsToGrade } from '../src/track/rebuild';
 import type { PropEntry, PropRow } from '../src/track/types';
@@ -97,7 +104,19 @@ async function main() {
   setStore(store);
   const tuning = typeof a.tuning === 'string' ? Object.fromEntries(a.tuning.split(',').map((kv) => [kv.split('=')[0].trim(), Number(kv.split('=')[1])])) : {};
   Object.assign(PLAYER_TUNING[league], tuning);
-  const ranges = String(a.ranges ?? '20260105-20260331').split(',').map((r) => r.split('-') as [string, string]);
+  const ymd = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '');
+  const today = new Date();
+  // The season that's under way: it starts in October of this year, or of last year until summer.
+  const seasonFrom = `${today.getUTCMonth() >= 8 ? today.getUTCFullYear() : today.getUTCFullYear() - 1}1015`;
+  const rangeArg = a.season === true ? `${seasonFrom}-${ymd(new Date(today.getTime() - 86_400_000))}` : String(a.ranges ?? '20260105-20260331');
+  const ranges = rangeArg.split(',').map((r) => r.split('-') as [string, string]);
+  // Lines an earlier run saved, for games whose lines ESPN no longer serves.
+  const historyFile = typeof a.history === 'string' ? a.history : undefined;
+  const archived = new Map<string, { provider: string; lines: PropLine[] }>();
+  if (historyFile && existsSync(historyFile)) {
+    for (const e of (JSON.parse(readFileSync(historyFile, 'utf8')) as PropHistory).entries)
+      if (e.pre) archived.set(e.id, { provider: e.pre.provider ?? '', lines: e.pre.rows.map(([athleteId, stat, line, over, under]) => ({ athleteId, stat, line, over, under })) });
+  }
 
   // --- Finished games ------------------------------------------------------------------------------
   const found = new Map<string, { id: string; date: string }>();
@@ -117,7 +136,7 @@ async function main() {
   const loaded: { g: GameData; lines: PropLine[]; provider: string }[] = [];
   const skipped: Record<string, number> = {};
   const skip = (why: string) => void (skipped[why] = (skipped[why] ?? 0) + 1);
-  let done = 0;
+  let done = 0, fromArchive = 0;
   const t0 = Date.now();
   await mapLimit(refs, 3, async (r) => {
     try {
@@ -125,9 +144,16 @@ async function main() {
       const key = `props-history:${league}:${r.id}`;
       let board = JSON.parse(store.get(key) ?? 'null') as { provider?: string; lines: PropLine[] } | null;
       if (!board) {
-        const b = await loadProps(league, r.id);
+        const b = await loadProps(league, r.id).catch((e) => {
+          if ((e as { status?: number }).status === 404 && archived.has(r.id)) return { provider: undefined, lines: [] as PropLine[] };
+          throw e;
+        });
         board = { provider: b.provider, lines: b.lines };
-        store.set(key, JSON.stringify(board));
+        if (b.lines.length) store.set(key, JSON.stringify(board));
+      }
+      if (!board.lines.length && archived.has(r.id)) {
+        board = archived.get(r.id)!;
+        fromArchive++;
       }
       if (!board.lines.length) skip('no prop lines kept');
       else if (!book.test(board.provider ?? '')) skip(`another book (${board.provider})`);
@@ -182,7 +208,7 @@ async function main() {
 
   const tuned = Object.keys(tuning).length ? `, with ${Object.entries(tuning).map(([k, v]) => `${k}=${v}`).join(' ')}` : '';
   let md = `## Props backtest, ${league.toUpperCase()}: ${entries.length} games, ${closeRows.length} decided closing lines, ${sims} sims per game (model ${MODEL_VERSION}${tuned})\n\n`;
-  md += `Games by month: ${Object.entries(byMonth).map(([m, n]) => `${m} ${n}`).join(', ')}. Left out: ${Object.entries(skipped).map(([k, n]) => `${n} ${k}`).join('; ') || 'none'}.\n\n`;
+  md += `Games by month: ${Object.entries(byMonth).map(([m, n]) => `${m} ${n}`).join(', ')}. Left out: ${Object.entries(skipped).map(([k, n]) => `${n} ${k}`).join('; ') || 'none'}.${fromArchive ? ` ${fromArchive} games used lines from the earlier history file.` : ''}\n\n`;
   md += `### The pick model, each day scored by a fit of earlier days (picks need ${pct(fit.minEdge, 0)} expected return)\n\n`;
   md += partLines('With the simulation', fit.pre);
   md += partLines("Book's odds only", blind.pre);
@@ -230,6 +256,17 @@ async function main() {
   console.log('\n' + md);
   if (typeof a.out === 'string') writeFileSync(a.out, md);
   if (typeof a.json === 'string') writeFileSync(a.json, JSON.stringify(entries));
+  if (historyFile && !Object.keys(tuning).length) {
+    // Only what the fit reads: the closing rows and the box lines of players who had one.
+    const slim = entries.map((e): PropEntry => {
+      const ids = new Set(e.pre!.rows.map((r) => r[0]));
+      return { id: e.id, league: e.league, season: e.season, tip: e.tip, home: e.home, away: e.away, status: 'final', players: {}, pre: e.pre, box: Object.fromEntries(Object.entries(e.box!).filter(([id]) => ids.has(id))) };
+    });
+    const history: PropHistory = { model: MODEL_VERSION, updatedAt: now.toISOString(), entries: slim };
+    mkdirSync(dirname(historyFile), { recursive: true });
+    writeFileSync(historyFile, `{"model":${JSON.stringify(history.model)},"updatedAt":${JSON.stringify(history.updatedAt)},"entries":[\n${slim.map((e) => JSON.stringify(e)).join(',\n')}\n]}\n`);
+    console.log(`Wrote ${slim.length} games to ${historyFile}.`);
+  }
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + '\n');
 }
 

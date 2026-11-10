@@ -314,6 +314,9 @@ function FitRecord({ part, live }: { part: FitPart; live: boolean }) {
           <span class="muted">
             A small model fitted to {part.lines} graded {live ? 'live' : 'pre-game'} lines from {part.games} games: the book's own odds and how far the simulation disagrees with them.
             Each day's picks come from a fit of earlier days only, so this record is one it couldn't have seen coming.{' '}
+            {part.resimulated
+              ? `${part.resimulated} of the games were replayed with the current model against the book's kept closing lines, because the log priced them with an older model. `
+              : ''}
             {verdict === 'tested'
               ? ''
               : `"Tested" needs ${TESTED_MIN_PICKS} picks and a return whose whole range is above zero.`}

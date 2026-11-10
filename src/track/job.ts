@@ -20,7 +20,7 @@ import { loadProps } from '../data/espn/props';
 import { num, parseBoxPlayers, parseOdds, periodOf, phaseOf, seasonYear } from '../data/espn/parse';
 import { predictionFrom } from './predict';
 import { easternYmd } from './dates';
-import { buildFit } from './fit';
+import { buildFit, type FitFile, type PropHistory } from './fit';
 import type { CloseLine, Entry, InjuryLog, LogFile, NewsSnap, PropEntry, PropLogFile, PropRow, PropSnap } from './types';
 
 export interface LogIO {
@@ -99,6 +99,7 @@ export const resultsPath = (league: LeagueId, season: number) => `results/${leag
 export const propsPath = (league: LeagueId, season: number, ymd: string) => `props/${logPath(league, season, ymd)}`;
 export const injuryLogPath = (league: LeagueId) => `injuries/${league}.json`;
 export const fitPath = (league: LeagueId) => `fit/${league}.json`;
+export const historyPath = (league: LeagueId) => `history/props/${league}.json`;
 
 const round = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d;
 
@@ -435,8 +436,13 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
     try {
       const listed = o.io.read<{ files: string[] }>('index.json')?.files ?? [];
       const propPaths = [...new Set([...listed, ...dirty])].filter((f) => f.startsWith(`props/${league}/`));
-      if (propPaths.length && (report.propsGraded > gradedBefore || !o.io.read(fitPath(league)))) {
-        o.io.write(fitPath(league), buildFit(propPaths.flatMap((f) => Object.values(propFile(f))), league, o.now));
+      // A re-simulation of the season by the current model, when scripts/props-backtest.ts has made one.
+      const history = o.io.read<PropHistory>(historyPath(league));
+      const had = o.io.read<FitFile>(fitPath(league));
+      const usable = history?.model === MODEL_VERSION && history.entries.length ? history : undefined;
+      const stale = !had || had.history?.updatedAt !== usable?.updatedAt;
+      if (propPaths.length && (report.propsGraded > gradedBefore || stale)) {
+        o.io.write(fitPath(league), buildFit(propPaths.flatMap((f) => Object.values(propFile(f))), league, o.now, { model: MODEL_VERSION, history: usable }));
         report.fit++;
         say(`fit      ${league}: refit the pick model from ${propPaths.length} prop log file${propPaths.length === 1 ? '' : 's'}`);
       }

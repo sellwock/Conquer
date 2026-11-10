@@ -183,4 +183,27 @@ describe('fitting the log', () => {
     expect(fit.live!.test!.moved).toBeUndefined();
     expect(fit.live!.open).toBeUndefined();
   });
+
+  it('trains the pre-game fit on the current model\'s rows when a re-simulated history exists', () => {
+    // The log priced day 1 with an old model, and one day-2 game with the current one.
+    const old = Array.from({ length: MIN_TRAIN_GAMES }, (_, i) => entry(`g${i}`, '2026-11-02T01:30:00Z', { pre: { model: '1.1.0', takenAt: '', n: 1000, rows } }));
+    const logged = entry('fresh', '2026-11-03T01:30:00Z', { pre: { model: '1.2.0', takenAt: '', n: 1000, rows }, open: { model: '1.2.0', takenAt: '', n: 1000, rows } });
+    // The history replays every finished game with the current model, the fresh one included.
+    const replay = (e: PropEntry): PropEntry => ({ ...e, open: undefined, pre: { model: '1.2.0', takenAt: e.tip, n: 1000, rows: rows.map((r) => [r[0], r[1], r[2], r[3], r[4], 0.9, 0, r[7]] as PropRow) } });
+    const history = { model: '1.2.0', updatedAt: '2026-11-03T12:00:00.000Z', entries: [...old, logged].map(replay) };
+    const now = new Date('2026-11-04T00:00:00Z');
+
+    const fit = buildFit([...old, logged], 'nba', now, { model: '1.2.0', history });
+    expect(fit).toMatchObject({ model: '1.2.0', history: { model: '1.2.0', updatedAt: history.updatedAt } });
+    // Twenty replayed games and the one the log itself priced with 1.2.0; none of the 1.1.0 rows.
+    expect(fit.pre).toMatchObject({ games: MIN_TRAIN_GAMES + 1, resimulated: MIN_TRAIN_GAMES, models: { '1.2.0': 2 * (MIN_TRAIN_GAMES + 1) } });
+    // The first-snapshot test uses only what the log saw in real time.
+    expect(fit.pre!.open).toMatchObject({ games: 1 });
+
+    // A history by another model version is ignored: every logged row counts, as without one.
+    const stale = buildFit([...old, logged], 'nba', now, { model: '1.3.0', history });
+    expect(stale.history).toBeUndefined();
+    expect(stale.pre).toMatchObject({ games: MIN_TRAIN_GAMES + 1, models: { '1.1.0': 2 * MIN_TRAIN_GAMES, '1.2.0': 2 } });
+    expect(stale.pre!.resimulated).toBeUndefined();
+  });
 });

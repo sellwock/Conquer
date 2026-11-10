@@ -260,40 +260,88 @@ export interface FitPart {
   games: number;
   /** Lines by the model version that simulated them. */
   models: Record<string, number>;
+  /** Pre-game only: how many of the games were re-simulated history, not logged in real time. */
+  resimulated?: number;
   /** The walk-forward test, once any day could be scored. */
   test?: FitTest;
   /** Pre-game only: the same test on each game's first snapshot, usually hours earlier. */
   open?: FitTest;
 }
 
+/**
+ * v1/history/props/{league}.json: the season's finished games re-simulated with one model version
+ * against the closing prop lines the book's feed keeps (scripts/props-backtest.ts). A new model
+ * version changes what the simulation says about every line, so the lines the log priced with an
+ * older version can't train the fit that prices today's; this replays them with the current one.
+ */
+export interface PropHistory {
+  model: string;
+  updatedAt: string;
+  entries: PropEntry[];
+}
+
+export interface FitOptions {
+  /** The model version pricing lines now. */
+  model?: string;
+  /** Used for the pre-game fit only when it was simulated by `model`. */
+  history?: PropHistory;
+}
+
 /** v1/fit/{league}.json */
 export interface FitFile {
   updatedAt: string;
   league: LeagueId;
+  /** The model version the pre-game fit's rows were simulated with, when they all were. */
+  model?: string;
+  /** The re-simulated history behind the pre-game fit. */
+  history?: { model: string; updatedAt: string };
   minEdge: number;
   minTrainGames: number;
   pre?: FitPart;
   live?: FitPart;
 }
 
-export function buildFit(entries: PropEntry[], league: LeagueId, now: Date): FitFile {
+/**
+ * The fit and its test from the logged props. With a history re-simulated by the current model,
+ * the pre-game fit trains on that model's rows only: games the log itself priced with it in real
+ * time, and the history for every other game. Without one, every logged pre-game line counts,
+ * whatever model priced it. The test on each game's first snapshot only ever uses real-time rows,
+ * because a re-simulation knows who went on to play, which opening lines didn't. Live lines can't
+ * be replayed, so the live fit pools every version.
+ */
+export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts: FitOptions = {}): FitFile {
+  const history = opts.model && opts.history?.model === opts.model && opts.history.entries.length ? opts.history : undefined;
+  const fresh = history ? entries.filter((e) => e.pre?.model === opts.model) : entries;
+  const freshIds = new Set(fresh.map((e) => e.id));
+  const replayed = history ? history.entries.filter((e) => !freshIds.has(e.id)) : [];
   const part = (key: FitWhen): FitPart | undefined => {
-    const rows = fitRows(entries, key);
+    const rows = key === 'pre' ? [...fitRows(replayed, 'pre'), ...fitRows(fresh, 'pre')] : fitRows(entries, key);
     const games = new Set(rows.map((r) => r.gameId)).size;
     if (games < MIN_TRAIN_GAMES) return undefined;
     const models: Record<string, number> = {};
     for (const r of rows) models[r.model] = (models[r.model] ?? 0) + 1;
     const scored = walkForward(rows);
-    const first = key === 'pre' ? walkForward(rows, fitRows(entries, 'open')) : [];
+    const first = key === 'pre' ? walkForward(rows, fitRows(fresh, 'open')) : [];
+    const replayedIds = new Set(replayed.map((e) => e.id));
     return {
       coef: fitLogistic(rows).map(r4) as FitCoef,
       lines: rows.length,
       games,
       models,
-      ...(scored.length ? { test: testOf(scored, key === 'pre' ? entries : []) } : {}),
-      ...(first.length ? { open: testOf(first, entries) } : {}),
+      ...(key === 'pre' && history ? { resimulated: new Set(rows.filter((r) => replayedIds.has(r.gameId)).map((r) => r.gameId)).size } : {}),
+      // Closing lines only judge picks made before them: the log's own, not replayed closes or live ones.
+      ...(scored.length ? { test: testOf(scored, key === 'pre' ? fresh : []) } : {}),
+      ...(first.length ? { open: testOf(first, fresh) } : {}),
     };
   };
   const pre = part('pre'), live = part('live');
-  return { updatedAt: now.toISOString(), league, minEdge: MIN_EDGE, minTrainGames: MIN_TRAIN_GAMES, ...(pre ? { pre } : {}), ...(live ? { live } : {}) };
+  return {
+    updatedAt: now.toISOString(),
+    league,
+    ...(history ? { model: history.model, history: { model: history.model, updatedAt: history.updatedAt } } : {}),
+    minEdge: MIN_EDGE,
+    minTrainGames: MIN_TRAIN_GAMES,
+    ...(pre ? { pre } : {}),
+    ...(live ? { live } : {}),
+  };
 }
