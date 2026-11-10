@@ -3,7 +3,7 @@
 // parlays tab's bar for singles. Also packs a game's simulated outcomes, props included, small
 // enough to cache in the browser.
 import { impliedFromAmerican } from '../lib/stats';
-import { defaultPickMode, evaluate, legsForGame, weightsFor, HIT_FLOOR, MAX_PRICE, type BlendWeights, type GameMarket, type Leg, type Parlay, type PropMarket } from './parlays';
+import { defaultPickMode, evaluate, fitLegs, legsForGame, weightsFor, HIT_FLOOR, MAX_PRICE, type BlendWeights, type GameMarket, type Leg, type Parlay, type PropMarket } from './parlays';
 
 export interface BoardRow {
   /** Home margin and game total, averaged over the simulations. */
@@ -56,10 +56,21 @@ export function boardRow(m: GameMarket, weights: BlendWeights = weightsFor(m.lea
   };
 }
 
-/** A game's best line single and best prop single in the default ranking; also used for live games' in-game markets. */
+/**
+ * A game's best line single and best prop single in the default ranking; also used for live games'
+ * in-game markets. Where the weights carry a pick model for the game's props, the prop is that
+ * model's top bet, by its own rule.
+ */
 export function boardPicks(m: GameMarket, weights: BlendWeights = weightsFor(m.league, defaultPickMode(m.league))): Pick<BoardRow, 'best' | 'bestProp' | 'hasProps'> {
   const legs = legsForGame(m, weights);
-  return { best: topSingle(legs.filter((l) => !l.prop)), bestProp: topSingle(legs.filter((l) => !!l.prop)), hasProps: !!m.props?.length };
+  const props = legs.filter((l) => !!l.prop);
+  const byFit = !!weights.fit && props.some((l) => l.fitted);
+  const top = byFit ? fitLegs(props, weights.fit!.minEdge)[0] : undefined;
+  return {
+    best: topSingle(legs.filter((l) => !l.prop)),
+    bestProp: byFit ? top && evaluate([top]) : topSingle(props),
+    hasProps: !!m.props?.length,
+  };
 }
 
 export interface PackedProp extends Omit<PropMarket, 'hits'> {

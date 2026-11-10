@@ -6,6 +6,7 @@ import { setFetch, setStore } from '../src/data/espn/client';
 import { easternYmd, fitPath, historyPath, injuryLogPath, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
 import type { Entry, InjuryLog, LogFile, PropEntry, PropLogFile } from '../src/track/types';
 import { gradeProps } from '../src/track/propGrade';
+import { FIT_FILE_VERSION } from '../src/track/fit';
 import { MODEL_VERSION } from '../src/model/version';
 
 const fx = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/espn/${name}`, import.meta.url), 'utf8'));
@@ -428,9 +429,14 @@ describe('player props in the forward log', () => {
     ]);
     // New grades refit the pick model; one game is far too few for coefficients.
     expect(r.fit).toBe(1);
-    expect(files.get(fitPath('nba'))).toEqual({ updatedAt: '2026-01-15T04:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: 20 });
+    expect(files.get(fitPath('nba'))).toEqual({ v: FIT_FILE_VERSION, updatedAt: '2026-01-15T04:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: 20 });
     // Nothing new to grade: the fit is left alone.
     expect((await run(io, '2026-01-15T04:15:00Z')).fit).toBe(0);
+    // A fit file written before the site read something from it is rewritten, once.
+    files.set(fitPath('nba'), { updatedAt: '2026-01-15T04:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: 20 });
+    expect((await run(io, '2026-01-15T04:30:00Z')).fit).toBe(1);
+    expect((files.get(fitPath('nba')) as { v?: number }).v).toBe(FIT_FILE_VERSION);
+    expect((await run(io, '2026-01-15T04:45:00Z')).fit).toBe(0);
     // A re-simulated history by the current model arrives: refit once, and say what it used.
     const replayed: PropEntry = { ...props, status: 'final', box: { '4432201': [27, 8, 7, 2], '4432209': null } };
     files.set(historyPath('nba'), { model: MODEL_VERSION, updatedAt: '2026-01-15T05:00:00.000Z', entries: [replayed] });

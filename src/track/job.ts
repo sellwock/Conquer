@@ -20,7 +20,7 @@ import { loadProps } from '../data/espn/props';
 import { num, parseBoxPlayers, parseOdds, periodOf, phaseOf, seasonYear } from '../data/espn/parse';
 import { predictionFrom } from './predict';
 import { easternYmd } from './dates';
-import { buildFit, type FitFile, type PropHistory } from './fit';
+import { buildFit, FIT_FILE_VERSION, type FitFile, type PropHistory } from './fit';
 import type { CloseLine, Entry, InjuryLog, LogFile, NewsSnap, PropEntry, PropLogFile, PropRow, PropSnap } from './types';
 
 export interface LogIO {
@@ -432,7 +432,8 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
 
     // --- Pick model --------------------------------------------------------------------------
     // Refit from every graded prop line of the league whenever new grades came in (or no fit
-    // exists yet): the site prices props with it and shows its out-of-sample record.
+    // exists yet, or it predates something the site now reads, or the replayed history changed):
+    // the site prices props with it and shows its out-of-sample record.
     try {
       const listed = o.io.read<{ files: string[] }>('index.json')?.files ?? [];
       const propPaths = [...new Set([...listed, ...dirty])].filter((f) => f.startsWith(`props/${league}/`));
@@ -440,7 +441,7 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
       const history = o.io.read<PropHistory>(historyPath(league));
       const had = o.io.read<FitFile>(fitPath(league));
       const usable = history?.model === MODEL_VERSION && history.entries.length ? history : undefined;
-      const stale = !had || had.history?.updatedAt !== usable?.updatedAt;
+      const stale = !had || had.v !== FIT_FILE_VERSION || had.history?.updatedAt !== usable?.updatedAt;
       if (propPaths.length && (report.propsGraded > gradedBefore || stale)) {
         o.io.write(fitPath(league), buildFit(propPaths.flatMap((f) => Object.values(propFile(f))), league, o.now, { model: MODEL_VERSION, history: usable }));
         report.fit++;

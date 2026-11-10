@@ -13,7 +13,7 @@ import { runBacktest, type BacktestProgress } from '../track/backtest';
 import type { Entry, PropEntry, PropSnap } from '../track/types';
 import { Reliability } from './charts';
 import { propMixText } from './parlays';
-import { lineText, one, pct, signed1 } from './format';
+import { lineText, one, pct, signed1, signedPct } from './format';
 
 type Source = 'log' | 'backtest';
 const BACKTEST_DAYS = [7, 14, 30];
@@ -254,7 +254,6 @@ function PropStats({ s, when }: { s: PropSummary; when: PropWhen }) {
 }
 
 const signed4 = (x: number) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${Math.abs(x).toFixed(4)}`;
-const signedPct = (x: number) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${pct(Math.abs(x))}`;
 
 function FitTestStats({ t, what }: { t: FitTest; what: string }) {
   const n = t.picks.win + t.picks.loss;

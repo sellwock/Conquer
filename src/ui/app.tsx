@@ -28,6 +28,7 @@ import { SlateBoard } from './slate';
 import { marketFrom, useSlate } from './useSlate';
 import { useLiveSlate } from './liveSlate';
 import { useNews } from './news';
+import { useFit } from './bestBets';
 
 export interface SimState {
   status: 'idle' | 'running' | 'done' | 'error';
@@ -75,6 +76,8 @@ export function App() {
   const [impact, setImpact] = useState<{ status: 'idle' | 'running' | 'done'; rows: ImpactRow[] }>({ status: 'idle', rows: [] });
   const [offline, setOffline] = useState(false);
   const [dark, setDark] = useState(prefersDark());
+  // The pick model fitted to graded prop lines, which prices props wherever it applies.
+  const fit = useFit(url.league);
   // Simulated games on the current date with posted lines, for the slate board and parlays.
   const slate = useSlate(url.league, url.date!, board.status === 'ok' ? board.games : NO_GAMES, url.seed, url.game, url.view === 'slate');
 
@@ -311,6 +314,7 @@ export function App() {
       props: propMarkets(board.lines, sc.outcomes.players, rosterNames(g), soFarOf(g)),
       propsAt: board.fetchedAt,
       propsProvider: board.provider,
+      live: true,
     };
   }, [sim.scenario, sim.liveFrom, props]);
 
@@ -413,6 +417,7 @@ export function App() {
           onOpen={(id) => update({ view: 'game', game: id, outs: [], ins: [], from: 'auto', mode: 'projected' })}
           live={{ slate: liveSlate, markets: liveMarkets }}
           news={url.league === 'nba' ? news : undefined}
+          fit={fit}
         />
       ) : (
         <>
@@ -487,6 +492,7 @@ export function App() {
                         setLiveScope('game');
                         setTab('parlays');
                       }}
+                      fit={fit}
                     />
                   )}
                   {url.tab === 'outlook' && <Outlook game={data} sim={sim as Required<SimState>} palette={palette} start={start} />}
@@ -511,6 +517,7 @@ export function App() {
                       liveSlate={liveSlate}
                       liveScope={liveScope}
                       onLiveScope={setLiveScope}
+                      fit={fit}
                     />
                   )}
                   {url.tab === 'method' && <Method game={data} />}

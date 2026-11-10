@@ -86,7 +86,11 @@ export function Method(props: { game: GameData }) {
         simulated from now, and its Outlook tab leads with the top live bets. The Track record grades props going forward: the scheduled job saves each
         game's posted lines with the simulation's chances before tip-off, once more mid-game from the in-game book, and right after a player is ruled out. From
         those graded lines it also fits a small model of how often an over wins given the book's odds and the simulation's disagreement, and scores each day's
-        picks with a fit of earlier days only; the Track record shows that out-of-sample record, and calls it tested only once it's clearly ahead. The
+        picks with a fit of earlier days only; the Track record shows that out-of-sample record, and calls it tested only once it's clearly ahead. Once that
+        model is fitted, it prices the props: the tab opens on "Pick model", and Best bets (here and at the top of the slate board) lists its single bets, one per
+        player, each needing a 3% expected return at a price no longer than +200, under its record. If the record isn't ahead, the picks stay hidden until you
+        ask for them. Parlays in that ranking join picks from different games; picks that share a game are shown with the lowest same-game price worth taking,
+        since a book prices those below the legs multiplied. The simulation's own ranking stays one tap away, marked unproven. The
         slate board's Injury news card watches ESPN's injury report every two minutes and reprices any game where someone with real minutes was newly ruled
         out, with and without him, to show which props his absence moves before the book catches up. These are suggestions from a model,
         not advice.

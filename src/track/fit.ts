@@ -2,9 +2,9 @@
 // way: each day's lines are scored by a fit that saw only earlier days. Pure functions; the
 // scheduled job writes the result to v1/fit/{league}.json and the site reads it.
 import { makeRng } from '../lib/rng';
-import { MAX_PRICE, noVig, toDecimal } from '../model/parlays';
+import { noVig, onePerPlayer, toDecimal } from '../model/parlays';
 import { PARTS } from '../model/props';
-import { TRUST_BOOK, fitFeatures, fittedFrom, type FitCoef, type FitFeatures } from '../model/propFit';
+import { TRUST_BOOK, fitFeatures, fittedFrom, type FitCoef, type FitFeatures, type PropFits } from '../model/propFit';
 import type { LeagueId, PropStat } from '../model/types';
 import { easternYmd } from './dates';
 import { BOX, lineMove } from './propGrade';
@@ -132,6 +132,8 @@ export function walkForward(train: FitRow[], score: FitRow[] = train): Scored[] 
 }
 
 export interface FitPick {
+  gameId: string;
+  athleteId: string;
   row: FitRow;
   side: 'over' | 'under';
   price: number;
@@ -142,24 +144,20 @@ export interface FitPick {
 }
 
 /**
- * The bets a fit would make: at most one per player per game (a player's lines move together, so
- * more would be one bet made several times), the side and stat with the best expected return, if
- * that clears MIN_EDGE at a price no longer than the app's cap for single bets.
+ * The bets a fit would make, by the rule the site lists its best bets with (`onePerPlayer`): at
+ * most one per player per game, the side and stat with the best expected return, if that clears
+ * MIN_EDGE at a price no longer than the app's cap for single bets.
  */
 export function picksOf(scored: Scored[], minEdge = MIN_EDGE): FitPick[] {
-  const best = new Map<string, FitPick>();
+  const cands: FitPick[] = [];
   for (const { row, pOver } of scored) {
     for (const side of ['over', 'under'] as const) {
       const p = side === 'over' ? pOver : 1 - pOver;
       const price = side === 'over' ? row.over : row.under;
-      const ev = p * toDecimal(price) - 1;
-      if (ev < minEdge || price > MAX_PRICE[1]) continue;
-      const key = `${row.gameId}|${row.athleteId}`;
-      const had = best.get(key);
-      if (!had || ev > had.ev) best.set(key, { row, side, price, p, ev, won: (side === 'over') === (row.won === 1) });
+      cands.push({ gameId: row.gameId, athleteId: row.athleteId, row, side, price, p, ev: p * toDecimal(price) - 1, won: (side === 'over') === (row.won === 1) });
     }
   }
-  return [...best.values()];
+  return onePerPlayer(cands, minEdge);
 }
 
 export interface FitTest {
@@ -186,6 +184,28 @@ export interface FitTest {
 }
 
 const r4 = (x: number) => Math.round(x * 1e4) / 1e4;
+
+/** One unit on every line's over, or every line's under, at the posted price. */
+export interface Flat {
+  win: number;
+  loss: number;
+  /** Return per unit staked. */
+  roi: number;
+}
+
+/** What betting blind costs: every over and every under among these lines, with no model at all. */
+export function flatOf(rows: FitRow[]): { over: Flat; under: Flat } {
+  const side = (over: boolean): Flat => {
+    let win = 0, units = 0;
+    for (const r of rows) {
+      const won = (r.won === 1) === over;
+      if (won) win++;
+      units += won ? toDecimal(over ? r.over : r.under) - 1 : -1;
+    }
+    return { win, loss: rows.length - win, roi: r4(rows.length ? units / rows.length : 0) };
+  };
+  return { over: side(true), under: side(false) };
+}
 
 /** `entries` supplies closing lines for pre-game picks; leave it out for live ones, which a pre-game close can't judge. */
 export function testOf(scored: Scored[], entries: PropEntry[] = [], minEdge = MIN_EDGE): FitTest {
@@ -262,6 +282,8 @@ export interface FitPart {
   models: Record<string, number>;
   /** Pre-game only: how many of the games were re-simulated history, not logged in real time. */
   resimulated?: number;
+  /** Every over and every under among the lines, bet blind: the baseline a pick has to beat. */
+  flat?: { over: Flat; under: Flat };
   /** The walk-forward test, once any day could be scored. */
   test?: FitTest;
   /** Pre-game only: the same test on each game's first snapshot, usually hours earlier. */
@@ -287,8 +309,13 @@ export interface FitOptions {
   history?: PropHistory;
 }
 
+/** Bumped when the file gains something the site reads, so the job rewrites an older one. 2: `flat`. */
+export const FIT_FILE_VERSION = 2;
+
 /** v1/fit/{league}.json */
 export interface FitFile {
+  /** FIT_FILE_VERSION when it was written; absent in the first files. */
+  v?: number;
   updatedAt: string;
   league: LeagueId;
   /** The model version the pre-game fit's rows were simulated with, when they all were. */
@@ -328,6 +355,7 @@ export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts
       lines: rows.length,
       games,
       models,
+      flat: flatOf(rows),
       ...(key === 'pre' && history ? { resimulated: new Set(rows.filter((r) => replayedIds.has(r.gameId)).map((r) => r.gameId)).size } : {}),
       // Closing lines only judge picks made before them: the log's own, not replayed closes or live ones.
       ...(scored.length ? { test: testOf(scored, key === 'pre' ? fresh : []) } : {}),
@@ -336,6 +364,7 @@ export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts
   };
   const pre = part('pre'), live = part('live');
   return {
+    v: FIT_FILE_VERSION,
     updatedAt: now.toISOString(),
     league,
     ...(history ? { model: history.model, history: { model: history.model, updatedAt: history.updatedAt } } : {}),
@@ -344,4 +373,19 @@ export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts
     ...(pre ? { pre } : {}),
     ...(live ? { live } : {}),
   };
+}
+
+/**
+ * The coefficients the site may price with under model version `model`. The pre-game fit counts
+ * only when that version simulated every line behind it: a new version changes what the simulation
+ * says about each line, and until the season is replayed with it the old fit doesn't apply. Live
+ * lines can't be replayed, so the live fit pools versions and always counts.
+ */
+export function fitsFor(file: FitFile | undefined, model: string): PropFits | undefined {
+  if (!file) return undefined;
+  const sameModel = !!file.pre && (file.model === model || Object.keys(file.pre.models).every((m) => m === model));
+  const pre = sameModel ? file.pre!.coef : undefined;
+  const live = file.live?.coef;
+  if (!pre && !live) return undefined;
+  return { ...(pre ? { pre } : {}), ...(live ? { live } : {}), minEdge: file.minEdge };
 }

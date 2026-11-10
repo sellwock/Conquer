@@ -55,6 +55,7 @@ export async function priceLiveGame(
       props,
       propsAt: board.fetchedAt,
       propsProvider: board.provider,
+      live: true,
     },
   };
 }
