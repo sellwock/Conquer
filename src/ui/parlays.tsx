@@ -36,7 +36,7 @@ const SIZE_TITLE: Record<1 | 2 | 3, string> = { 1: 'Singles', 2: '2-leg parlays'
 
 const KIND_WORDS: Record<LegKind, string> = { ml: 'moneylines', spread: 'spreads', total: 'totals', prop: 'player props' };
 
-/** "moneylines use the market's no-vig odds alone; spreads and totals blend 25% simulation with 75% market" */
+/** "moneylines use the market's no-vig odds alone; spreads and totals blend 20% simulation with 80% market" */
 export function blendText(w: BlendWeights): string {
   const byWeight = new Map<number, string[]>();
   for (const k of ['ml', 'spread', 'total', 'prop'] as LegKind[]) byWeight.set(w[k], [...(byWeight.get(w[k]) ?? []), KIND_WORDS[k]]);
