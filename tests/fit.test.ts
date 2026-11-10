@@ -188,6 +188,20 @@ describe('fitting the log', () => {
     expect(fit.pre!.flat!.under).toEqual({ win: 0, loss: 4 * MIN_TRAIN_GAMES, roi: -1 });
   });
 
+  it('counts a second live snapshot as bets of its own, in the same game', () => {
+    const snap = { model: '1.2.0', takenAt: '', n: 1000, rows, at: { period: 2, clockSec: 300, home: 50, away: 48 } };
+    const e = entry('g1', '2026-11-02T01:30:00Z', { live: snap, live2: { ...snap, at: { period: 3, clockSec: 300, home: 80, away: 77 } } });
+    const both = [...fitRows([e], 'live'), ...fitRows([e], 'live2')];
+    expect(both.map((r) => r.snap)).toEqual([undefined, undefined, 'live2', 'live2']);
+    // One pick per player per snapshot; the game still counts once when ranges are resampled.
+    const picks = picksOf(both.map((r) => ({ row: r, pOver: 0.7 })));
+    expect(picks).toHaveLength(2);
+    expect(new Set(picks.map((k) => k.row.gameId))).toEqual(new Set(['g1']));
+    expect(testOf(both.map((r) => ({ row: r, pOver: 0.7 }))).games).toBe(1);
+    const many = Array.from({ length: MIN_TRAIN_GAMES }, (_, i) => ({ ...e, id: `g${i}` }));
+    expect(buildFit(many, 'nba', new Date('2026-11-04T00:00:00Z')).live).toMatchObject({ games: MIN_TRAIN_GAMES, lines: 4 * MIN_TRAIN_GAMES });
+  });
+
   it('counts what every over and every under returned at the posted prices', () => {
     const flat = flatOf([row({ pMarket: 0.5, pSim: 0.5, won: 1 }), row({ pMarket: 0.5, pSim: 0.5, won: 0, over: 150, under: -180 }), row({ pMarket: 0.5, pSim: 0.5, won: 0 })]);
     expect(flat.over).toEqual({ win: 1, loss: 2, roi: Math.round(((100 / 110 - 2) / 3) * 1e4) / 1e4 });

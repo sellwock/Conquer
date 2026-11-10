@@ -348,12 +348,35 @@ describe('player props in the forward log', () => {
     expect(vance[7]).toBeGreaterThanOrEqual(27);
     expect(e.pre).toBeUndefined();
 
-    // A later run, still mid-game: the saved lines stay as they were.
-    liveAt = { period: 3, clock: '6:00' };
+    // Later in the same half: the saved lines stay as they were.
+    liveAt = { period: 2, clock: '1:00' };
     const before = JSON.stringify(files.get(PROPS));
-    r = await run(io, '2026-01-15T01:45:00Z');
+    r = await run(io, '2026-01-15T01:30:00Z');
     expect(r.propsLive).toBe(0);
     expect(JSON.stringify(files.get(PROPS))).toBe(before);
+
+    // After halftime: one more look, kept apart from the first.
+    liveAt = { period: 3, clock: '6:00' };
+    r = await run(io, '2026-01-15T01:45:00Z');
+    expect(r.propsLive).toBe(1);
+    const again = (files.get(PROPS) as PropLogFile)['401810123'];
+    expect(JSON.stringify(again.live)).toBe(JSON.stringify(e.live));
+    expect(again.live2).toMatchObject({ model: MODEL_VERSION, at: { period: 3, clockSec: 360 } });
+    // And no third.
+    const twice = JSON.stringify(files.get(PROPS));
+    r = await run(io, '2026-01-15T02:00:00Z');
+    expect(r.propsLive).toBe(0);
+    expect(JSON.stringify(files.get(PROPS))).toBe(twice);
+  });
+
+  it('takes no second look when the first came after halftime', async () => {
+    withProps = true;
+    const { io, files } = memoryIO();
+    liveAt = { period: 3, clock: '10:00' };
+    expect((await run(io, '2026-01-15T01:45:00Z')).propsLive).toBe(1);
+    liveAt = { period: 3, clock: '2:00' };
+    expect((await run(io, '2026-01-15T02:00:00Z')).propsLive).toBe(0);
+    expect((files.get(PROPS) as PropLogFile)['401810123'].live2).toBeUndefined();
   });
 
   it('loads nothing more for a live game whose book has no in-game props', async () => {

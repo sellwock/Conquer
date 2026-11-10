@@ -78,6 +78,8 @@ export interface PropEntry {
   pre?: PropSnap;
   /** Saved once, mid-game, from the book's in-game feed. */
   live?: PropSnap;
+  /** A second look after halftime, when the first was taken before it. */
+  live2?: PropSnap;
   /** Saved when a player was newly ruled out before tip: one per scratched player. */
   news?: NewsSnap[];
   /** The pre-game book's lines in the last 20 minutes before tip (until model 1.2.0, only for games with news). */

@@ -11,7 +11,7 @@ import { MODEL_VERSION } from '../model/version';
 import { fmtAmerican } from '../lib/stats';
 import { fitsFor, type FitFile } from '../track/fit';
 import { loadFit } from '../track/forward';
-import { one, pct, perHundred, signedPct } from './format';
+import { STALE_LINE_MIN, ageText, lineAgeMin, one, pct, perHundred, signedPct } from './format';
 
 export interface FitState {
   /** The fit as the scheduled job wrote it, for its record. */
@@ -98,6 +98,8 @@ export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (i
         <tbody>
           {props.singles.map((p) => {
             const l = p.legs[0];
+            // A live line the book hasn't touched in a while has usually moved at the book itself.
+            const age = props.live ? lineAgeMin(l.prop!.updated) : undefined;
             return (
               <tr key={l.key}>
                 <th scope="row">
@@ -114,6 +116,19 @@ export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (i
                     )}
                     {props.live && <>has {l.prop!.now ?? 0} · </>}
                     sim {one(l.prop!.mean)} · book {pct(l.pFair, 0)}
+                    {age != null && (
+                      <>
+                        {' '}
+                        ·{' '}
+                        {age >= STALE_LINE_MIN ? (
+                          <span class="chip warn" title="ESPN's copy of this line hasn't changed in a while. The book's own price has probably moved.">
+                            Line {ageText(age)} old: check the book
+                          </span>
+                        ) : (
+                          <>line set {ageText(age)}{age < 1 ? '' : ' ago'}</>
+                        )}
+                      </>
+                    )}
                   </span>
                 </th>
                 <td class="num" data-label="Price">
