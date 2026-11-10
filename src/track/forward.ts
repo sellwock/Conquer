@@ -1,5 +1,6 @@
 // Reads the forward log the scheduled job writes to the `data` branch.
 import type { LeagueId } from '../model/types';
+import type { FitFile } from './fit';
 import type { Entry, InjuryLog, LogFile, PropEntry, PropLogFile } from './types';
 
 const BASES = ['https://raw.githubusercontent.com/sellwock/Conquer/data/v1', 'https://cdn.jsdelivr.net/gh/sellwock/Conquer@data/v1'];
@@ -53,4 +54,9 @@ export async function loadPropLog(league: LeagueId, signal?: AbortSignal): Promi
 /** The last injury report the scheduled job saw, and the news it found (NBA). */
 export async function loadInjuryLog(league: LeagueId, signal?: AbortSignal): Promise<InjuryLog | undefined> {
   return getData<InjuryLog>(`injuries/${league}.json`, signal);
+}
+
+/** The pick model the scheduled job fits to the graded props, with its out-of-sample record. */
+export async function loadFit(league: LeagueId, signal?: AbortSignal): Promise<FitFile | undefined> {
+  return getData<FitFile>(`fit/${league}.json`, signal);
 }
