@@ -3,7 +3,7 @@ import { HIT_FLOOR, MAX_PRICE, PROP_SIM_WEIGHT, noVig, toDecimal } from '../mode
 import { PARTS } from '../model/props';
 import type { PropStat } from '../model/types';
 import { bootstrapMean, record, type BetResult, type Record3 } from './grade';
-import type { NewsSnap, PropEntry, PropRow, PropSnap } from './types';
+import type { CloseLine, NewsSnap, PropEntry, PropRow, PropSnap } from './types';
 
 /** Before tip-off, mid-game, or right after a player was ruled out. */
 export type PropWhen = 'pre' | 'live' | 'news';
@@ -99,9 +99,12 @@ export function gradeNews(e: PropEntry): GradedSnap[] {
   return e.news.map((n) => gradeSnap(e, n, n));
 }
 
-/** How the closing line moved for this pick: a higher line (or a dearer over) favors an over. */
-function movedFor(e: PropEntry, p: GradedProp): 'toward' | 'away' | 'same' | undefined {
-  const c = e.close?.lines.find(([id, stat]) => id === p.athleteId && stat === p.stat);
+/**
+ * How the closing line moved for a pick: a higher line (or a dearer over) favors an over.
+ * `pMarket` is the book's no-vig chance of the pick's side when it was made.
+ */
+export function lineMove(close: CloseLine[] | undefined, p: Pick<GradedProp, 'athleteId' | 'stat' | 'line' | 'side' | 'pMarket'>): 'toward' | 'away' | 'same' | undefined {
+  const c = close?.find(([id, stat]) => id === p.athleteId && stat === p.stat);
   if (!c) return undefined;
   const [, , line, over, under] = c;
   let dir = Math.sign(line - p.line);
@@ -114,6 +117,8 @@ function movedFor(e: PropEntry, p: GradedProp): 'toward' | 'away' | 'same' | und
   if (!dir) return 'same';
   return (dir > 0) === (p.side === 'over') ? 'toward' : 'away';
 }
+
+const movedFor = (e: PropEntry, p: GradedProp) => lineMove(e.close?.lines, p);
 
 function gradeSnap(e: PropEntry, snap: PropSnap, news?: NewsSnap): GradedSnap {
   const box = e.box!;

@@ -20,6 +20,7 @@ import { loadProps } from '../data/espn/props';
 import { num, parseBoxPlayers, parseOdds, periodOf, phaseOf, seasonYear } from '../data/espn/parse';
 import { predictionFrom } from './predict';
 import { easternYmd } from './dates';
+import { buildFit } from './fit';
 import type { CloseLine, Entry, InjuryLog, LogFile, NewsSnap, PropEntry, PropLogFile, PropRow, PropSnap } from './types';
 
 export interface LogIO {
@@ -48,10 +49,14 @@ export interface JobReport {
   propsPre: number;
   propsLive: number;
   propsGraded: number;
-  /** Players newly ruled out, news prop snapshots taken, and closing lines saved for games with news. */
+  /** Games whose first prop snapshot was kept as their opening lines. */
+  propsOpen: number;
+  /** Players newly ruled out, news prop snapshots taken, and games whose closing lines were saved. */
   news: number;
   propsNews: number;
   propsClose: number;
+  /** Pick-model fits rewritten (after new prop grades). */
+  fit: number;
   errors: string[];
 }
 
@@ -63,7 +68,7 @@ const REFRESH_WITHIN_MIN = 180;
 const REFRESH_AFTER_MIN = 45;
 const GRADE_AFTER_MIN = 120;
 const GIVE_UP_AFTER_MIN = 72 * 60;
-// Games with injury news get the pre-game book's lines once more, this close to tip, to see whether
+// Every game with logged props gets the pre-game book's lines once more, this close to tip, to see whether
 // the lines moved after the news.
 const CLOSE_WITHIN_MIN = 20;
 // News the job found stays in its log this long, so the site can show it.
@@ -93,6 +98,7 @@ export const logPath = (league: LeagueId, season: number, ymd: string) => `${lea
 export const resultsPath = (league: LeagueId, season: number) => `results/${league}/${season}.json`;
 export const propsPath = (league: LeagueId, season: number, ymd: string) => `props/${logPath(league, season, ymd)}`;
 export const injuryLogPath = (league: LeagueId) => `injuries/${league}.json`;
+export const fitPath = (league: LeagueId) => `fit/${league}.json`;
 
 const round = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d;
 
@@ -127,14 +133,19 @@ const withPlayers = (prev: PropEntry, markets: PropMarket[]): PropEntry => ({
   players: { ...prev.players, ...Object.fromEntries(markets.map((m) => [m.athleteId, m.player])) },
 });
 
-const withSnap = (prev: PropEntry, markets: PropMarket[], key: 'pre' | 'live', snap: PropSnap): PropEntry => ({ ...withPlayers(prev, markets), [key]: snap });
+/** A game's first pre-game snapshot is also kept as its opening lines; later refreshes replace only `pre`. */
+const withSnap = (prev: PropEntry, markets: PropMarket[], key: 'pre' | 'live', snap: PropSnap): PropEntry => ({
+  ...withPlayers(prev, markets),
+  ...(key === 'pre' && !prev.pre && !prev.open ? { open: snap } : {}),
+  [key]: snap,
+});
 
 /** One row per final: [yyyymmdd, homeId, awayId, homeScore, awayScore, neutral, overtime]. */
 export type ResultRow = [string, string, string, number, number, boolean, boolean];
 
 export async function runJob(o: JobOptions): Promise<JobReport> {
   const say = o.log ?? (() => {});
-  const report: JobReport = { snapshots: 0, refreshed: 0, graded: 0, voided: 0, results: 0, propsPre: 0, propsLive: 0, propsGraded: 0, news: 0, propsNews: 0, propsClose: 0, errors: [] };
+  const report: JobReport = { snapshots: 0, refreshed: 0, graded: 0, voided: 0, results: 0, propsPre: 0, propsLive: 0, propsGraded: 0, propsOpen: 0, news: 0, propsNews: 0, propsClose: 0, fit: 0, errors: [] };
   const files = new Map<string, Record<string, Entry | PropEntry>>();
   const dirty = new Set<string>();
   const load = (path: string) => {
@@ -156,6 +167,7 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
   };
 
   for (const league of o.leagues) {
+    const gradedBefore = report.propsGraded;
     const today = easternYmd(o.now);
     const tomorrow = easternYmd(new Date(o.now.getTime() + 86_400_000));
     const yesterday = easternYmd(new Date(o.now.getTime() - 86_400_000));
@@ -219,8 +231,10 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
           if (markets.length) {
             const pp = propsPath(league, seasonYear(gd.date, league), ymd);
             const prevP = propFile(pp)[g.id] ?? propBase(league, gd);
-            put(pp, withSnap(prevP, markets, 'pre', { model: MODEL_VERSION, takenAt: o.now.toISOString(), provider: board!.provider, n: s.n, rows: propRows(markets) }));
+            const next = withSnap(prevP, markets, 'pre', { model: MODEL_VERSION, takenAt: o.now.toISOString(), provider: board!.provider, n: s.n, rows: propRows(markets) });
+            put(pp, next);
             report.propsPre++;
+            if (next.open && !prevP.open) report.propsOpen++;
           }
         } catch (e) {
           // No odds posted for the game reads as a 404, which just means no props.
@@ -315,22 +329,29 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
         report.errors.push(`${league} injuries: ${(e as Error).message}`);
       }
 
-      // Games with news get the book's lines once more just before tip.
-      for (const g of slate.values()) {
-        const mins = minutesUntil(g.date);
-        if (g.phase !== 'pre' || mins <= 0 || mins > CLOSE_WITHIN_MIN) continue;
-        const pp = propsPath(league, seasonYear(g.date, league), easternYmd(new Date(g.date)));
-        const entry = propFile(pp)[g.id];
-        if (!entry?.news?.length || entry.close) continue;
-        try {
-          const board = await loadProps(league, g.id);
-          if (!board.lines.length) continue;
-          const lines: CloseLine[] = board.lines.map((l) => [l.athleteId, l.stat, l.line, l.over, l.under]);
-          put(pp, { ...entry, close: { takenAt: o.now.toISOString(), lines } });
-          report.propsClose++;
-        } catch (err) {
-          if ((err as { status?: number }).status !== 404) report.errors.push(`${league} ${g.id} closing props: ${(err as Error).message}`);
-        }
+    }
+
+    // --- Closing lines -----------------------------------------------------------------------
+    // Every game with logged props gets the book's lines once more just before tip: whether a
+    // pick's line then moved its way is the quickest sign of an edge.
+    for (const g of slate.values()) {
+      const mins = minutesUntil(g.date);
+      if (g.phase !== 'pre' || mins <= 0 || mins > CLOSE_WITHIN_MIN) continue;
+      const pp = propsPath(league, seasonYear(g.date, league), easternYmd(new Date(g.date)));
+      const entry = propFile(pp)[g.id];
+      if (!entry || entry.close || !(entry.pre || entry.news?.length)) continue;
+      if (requestCount() > o.budget) {
+        report.errors.push(`${league}: request budget reached; closing props for ${g.away.abbr} @ ${g.home.abbr} skipped`);
+        break;
+      }
+      try {
+        const board = await loadProps(league, g.id);
+        if (!board.lines.length) continue;
+        const lines: CloseLine[] = board.lines.map((l) => [l.athleteId, l.stat, l.line, l.over, l.under]);
+        put(pp, { ...entry, close: { takenAt: o.now.toISOString(), lines } });
+        report.propsClose++;
+      } catch (err) {
+        if ((err as { status?: number }).status !== 404) report.errors.push(`${league} ${g.id} closing props: ${(err as Error).message}`);
       }
     }
 
@@ -406,6 +427,21 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
           report.errors.push(`grade props ${league} ${e.id}: ${(err as Error).message}`);
         }
       }
+    }
+
+    // --- Pick model --------------------------------------------------------------------------
+    // Refit from every graded prop line of the league whenever new grades came in (or no fit
+    // exists yet): the site prices props with it and shows its out-of-sample record.
+    try {
+      const listed = o.io.read<{ files: string[] }>('index.json')?.files ?? [];
+      const propPaths = [...new Set([...listed, ...dirty])].filter((f) => f.startsWith(`props/${league}/`));
+      if (propPaths.length && (report.propsGraded > gradedBefore || !o.io.read(fitPath(league)))) {
+        o.io.write(fitPath(league), buildFit(propPaths.flatMap((f) => Object.values(propFile(f))), league, o.now));
+        report.fit++;
+        say(`fit      ${league}: refit the pick model from ${propPaths.length} prop log file${propPaths.length === 1 ? '' : 's'}`);
+      }
+    } catch (e) {
+      report.errors.push(`${league} fit: ${(e as Error).message}`);
     }
 
     // --- Results ----------------------------------------------------------------------------
