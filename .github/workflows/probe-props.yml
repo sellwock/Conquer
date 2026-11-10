@@ -3,41 +3,52 @@ on:
   push:
     branches: [claude/probe-props]
 jobs:
-  players:
+  history:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - part: nba-split
-            league: nba
-            range: 20260105-20260331
-            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,creationPriorMin=120;usagePriorMin=15,ratePriorMin=20,minutesNoise=1.5,creationPriorMin=120;usagePriorMin=15,ratePriorMin=180,minutesNoise=0,creationPriorMin=120"
-          - part: nba-alternatives
-            league: nba
-            range: 20260105-20260331
-            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,creationPriorMin=120;usagePriorMin=15,ratePriorMin=45,minutesNoise=1.5,creationPriorMin=120;usagePriorMin=120,ratePriorMin=20,minutesNoise=1.5,creationPriorMin=120"
-          - part: college
-            league: ncaam
-            range: 20260110-20260301
-            tries: "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,creationPriorMin=120;usagePriorMin=15,ratePriorMin=20,minutesNoise=0,creationPriorMin=120;usagePriorMin=15,ratePriorMin=20,minutesNoise=0,creationPriorMin=15"
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - uses: actions/cache@v4
-        with:
-          path: bt-cache
-          key: bt-espn-${{ matrix.league }}-diag2-${{ matrix.part }}-${{ github.run_id }}
-          restore-keys: bt-espn-${{ matrix.league }}-
-      - name: Game and player lines with lineup creation split from usage
-        run: npx tsx scripts/players.ts --league ${{ matrix.league }} --ranges ${{ matrix.range }} --max 600 --sims 1000 --cache bt-cache --out players.md --try "${{ matrix.tries }}"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: diag2-${{ matrix.part }}
-          path: players.md
+      - name: Does ESPN keep prop lines for finished games?
+        run: |
+          node --input-type=module <<'JS'
+          const SITE = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
+          const CORE = 'https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba';
+          const get = async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(`${r.status} ${u}`); return r.json(); };
+          const WANT = new Set(['1', '2', '3', '4', '87', '88', '89', '90']);
+          let sampled = false;
+          for (const ymd of ['20261109', '20261027', '20260410', '20260115', '20251105', '20250115', '20240115']) {
+            try {
+              const sb = await get(`${SITE}/scoreboard?dates=${ymd}&limit=50`);
+              const finals = (sb.events ?? []).filter((e) => e.status?.type?.state === 'post').slice(0, 2);
+              console.log(`\n== ${ymd}: ${sb.events?.length ?? 0} events, probing ${finals.map((e) => e.shortName).join(', ')}`);
+              for (const e of finals) {
+                try {
+                  const odds = await get(`${CORE}/events/${e.id}/competitions/${e.id}/odds?lang=en&region=us&limit=50`);
+                  const books = (odds.items ?? []).map((it) => `${it.provider?.name}${it.propBets?.$ref ? ' [props]' : ''}${it.spread != null ? ` spread ${it.spread}` : ''}${it.overUnder != null ? ` total ${it.overUnder}` : ''}`);
+                  console.log(`  ${e.shortName} (${e.id}): books: ${books.join(' | ') || 'none'}`);
+                  for (const it of (odds.items ?? []).filter((x) => x.propBets?.$ref)) {
+                    const ref = new URL(it.propBets.$ref.replace('http://', 'https://'));
+                    ref.searchParams.set('limit', '1000');
+                    const pb = await get(ref.toString());
+                    const items = pb.items ?? [];
+                    const ours = items.filter((x) => WANT.has(String(x?.type?.id)));
+                    const players = new Set(ours.map((x) => /athletes\/(\d+)/.exec(String(x?.athlete?.$ref ?? ''))?.[1]));
+                    console.log(`    ${it.provider?.name}: count ${pb.count}, pages ${pb.pageCount}, page-1 items ${items.length}, over/under items of our stats ${ours.length} for ${players.size} players`);
+                    if (!sampled && ours.length) {
+                      sampled = true;
+                      console.log('    sample item keys:', Object.keys(ours[0]).join(', '));
+                      console.log('    sample item:', JSON.stringify(ours[0]).slice(0, 1800));
+                      console.log('    odds item keys:', Object.keys(it).join(', '));
+                    }
+                  }
+                } catch (err) {
+                  console.log(`  ${e.shortName} (${e.id}): ${err.message}`);
+                }
+              }
+            } catch (err) {
+              console.log(`== ${ymd}: ${err.message}`);
+            }
+          }
+          JS
