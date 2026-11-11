@@ -21,20 +21,22 @@ jobs:
           path: bt-cache
           key: bt-espn-nba-props-${{ github.run_id }}
           restore-keys: bt-espn-nba-
-      - name: A season of kept prop lines, fitted and tested
-        run: npx tsx scripts/props-backtest.ts --league nba --ranges 20260101-20260131,20261021-20261109 --max 1500 --sims 1000 --cache bt-cache --out props.md --json entries.json --tuning "usagePriorMin=120,ratePriorMin=180,minutesNoise=0,creationPriorMin=120"
-      - name: Keep the rows on this branch for a closer look
+      - name: The season's prop lines, as the model is, and anchored to the book's spread and total
+        run: |
+          R="--league nba --ranges 20260101-20260131,20261021-20261110 --max 1500 --sims 1000 --cache bt-cache"
+          npx tsx scripts/props-backtest.ts $R --out props-plain.md
+          npx tsx scripts/props-backtest.ts $R --anchor 0 --out props-anchor-make.md
+          npx tsx scripts/props-backtest.ts $R --anchor 0.5 --out props-anchor-mix.md
+          cat props-plain.md props-anchor-make.md props-anchor-mix.md > props.md
+      - name: Keep the reports on this branch
         if: always()
         run: |
-          [ -f entries.json ] || exit 0
           mkdir -p data
-          gzip -9 -c entries.json > data/props-history-nba-110.json.gz
-          cp props.md data/props-history-nba-110.md
-          ls -la data
+          cp props-*.md data/ 2>/dev/null || exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data
-          git commit -q -m "Props backtest rows" || exit 0
+          git commit -q -m "Anchoring replay reports" || exit 0
           git push -q origin HEAD:claude/probe-props
       - uses: actions/upload-artifact@v4
         if: always()
