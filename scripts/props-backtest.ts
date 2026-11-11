@@ -7,6 +7,7 @@
 //       [--sims 1000] [--book draft] [--cache .cache/bt] [--out props.md] [--json entries.json]
 //       [--history data/v1/history/props/nba.json]
 //       [--tuning "usagePriorMin=120,ratePriorMin=180,minutesNoise=0"]   (PLAYER_TUNING overrides)
+//       [--anchor 0.5]   (anchor each simulation to the book's spread and total; the number is the share of a total gap closed by pace)
 //
 // --season covers the current season up to yesterday. --history writes the closing-line rows the
 // forward job's fit trains on (src/track/fit.ts, PropHistory), and first reads the file it's about
@@ -30,6 +31,7 @@ import { seasonYear } from '../src/data/espn/parse';
 import type { GameData, LeagueId, PropStat } from '../src/model/types';
 import { MODEL_VERSION } from '../src/model/version';
 import { runOutcomes } from '../src/sim/quick';
+import { anchorSpec } from '../src/sim/anchor';
 import { buildFit, fitRows, type FitPart, type FitRow, type FitTest, type PropHistory } from '../src/track/fit';
 import { propRows } from '../src/track/job';
 import { evenly, finalsToGrade } from '../src/track/rebuild';
@@ -171,9 +173,23 @@ async function main() {
 
   // --- Simulate and price ---------------------------------------------------------------------------
   const entries: PropEntry[] = [];
+  const anchor = a.anchor != null ? Number(a.anchor === true ? 0 : a.anchor) : undefined;
+  let anchored = 0;
+  // Per game: the simulation's average margin and total, minus the book's.
+  const gaps: [number, number][] = [];
   for (const { g, lines, provider } of loaded) {
-    const { spec } = buildSpec(pregameView(g), { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
+    const built = buildSpec(pregameView(g), { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
+    let spec = built.spec;
+    if (anchor != null && g.odds && (g.odds.spread != null || g.odds.total != null)) {
+      const an = anchorSpec(spec, { margin: g.odds.spread != null ? -g.odds.spread : undefined, total: g.odds.total }, g.id, { paceShare: anchor });
+      spec = an.spec;
+      anchored++;
+    }
     const o = runOutcomes(spec, sims, g.id, { players: true });
+    if (g.odds?.spread != null && g.odds.total != null) {
+      const avg = (xs: Int16Array) => xs.reduce((x, y) => x + y, 0) / xs.length;
+      gaps.push([avg(o.margin) + g.odds.spread, avg(o.total) - g.odds.total]);
+    }
     if (!o.players) continue;
     const names = rosterNames(g);
     const close = propMarkets(lines, o.players, names);
@@ -212,6 +228,12 @@ async function main() {
   md += `### The pick model, each day scored by a fit of earlier days (picks need ${pct(fit.minEdge, 0)} expected return)\n\n`;
   md += partLines('With the simulation', fit.pre);
   md += partLines("Book's odds only", blind.pre);
+  // The simulation's own chances against the book's, on every decided closing line.
+  const sq = (f: (r: FitRow) => number) => mean(closeRows.map((r) => (f(r) - r.won) ** 2));
+  const rms = (i: 0 | 1) => Math.sqrt(mean(gaps.map((g) => g[i] ** 2)));
+  md += `\nSimulation alone on every closing line: Brier ${sq((r) => r.pSim).toFixed(4)} vs the book's ${sq((r) => r.pMarket).toFixed(4)}.`;
+  md += ` Its average score sat ${gaps.length ? `${rms(0).toFixed(1)} points from the book's spread and ${rms(1).toFixed(1)} from its total (root mean square, ${gaps.length} games)` : 'n/a'}.`;
+  md += anchor != null ? ` Anchored to the book's spread and total in ${anchored} games (pace share ${anchor}).\n` : '\n';
 
   // Typical posted lines per stat (the log's medians, November 2026), to sort lines by size.
   const REF_LINE: Record<PropStat, number> = { pts: 12.5, reb: 4.5, ast: 3.5, tpm: 1.5, pra: 23.5, pr: 18.5, pa: 18.5, ar: 8.5 };
@@ -256,7 +278,7 @@ async function main() {
   console.log('\n' + md);
   if (typeof a.out === 'string') writeFileSync(a.out, md);
   if (typeof a.json === 'string') writeFileSync(a.json, JSON.stringify(entries));
-  if (historyFile && !Object.keys(tuning).length) {
+  if (historyFile && !Object.keys(tuning).length && anchor == null) {
     // Only what the fit reads: the closing rows and the box lines of players who had one.
     const slim = entries.map((e): PropEntry => {
       const ids = new Set(e.pre!.rows.map((r) => r[0]));
