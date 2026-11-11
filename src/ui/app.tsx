@@ -29,6 +29,7 @@ import { marketFrom, useSlate } from './useSlate';
 import { useLiveSlate } from './liveSlate';
 import { useNews } from './news';
 import { useFit } from './bestBets';
+import { MyBets, TrackerContext, useTracker } from './myBets';
 
 export interface SimState {
   status: 'idle' | 'running' | 'done' | 'error';
@@ -78,6 +79,8 @@ export function App() {
   const [dark, setDark] = useState(prefersDark());
   // The pick model fitted to graded prop lines, which prices props wherever it applies.
   const fit = useFit(url.league);
+  // Bets logged on this device, and the bankroll stakes are sized from.
+  const tracker = useTracker();
   // Simulated games on the current date with posted lines, for the slate board and parlays.
   const slate = useSlate(url.league, url.date!, board.status === 'ok' ? board.games : NO_GAMES, url.seed, url.game, url.view === 'slate');
 
@@ -395,6 +398,7 @@ export function App() {
   );
 
   return (
+    <TrackerContext.Provider value={tracker}>
     <div class="app">
       <TopBar
         view={url.view}
@@ -407,6 +411,8 @@ export function App() {
       />
       {url.view === 'record' ? (
         <TrackRecord league={url.league} />
+      ) : url.view === 'bets' ? (
+        <MyBets league={url.league} />
       ) : url.view === 'slate' ? (
         <SlateBoard
           league={url.league}
@@ -539,6 +545,7 @@ export function App() {
         <ProxySettings />
       </footer>
     </div>
+    </TrackerContext.Provider>
   );
 }
 

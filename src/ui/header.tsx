@@ -35,6 +35,7 @@ export function TopBar(props: {
             ['game', 'Games'],
             ['slate', 'Slate'],
             ['record', 'Track record'],
+            ['bets', 'My bets'],
           ] as [View, string][]
         ).map(([v, label]) => (
           <button key={v} type="button" role="radio" aria-checked={props.view === v} class={props.view === v ? 'on' : ''} onClick={() => props.onView(v)}>
@@ -49,7 +50,7 @@ export function TopBar(props: {
           </button>
         ))}
       </div>
-      <div class="datebar" hidden={props.view === 'record'}>
+      <div class="datebar" hidden={props.view === 'record' || props.view === 'bets'}>
         <button type="button" class="icon-btn" aria-label="Previous day" onClick={() => shift(-1)}>
           ‹
         </button>
