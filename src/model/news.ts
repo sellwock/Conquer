@@ -1,7 +1,8 @@
-// Injury news: a player newly ruled out for a game that hasn't tipped, and how it moves the game's
-// player props. The simulation plays the game twice on the same random numbers, once as reported
-// (he's out) and once with him in, so each prop's shift is the news itself. Books move the spread
-// within minutes of a scratch; whether teammates' props catch up as fast is what this looks for.
+// Injury news: a player newly ruled out for a game that hasn't tipped, or one who was out and now
+// isn't, and how it moves the game's player props. The simulation plays the game twice on the same
+// random numbers, once as reported and once the other way (him in after a scratch, him out after a
+// return), so each prop's shift is the news itself. Books move the spread within minutes; whether
+// teammates' props catch up as fast is what this looks for.
 import { buildSpec } from './build';
 import { defaultPickMode, evaluate, legsForGame, weightsFor, HIT_FLOOR, MAX_PRICE, type BlendWeights, type GameMarket, type Leg, type PropMarket } from './parlays';
 import { propMarkets, rosterNames } from './props';
@@ -19,14 +20,19 @@ export const FALLBACK_HOURS = 6;
 const NEWS_SIMS = 2000;
 const SAMPLE_GAMES = 10;
 
-/** What the last report said, by athlete id. */
-export type InjuryState = Record<string, { status: string; out: boolean; since?: string; team: string }>;
+/** A report naming fewer teams than this may be incomplete, so a player missing from it isn't news. */
+export const FULL_REPORT_TEAMS = 15;
+
+/** What the last report said, by athlete id. The name is kept so a player who drops off the next report can still be named. */
+export type InjuryState = Record<string, { status: string; out: boolean; since?: string; team: string; name?: string }>;
 
 export function injuryState(feed: InjuryReport[]): InjuryState {
-  return Object.fromEntries(feed.map((r) => [r.athleteId, { status: r.injury.status, out: r.injury.out, team: r.teamId, ...(r.injury.since ? { since: r.injury.since } : {}) }]));
+  return Object.fromEntries(feed.map((r) => [r.athleteId, { status: r.injury.status, out: r.injury.out, team: r.teamId, name: r.name, ...(r.injury.since ? { since: r.injury.since } : {}) }]));
 }
 
 export interface NewsEvent {
+  /** "out": newly ruled out (also what an event without a kind is). "back": was out, now isn't. */
+  kind?: 'out' | 'back';
   /** One per player per status update. */
   key: string;
   athleteId: string;
@@ -47,6 +53,10 @@ export interface NewsEvent {
  * games that haven't tipped. A move to out from another status (day-to-day, questionable) is news
  * whatever its date. A player missing from `prev` altogether counts only if his entry is from the
  * last few hours: ESPN refreshes the date on long-term injuries too, and a report can miss a team.
+ *
+ * And the other way: players `prev` had out who are now listed as something else, or have left a
+ * report that still names most teams. An upgrade to day-to-day is no promise he plays; the event
+ * carries his new status so the reader can judge.
  */
 export function findNews(feed: InjuryReport[], prev: InjuryState | undefined, games: ScoreboardGame[], now = Date.now()): NewsEvent[] {
   const next = new Map<string, ScoreboardGame>();
@@ -75,6 +85,30 @@ export function findNews(feed: InjuryReport[], prev: InjuryState | undefined, ga
       tip: g.date,
     });
   }
+  const listed = new Map(feed.map((r) => [r.athleteId, r]));
+  const full = new Set(feed.map((r) => r.teamId)).size >= FULL_REPORT_TEAMS;
+  for (const [athleteId, before] of Object.entries(prev ?? {})) {
+    if (!before.out) continue;
+    const r = listed.get(athleteId);
+    if (r ? r.injury.out : !full || !before.name) continue;
+    const teamId = r?.teamId ?? before.team;
+    const g = next.get(teamId);
+    if (!g) continue;
+    const since = r?.injury.since;
+    out.push({
+      kind: 'back',
+      key: `${athleteId}|back|${since ?? g.id}`,
+      athleteId,
+      name: r?.name ?? before.name!,
+      teamId,
+      status: r ? r.injury.status : 'Off the injury report',
+      ...(since ? { since } : {}),
+      ...(r?.note ? { note: r.note } : {}),
+      was: before.status,
+      gameId: g.id,
+      tip: g.date,
+    });
+  }
   return out;
 }
 
@@ -98,9 +132,10 @@ export interface NewsRow {
   line: number;
   over: number;
   under: number;
-  /** Simulated average with the scratched player out (as reported), and with him in. */
+  /** Simulated average with the player in the news out, and with him in. */
   meanOut: number;
   meanWith: number;
+  /** As reported minus the other way: what the news does to this prop. */
   shift: number;
   /** The side the news points to, priced the way the app prices props. */
   side: 'over' | 'under';
@@ -116,12 +151,12 @@ export interface NewsPricing {
   event: NewsEvent;
   game: GameData;
   label: string;
-  /** His projected minutes had he played. */
+  /** His projected minutes when he plays. */
   minutes: number;
   provider?: string;
   fetchedAt: number;
   sims: number;
-  /** Every priced prop, as reported and with him in, for logging. */
+  /** Every priced prop as reported, and each one's simulated mean the other way, for logging. */
   out: PropMarket[];
   withMeans: Map<string, number>;
   /** Props the news moves, the side it points to first; strongest first. */
@@ -131,9 +166,9 @@ export interface NewsPricing {
 const propKey = (athleteId: string, stat: string) => `${athleteId}|${stat}`;
 
 /**
- * Prices one news event: loads the game, applies `feed`, simulates it as reported and with the
- * scratched player in, and reads the book's current prop lines. Null when he wasn't projected for
- * real minutes (nothing to move) or isn't on the roster.
+ * Prices one news event: loads the game, applies `feed`, simulates it as reported and the other
+ * way (a scratched player in, a returning one out), and reads the book's current prop lines. Null
+ * when he isn't projected for real minutes (nothing to move) or isn't on the roster.
  */
 export async function priceNews(
   league: LeagueId,
@@ -146,15 +181,18 @@ export async function priceNews(
   const g = withReport(opts.game ?? (await loadGame(league, event.gameId, { sampleGames: opts.sampleGames ?? SAMPLE_GAMES, signal: opts.signal })), feed);
   const team = [g.home, g.away].find((t) => t.players.some((p) => p.id === event.athleteId));
   if (!team) return null;
-  const base = { outs: new Set<string>(), whistle: 1, homeCourt: true, minutesMode: 'projected' as const };
-  const asReported = buildSpec(g, { ...base, ins: new Set() });
-  const withHim = buildSpec(g, { ...base, ins: new Set([event.athleteId]) });
+  const back = event.kind === 'back';
+  const base = { whistle: 1, homeCourt: true, minutesMode: 'projected' as const };
+  const asReported = buildSpec(g, { ...base, outs: new Set(), ins: new Set() });
+  const otherWay = buildSpec(g, { ...base, outs: new Set(back ? [event.athleteId] : []), ins: new Set(back ? [] : [event.athleteId]) });
+  // The build in which he plays: as reported after a return, the other way after a scratch.
+  const withHim = back ? asReported : otherWay;
   const plan = team.id === g.home.id ? withHim.plans.home : withHim.plans.away;
   const minutes = plan.minutes[event.athleteId] ?? 0;
   if (minutes < NEWS_MIN_MINUTES) return null;
   // The same seed for both, so the shift is the news and not simulation noise.
   const seed = `news-${event.gameId}-${event.athleteId}`;
-  const [oOut, oWith] = [await simulate(asReported.spec, sims, seed, { players: true }), await simulate(withHim.spec, sims, seed, { players: true })];
+  const [oOut, oWith] = [await simulate(asReported.spec, sims, seed, { players: true }), await simulate(otherWay.spec, sims, seed, { players: true })];
   const board = await loadProps(league, event.gameId, opts.signal, false, { home: g.home.abbr, away: g.away.abbr });
   const label = `${g.away.abbr} @ ${g.home.abbr}`;
   const names = rosterNames(g);
@@ -168,9 +206,9 @@ export async function priceNews(
   const rows: NewsRow[] = [];
   for (const m of out) {
     const k = propKey(m.athleteId, m.stat);
-    const meanWith = withMeans.get(k);
-    if (meanWith == null) continue;
-    const shift = m.mean - meanWith;
+    const other = withMeans.get(k);
+    if (other == null) continue;
+    const shift = m.mean - other;
     // Small moves are noise next to the book's own margin.
     if (Math.abs(shift) < (m.stat === 'tpm' ? 0.2 : 0.5)) continue;
     const side = shift > 0 ? 'over' : 'under';
@@ -185,8 +223,8 @@ export async function priceNews(
       line: m.line,
       over: m.over,
       under: m.under,
-      meanOut: m.mean,
-      meanWith,
+      meanOut: back ? other : m.mean,
+      meanWith: back ? m.mean : other,
       shift,
       side,
       price: leg.price,

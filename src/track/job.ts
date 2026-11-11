@@ -320,12 +320,13 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
               provider: p.provider,
               n: p.sims,
               rows,
+              ...(e.kind === 'back' ? { kind: 'back' as const } : {}),
               out: { athleteId: e.athleteId, name: e.name, status: e.status, ...(e.since ? { since: e.since } : {}), minutes: round(p.minutes, 1) },
               meanWith: rows.map(([id, stat]) => round(p.withMeans.get(`${id}|${stat}`) ?? NaN, 1)),
             };
             put(pp, { ...withPlayers(prevP, p.out), news: [...(prevP.news ?? []).filter((n) => n.out.athleteId !== e.athleteId), snap] });
             report.propsNews++;
-            say(`news     ${league} ${e.name} out for ${p.label}: ${rows.length} props, ${p.rows.filter((r) => r.pick).length} picks`);
+            say(`news     ${league} ${e.name} ${e.kind === 'back' ? 'back' : 'out'} for ${p.label}: ${rows.length} props, ${p.rows.filter((r) => r.pick).length} picks`);
           } catch (err) {
             if ((err as { status?: number }).status !== 404) report.errors.push(`${league} news ${e.name}: ${(err as Error).message}`);
           }

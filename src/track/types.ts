@@ -94,16 +94,19 @@ export type PropLogFile = Record<string, PropEntry>;
 /** [athlete id, stat, line, over price, under price] */
 export type CloseLine = [athleteId: string, stat: PropStat, line: number, over: number, under: number];
 
-/** The game's prop lines priced with a newly scratched player out, right after the news. */
+/** The game's prop lines priced right after the news: a newly scratched player out, or a returning one in. */
 export interface NewsSnap extends PropSnap {
+  /** "back" when the player in `out` had been out and now isn't; absent for a scratch. */
+  kind?: 'back';
+  /** The player in the news. */
   out: { athleteId: string; name: string; status: string; since?: string; minutes: number };
-  /** Each row's simulated mean had he played, in row order. */
+  /** Each row's simulated mean the other way (had he played, or after a return had he sat), in row order. */
   meanWith: number[];
 }
 
 /** v1/injuries/{league}.json: the last report the job saw, and recent news it found. */
 export interface InjuryLog {
   updatedAt: string;
-  players: Record<string, { status: string; out: boolean; since?: string; team: string }>;
+  players: Record<string, { status: string; out: boolean; since?: string; team: string; name?: string }>;
   events: (NewsEvent & { seenAt: string })[];
 }
