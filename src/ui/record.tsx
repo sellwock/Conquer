@@ -373,7 +373,7 @@ function PropTable({ rows, league, live }: { rows: GradedProp[]; league: LeagueI
                   {r.news && (
                     <>
                       <br />
-                      {r.news.name} out · sim {r.news.shift > 0 ? '+' : '−'}
+                      {r.news.name} {r.news.back ? 'back' : 'out'} · sim {r.news.shift > 0 ? '+' : '−'}
                       {Math.abs(r.news.shift).toFixed(1)}
                       {r.news.moved ? ` · line moved ${r.news.moved === 'same' ? 'nowhere' : r.news.moved === 'toward' ? 'toward it' : 'away'} by tip` : ''}
                     </>
