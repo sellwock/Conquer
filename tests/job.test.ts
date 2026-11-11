@@ -3,9 +3,10 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setFetch, setStore } from '../src/data/espn/client';
-import { easternYmd, fitPath, injuryLogPath, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
+import { easternYmd, fitPath, historyPath, injuryLogPath, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
 import type { Entry, InjuryLog, LogFile, PropEntry, PropLogFile } from '../src/track/types';
 import { gradeProps } from '../src/track/propGrade';
+import { FIT_FILE_VERSION } from '../src/track/fit';
 import { MODEL_VERSION } from '../src/model/version';
 
 const fx = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/espn/${name}`, import.meta.url), 'utf8'));
@@ -347,12 +348,35 @@ describe('player props in the forward log', () => {
     expect(vance[7]).toBeGreaterThanOrEqual(27);
     expect(e.pre).toBeUndefined();
 
-    // A later run, still mid-game: the saved lines stay as they were.
-    liveAt = { period: 3, clock: '6:00' };
+    // Later in the same half: the saved lines stay as they were.
+    liveAt = { period: 2, clock: '1:00' };
     const before = JSON.stringify(files.get(PROPS));
-    r = await run(io, '2026-01-15T01:45:00Z');
+    r = await run(io, '2026-01-15T01:30:00Z');
     expect(r.propsLive).toBe(0);
     expect(JSON.stringify(files.get(PROPS))).toBe(before);
+
+    // After halftime: one more look, kept apart from the first.
+    liveAt = { period: 3, clock: '6:00' };
+    r = await run(io, '2026-01-15T01:45:00Z');
+    expect(r.propsLive).toBe(1);
+    const again = (files.get(PROPS) as PropLogFile)['401810123'];
+    expect(JSON.stringify(again.live)).toBe(JSON.stringify(e.live));
+    expect(again.live2).toMatchObject({ model: MODEL_VERSION, at: { period: 3, clockSec: 360 } });
+    // And no third.
+    const twice = JSON.stringify(files.get(PROPS));
+    r = await run(io, '2026-01-15T02:00:00Z');
+    expect(r.propsLive).toBe(0);
+    expect(JSON.stringify(files.get(PROPS))).toBe(twice);
+  });
+
+  it('takes no second look when the first came after halftime', async () => {
+    withProps = true;
+    const { io, files } = memoryIO();
+    liveAt = { period: 3, clock: '10:00' };
+    expect((await run(io, '2026-01-15T01:45:00Z')).propsLive).toBe(1);
+    liveAt = { period: 3, clock: '2:00' };
+    expect((await run(io, '2026-01-15T02:00:00Z')).propsLive).toBe(0);
+    expect((files.get(PROPS) as PropLogFile)['401810123'].live2).toBeUndefined();
   });
 
   it('loads nothing more for a live game whose book has no in-game props', async () => {
@@ -428,9 +452,25 @@ describe('player props in the forward log', () => {
     ]);
     // New grades refit the pick model; one game is far too few for coefficients.
     expect(r.fit).toBe(1);
-    expect(files.get(fitPath('nba'))).toEqual({ updatedAt: '2026-01-15T04:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: 20 });
+    expect(files.get(fitPath('nba'))).toEqual({ v: FIT_FILE_VERSION, updatedAt: '2026-01-15T04:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: 20 });
     // Nothing new to grade: the fit is left alone.
     expect((await run(io, '2026-01-15T04:15:00Z')).fit).toBe(0);
+    // A fit file written before the site read something from it is rewritten, once.
+    files.set(fitPath('nba'), { updatedAt: '2026-01-15T04:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: 20 });
+    expect((await run(io, '2026-01-15T04:30:00Z')).fit).toBe(1);
+    expect((files.get(fitPath('nba')) as { v?: number }).v).toBe(FIT_FILE_VERSION);
+    expect((await run(io, '2026-01-15T04:45:00Z')).fit).toBe(0);
+    // A re-simulated history by the current model arrives: refit once, and say what it used.
+    const replayed: PropEntry = { ...props, status: 'final', box: { '4432201': [27, 8, 7, 2], '4432209': null } };
+    files.set(historyPath('nba'), { model: MODEL_VERSION, updatedAt: '2026-01-15T05:00:00.000Z', entries: [replayed] });
+    expect((await run(io, '2026-01-15T05:15:00Z')).fit).toBe(1);
+    expect((files.get(fitPath('nba')) as { history?: unknown }).history).toEqual({ model: MODEL_VERSION, updatedAt: '2026-01-15T05:00:00.000Z' });
+    expect((await run(io, '2026-01-15T05:30:00Z')).fit).toBe(0);
+    // One by another model version is not this model's history.
+    files.set(historyPath('nba'), { model: '0.0.1', updatedAt: '2026-01-15T06:00:00.000Z', entries: [replayed] });
+    expect((await run(io, '2026-01-15T06:15:00Z')).fit).toBe(1);
+    expect((files.get(fitPath('nba')) as { history?: unknown }).history).toBeUndefined();
+    expect((await run(io, '2026-01-15T06:30:00Z')).fit).toBe(0);
   });
 });
 

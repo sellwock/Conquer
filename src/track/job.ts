@@ -20,7 +20,7 @@ import { loadProps } from '../data/espn/props';
 import { num, parseBoxPlayers, parseOdds, periodOf, phaseOf, seasonYear } from '../data/espn/parse';
 import { predictionFrom } from './predict';
 import { easternYmd } from './dates';
-import { buildFit } from './fit';
+import { buildFit, FIT_FILE_VERSION, type FitFile, type PropHistory } from './fit';
 import type { CloseLine, Entry, InjuryLog, LogFile, NewsSnap, PropEntry, PropLogFile, PropRow, PropSnap } from './types';
 
 export interface LogIO {
@@ -99,6 +99,7 @@ export const resultsPath = (league: LeagueId, season: number) => `results/${leag
 export const propsPath = (league: LeagueId, season: number, ymd: string) => `props/${logPath(league, season, ymd)}`;
 export const injuryLogPath = (league: LeagueId) => `injuries/${league}.json`;
 export const fitPath = (league: LeagueId) => `fit/${league}.json`;
+export const historyPath = (league: LeagueId) => `history/props/${league}.json`;
 
 const round = (x: number, d: number) => Math.round(x * 10 ** d) / 10 ** d;
 
@@ -134,7 +135,7 @@ const withPlayers = (prev: PropEntry, markets: PropMarket[]): PropEntry => ({
 });
 
 /** A game's first pre-game snapshot is also kept as its opening lines; later refreshes replace only `pre`. */
-const withSnap = (prev: PropEntry, markets: PropMarket[], key: 'pre' | 'live', snap: PropSnap): PropEntry => ({
+const withSnap = (prev: PropEntry, markets: PropMarket[], key: 'pre' | 'live' | 'live2', snap: PropSnap): PropEntry => ({
   ...withPlayers(prev, markets),
   ...(key === 'pre' && !prev.pre && !prev.open ? { open: snap } : {}),
   [key]: snap,
@@ -255,7 +256,11 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
       const ymd = easternYmd(new Date(g.date));
       const pp = propsPath(league, seasonYear(g.date, league), ymd);
       const prevP = propFile(pp)[g.id];
-      if (prevP?.live) continue;
+      // One snapshot per game, and a second after halftime when the first came before it: lines
+      // in the third quarter are a different bet from lines in the second.
+      const firstHalf = (at?: PropSnap['at']) => !!at && playedShare(league, at.period, at.clockSec) < 0.5;
+      const key = !prevP?.live ? 'live' : !prevP.live2 && firstHalf(prevP.live.at) && playedShare(league, g.period ?? 1, g.clockSec ?? 0) >= 0.5 ? 'live2' : undefined;
+      if (!key) continue;
       if (requestCount() > o.budget) {
         report.errors.push(`${league}: request budget reached; live props for ${g.away.abbr} @ ${g.home.abbr} skipped`);
         break;
@@ -267,9 +272,10 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
         const gd = r.game;
         const markets = r.market?.props ?? [];
         if (gd.phase !== 'in' || !midGame(league, gd.period, gd.clockSec) || !markets.length) continue;
+        if (key === 'live2' && playedShare(league, gd.period, gd.clockSec) < 0.5) continue;
         put(
           pp,
-          withSnap(prevP ?? propBase(league, gd), markets, 'live', {
+          withSnap(prevP ?? propBase(league, gd), markets, key, {
             model: MODEL_VERSION,
             takenAt: o.now.toISOString(),
             provider: r.market!.propsProvider,
@@ -314,12 +320,13 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
               provider: p.provider,
               n: p.sims,
               rows,
+              ...(e.kind === 'back' ? { kind: 'back' as const } : {}),
               out: { athleteId: e.athleteId, name: e.name, status: e.status, ...(e.since ? { since: e.since } : {}), minutes: round(p.minutes, 1) },
               meanWith: rows.map(([id, stat]) => round(p.withMeans.get(`${id}|${stat}`) ?? NaN, 1)),
             };
             put(pp, { ...withPlayers(prevP, p.out), news: [...(prevP.news ?? []).filter((n) => n.out.athleteId !== e.athleteId), snap] });
             report.propsNews++;
-            say(`news     ${league} ${e.name} out for ${p.label}: ${rows.length} props, ${p.rows.filter((r) => r.pick).length} picks`);
+            say(`news     ${league} ${e.name} ${e.kind === 'back' ? 'back' : 'out'} for ${p.label}: ${rows.length} props, ${p.rows.filter((r) => r.pick).length} picks`);
           } catch (err) {
             if ((err as { status?: number }).status !== 404) report.errors.push(`${league} news ${e.name}: ${(err as Error).message}`);
           }
@@ -431,12 +438,18 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
 
     // --- Pick model --------------------------------------------------------------------------
     // Refit from every graded prop line of the league whenever new grades came in (or no fit
-    // exists yet): the site prices props with it and shows its out-of-sample record.
+    // exists yet, or it predates something the site now reads, or the replayed history changed):
+    // the site prices props with it and shows its out-of-sample record.
     try {
       const listed = o.io.read<{ files: string[] }>('index.json')?.files ?? [];
       const propPaths = [...new Set([...listed, ...dirty])].filter((f) => f.startsWith(`props/${league}/`));
-      if (propPaths.length && (report.propsGraded > gradedBefore || !o.io.read(fitPath(league)))) {
-        o.io.write(fitPath(league), buildFit(propPaths.flatMap((f) => Object.values(propFile(f))), league, o.now));
+      // A re-simulation of the season by the current model, when scripts/props-backtest.ts has made one.
+      const history = o.io.read<PropHistory>(historyPath(league));
+      const had = o.io.read<FitFile>(fitPath(league));
+      const usable = history?.model === MODEL_VERSION && history.entries.length ? history : undefined;
+      const stale = !had || had.v !== FIT_FILE_VERSION || had.history?.updatedAt !== usable?.updatedAt;
+      if (propPaths.length && (report.propsGraded > gradedBefore || stale)) {
+        o.io.write(fitPath(league), buildFit(propPaths.flatMap((f) => Object.values(propFile(f))), league, o.now, { model: MODEL_VERSION, history: usable }));
         report.fit++;
         say(`fit      ${league}: refit the pick model from ${propPaths.length} prop log file${propPaths.length === 1 ? '' : 's'}`);
       }

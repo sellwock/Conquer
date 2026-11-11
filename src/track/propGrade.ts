@@ -36,7 +36,7 @@ export interface GradedProp {
   now?: number;
   at?: PropSnap['at'];
   /** News picks: the scratched player, and how the book's line moved by just before tip. */
-  news?: { name: string; shift: number; moved?: 'toward' | 'away' | 'same' };
+  news?: { name: string; shift: number; back?: boolean; moved?: 'toward' | 'away' | 'same' };
 }
 
 export interface GradedSnap {
@@ -66,15 +66,14 @@ interface Side {
 export function sidesOf(r: PropRow, w = PROP_SIM_WEIGHT): [Side, Side] {
   const [, , , over, under, pOver, pPush] = r;
   const pOverDecided = pPush < 1 ? pOver / (1 - pPush) : 0;
-  const pUnder = Math.max(0, 1 - pOver - pPush);
   const [mOver, mUnder] = noVig(over, under);
-  const side = (s: 'over' | 'under', price: number, p: number, pm: number, pWin: number): Side => {
+  const side = (s: 'over' | 'under', price: number, p: number, pm: number): Side => {
     const pPick = w * p + (1 - w) * pm;
-    // As `evaluate` scales a leg's simulated outcomes to its blended chance.
-    const scale = p > 0 ? pPick / p : 1;
-    return { side: s, price, pSim: p, pMarket: pm, pPick, pHit: Math.min(1, (pWin + pPush) * scale), ev: (pWin * toDecimal(price) + pPush) * scale - 1 };
+    // A push hands the stake back; otherwise the bet wins at the blended chance.
+    const decided = 1 - pPush;
+    return { side: s, price, pSim: p, pMarket: pm, pPick, pHit: pPush + decided * pPick, ev: pPush + decided * pPick * toDecimal(price) - 1 };
   };
-  return [side('over', over, pOverDecided, mOver, pOver), side('under', under, 1 - pOverDecided, mUnder, pUnder)];
+  return [side('over', over, pOverDecided, mOver), side('under', under, 1 - pOverDecided, mUnder)];
 }
 
 /** Order of a logged box line. */
@@ -149,7 +148,7 @@ function gradeSnap(e: PropEntry, snap: PropSnap, news?: NewsSnap): GradedSnap {
     if (final !== line) brier.push([over.pSim, over.pMarket, final > line ? 1 : 0]);
     for (const s of [over, under]) {
       if (news && !(Math.abs(shift) >= (stat === 'tpm' ? 0.2 : 0.5) && (s.side === 'over') === shift > 0)) continue;
-      if (s.ev > 0 && s.pHit >= HIT_FLOOR[1] && s.price <= MAX_PRICE[1]) picks.push({ s, grade: news ? (x) => ({ ...grade(x), news: { name: news.out.name, shift } }) : grade });
+      if (s.ev > 0 && s.pHit >= HIT_FLOOR[1] && s.price <= MAX_PRICE[1]) picks.push({ s, grade: news ? (x) => ({ ...grade(x), news: { name: news.out.name, shift, ...(news.kind === 'back' ? { back: true } : {}) } }) : grade });
     }
   }
   const top = picks
