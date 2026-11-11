@@ -1,0 +1,62 @@
+name: Props history
+
+# Re-simulates this season's finished NBA games with the current model against the closing prop
+# lines ESPN's feed keeps, and saves the rows to the `data` branch (v1/history/props/nba.json).
+# The forward log's pick model trains on them, so it prices today's lines with a fit of the model
+# that simulated them. Runs when the model version changes, weekly as a backup, or by hand.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [src/model/version.ts, scripts/props-backtest.ts, .github/workflows/props-history.yml]
+  schedule:
+    - cron: '41 10 * * 1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: props-history
+  cancel-in-progress: false
+
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: .cache/bt
+          key: bt-espn-nba-history-${{ github.run_id }}
+          restore-keys: bt-espn-nba-
+      - name: Replay the season's prop lines with the current model
+        run: npx tsx scripts/props-backtest.ts --league nba --season --max 2000 --sims 1000 --cache .cache/bt --history data/v1/history/props/nba.json --out props.md
+      - name: Commit to the data branch
+        working-directory: data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "Nothing changed."; exit 0; fi
+          git commit -q -m "Props history $(date -u +%Y-%m-%dT%H:%MZ)"
+          for attempt in 1 2 3; do
+            if git pull -q --rebase origin data && git push -q origin HEAD:data; then exit 0; fi
+            sleep $((attempt * 5))
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: props-history
+          path: props.md
+          if-no-files-found: ignore

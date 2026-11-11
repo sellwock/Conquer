@@ -6,7 +6,9 @@ import { MODEL_VERSION } from '../model/version';
 import { fmtAmerican } from '../lib/stats';
 import { gradeEntry, summarize, type Graded, type Record3, type Summary } from '../track/grade';
 import { gradeNews, gradeProps, summarizeProps, TOP_PER_GAME, type GradedProp, type GradedSnap, type PropSummary, type PropWhen } from '../track/propGrade';
-import { loadForwardLog, loadPropLog, type ForwardLog } from '../track/forward';
+import { loadFit, loadForwardLog, loadPropLog, type ForwardLog } from '../track/forward';
+import type { FitFile, FitPart, FitTest } from '../track/fit';
+import { TESTED_MIN_PICKS, fitVerdict, fittedFrom, logit } from '../model/propFit';
 import { runBacktest, type BacktestProgress } from '../track/backtest';
 import type { Entry, PropEntry, PropSnap } from '../track/types';
 import { Reliability } from './charts';
@@ -251,6 +253,86 @@ function PropStats({ s, when }: { s: PropSummary; when: PropWhen }) {
   );
 }
 
+const signed4 = (x: number) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${Math.abs(x).toFixed(4)}`;
+const signedPct = (x: number) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${pct(Math.abs(x))}`;
+
+function FitTestStats({ t, what }: { t: FitTest; what: string }) {
+  const n = t.picks.win + t.picks.loss;
+  const moved = t.moved && t.moved.toward + t.moved.away + t.moved.same;
+  return (
+    <section class="card stats-row" aria-label={`Fitted picks ${what}`}>
+      <div class="stat">
+        <span class="kicker">Fitted picks {what}</span>
+        <strong>{n ? pct(t.picks.win / n) : '–'}</strong>
+        <span class="muted">
+          {t.picks.win}-{t.picks.loss} over {t.games} game{t.games === 1 ? '' : 's'} · the fit said {pct(t.picks.said)}
+        </span>
+      </div>
+      <div class="stat">
+        <span class="kicker">Return per bet</span>
+        <strong class={t.picks.lo > 0 ? 'pos' : t.picks.hi < 0 ? 'neg' : ''}>{signedPct(t.picks.roi)}</strong>
+        <span class="muted">
+          95% range {signedPct(t.picks.lo)} to {signedPct(t.picks.hi)}, staking 1 unit on each at the listed price
+        </span>
+      </div>
+      <div class="stat">
+        <span class="kicker">Every line, against the book</span>
+        <strong class={t.brier.hi < 0 ? 'pos' : t.brier.lo > 0 ? 'neg' : ''}>{signed4(t.brier.diff)}</strong>
+        <span class="muted">
+          Brier score on the over: fit {t.brier.fit.toFixed(4)}, book {t.brier.market.toFixed(4)} over {t.lines} lines (negative is better; range {signed4(t.brier.lo)} to{' '}
+          {signed4(t.brier.hi)})
+        </span>
+      </div>
+      {t.moved && moved ? (
+        <div class="stat">
+          <span class="kicker">Line moved toward the pick</span>
+          <strong>{pct(t.moved.toward / moved, 0)}</strong>
+          <span class="muted">
+            {t.moved.toward} of {moved} picks by the close ({t.moved.away} away, {t.moved.same} unchanged)
+          </span>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/** What the scheduled job's fitted pick model has done on days it hadn't seen. */
+function FitRecord({ part, live }: { part: FitPart; live: boolean }) {
+  const t = part.test;
+  const verdict = fitVerdict(t?.picks);
+  const head = !t ? 'Not enough days to test yet' : verdict === 'tested' ? 'Tested: ahead, beyond luck' : verdict === 'promising' ? 'Ahead so far, not proven' : 'Not ahead';
+  // The fit in plain numbers: an over the book calls a coin flip, where the simulation agrees and where it doesn't.
+  const at = (sim: number) => fittedFrom(part.coef, [1, 0, logit(sim) - logit(0.5)]);
+  return (
+    <>
+      <section class="card">
+        <header class="card-head">
+          <h2>Fitted picks, out of sample</h2>
+        </header>
+        <div class="verdict">
+          <strong class={verdict === 'tested' ? 'pos' : ''}>{head}</strong>
+          <span class="muted">
+            A small model fitted to {part.lines} graded {live ? 'live' : 'pre-game'} lines from {part.games} games: the book's own odds and how far the simulation disagrees with them.
+            Each day's picks come from a fit of earlier days only, so this record is one it couldn't have seen coming.{' '}
+            {part.resimulated
+              ? `${part.resimulated} of the games were replayed with the current model against the book's kept closing lines, because the log priced them with an older model. `
+              : ''}
+            {verdict === 'tested'
+              ? ''
+              : `"Tested" needs ${TESTED_MIN_PICKS} picks and a return whose whole range is above zero.`}
+          </span>
+        </div>
+        <p class="muted small">
+          What it has learned so far: where the book prices an over at 50%, the fit puts it at {pct(at(0.5), 0)} when the simulation agrees, {pct(at(0.35), 0)} when the simulation
+          says 35% and {pct(at(0.65), 0)} when it says 65%. A pick is one bet per player per game with at least a 3% expected return at the listed price. Not advice.
+        </p>
+      </section>
+      {t && <FitTestStats t={t} what={live ? 'mid-game' : 'before tip-off'} />}
+      {part.open && <FitTestStats t={part.open} what="at each game's first lines" />}
+    </>
+  );
+}
+
 function PropTable({ rows, league, live }: { rows: GradedProp[]; league: LeagueId; live: boolean }) {
   const cell = (r: string) => (r === 'win' ? <span class="pos">Won</span> : r === 'loss' ? <span class="neg">Lost</span> : <span class="muted">Push</span>);
   return (
@@ -320,15 +402,21 @@ function PropRecord(props: { league: LeagueId; model: string }) {
   const [when, setWhen] = useState<PropWhen>('pre');
   const [log, setLog] = useState<{ status: 'loading' | 'ok' | 'error'; entries: PropEntry[]; error?: string }>({ status: 'loading', entries: [] });
   const [all, setAll] = useState(false);
+  const [fit, setFit] = useState<FitFile>();
 
   useEffect(() => {
     const ac = new AbortController();
     setLog({ status: 'loading', entries: [] });
+    setFit(undefined);
     loadPropLog(props.league, ac.signal)
       .then((entries) => setLog({ status: 'ok', entries }))
       .catch((e) => {
         if (e?.name !== 'AbortError') setLog({ status: 'error', entries: [], error: e?.message ?? String(e) });
       });
+    // The fit is extra: the record shows without it.
+    loadFit(props.league, ac.signal)
+      .then(setFit)
+      .catch(() => {});
     return () => ac.abort();
   }, [props.league]);
 
@@ -346,6 +434,7 @@ function PropRecord(props: { league: LeagueId; model: string }) {
   const summary = useMemo(() => summarizeProps(snaps), [snaps]);
   const top = useMemo(() => snaps.flatMap((s) => s.top), [snaps]);
   const waiting = logged.filter((e) => e.status === 'open').length;
+  const fitPart = when === 'news' ? undefined : fit?.[when];
 
   return (
     <>
@@ -392,6 +481,7 @@ function PropRecord(props: { league: LeagueId; model: string }) {
           </p>
         )}
       </section>
+      {fitPart && <FitRecord part={fitPart} live={when === 'live'} />}
       {snaps.length > 0 && (
         <>
           <PropStats s={summary} when={when} />

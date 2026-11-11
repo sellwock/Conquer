@@ -84,7 +84,9 @@ export function Method(props: { game: GameData }) {
         every game in progress (2,000 sims each from its current state, refreshed every two minutes while open) and builds live parlays across them. The
         in-game book's live moneyline, spread and total join those parlays too, priced from the simulated final scores. A game in progress opens
         simulated from now, and its Outlook tab leads with the top live bets. The Track record grades props going forward: the scheduled job saves each
-        game's posted lines with the simulation's chances before tip-off, once more mid-game from the in-game book, and right after a player is ruled out. The
+        game's posted lines with the simulation's chances before tip-off, once more mid-game from the in-game book, and right after a player is ruled out. From
+        those graded lines it also fits a small model of how often an over wins given the book's odds and the simulation's disagreement, and scores each day's
+        picks with a fit of earlier days only; the Track record shows that out-of-sample record, and calls it tested only once it's clearly ahead. The
         slate board's Injury news card watches ESPN's injury report every two minutes and reprices any game where someone with real minutes was newly ruled
         out, with and without him, to show which props his absence moves before the book catches up. These are suggestions from a model,
         not advice.

@@ -72,13 +72,15 @@ export interface PropEntry {
   status: 'open' | 'final' | 'void';
   /** Short names of the logged players. */
   players: Record<string, string>;
+  /** The first pre-game snapshot, kept as it was: the lines when the job first saw them posted. */
+  open?: PropSnap;
   /** Saved before tip-off (the last refresh wins). */
   pre?: PropSnap;
   /** Saved once, mid-game, from the book's in-game feed. */
   live?: PropSnap;
   /** Saved when a player was newly ruled out before tip: one per scratched player. */
   news?: NewsSnap[];
-  /** The pre-game book's lines in the last 20 minutes before tip, for games with news. */
+  /** The pre-game book's lines in the last 20 minutes before tip (until model 1.2.0, only for games with news). */
   close?: { takenAt: string; lines: CloseLine[] };
   /** Each logged player's final [pts, reb, ast, tpm], or null if they didn't play (their props are void). */
   box?: Record<string, [number, number, number, number] | null>;

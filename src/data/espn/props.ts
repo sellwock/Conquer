@@ -17,6 +17,10 @@ export interface PropLine {
   /** American prices. */
   over: number;
   under: number;
+  /** The line and prices the book first posted, when the feed carries them. */
+  open?: { line: number; over: number; under: number };
+  /** When the book last changed this line or its prices (ISO), per the feed. */
+  updated?: string;
 }
 
 export interface PropBoard {
@@ -59,7 +63,19 @@ export function parsePropBets(items: J[]): PropLine[] {
     const over = americanOf(a?.odds?.american?.value), under = americanOf(b?.odds?.american?.value);
     if (!Number.isFinite(line) || line !== lineB || over == null || under == null) continue;
     const [athleteId, stat] = k.split('|') as [string, PropStat];
-    out.push({ athleteId, stat, line, over, under });
+    const openLine = Number(a?.open?.target?.value ?? a?.odds?.total?.open);
+    const openOver = americanOf(a?.odds?.american?.open), openUnder = americanOf(b?.odds?.american?.open);
+    // The later of the two sides' update times.
+    const updated = [a?.lastUpdated, b?.lastUpdated].filter((t): t is string => typeof t === 'string' && !Number.isNaN(Date.parse(t))).sort().pop();
+    out.push({
+      athleteId,
+      stat,
+      line,
+      over,
+      under,
+      ...(Number.isFinite(openLine) && openOver != null && openUnder != null ? { open: { line: openLine, over: openOver, under: openUnder } } : {}),
+      ...(updated ? { updated } : {}),
+    });
   }
   return out;
 }

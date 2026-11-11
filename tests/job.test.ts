@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { setFetch, setStore } from '../src/data/espn/client';
-import { easternYmd, injuryLogPath, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
+import { easternYmd, fitPath, historyPath, injuryLogPath, logPath, playedShare, propsPath, resultsPath, runJob, type LogIO } from '../src/track/job';
 import type { Entry, InjuryLog, LogFile, PropEntry, PropLogFile } from '../src/track/types';
 import { gradeProps } from '../src/track/propGrade';
 import { MODEL_VERSION } from '../src/model/version';
@@ -280,6 +280,32 @@ describe('player props in the forward log', () => {
     expect((files.get('index.json') as { files: string[] }).files).toEqual([PRE_PATH, PROPS]);
   });
 
+  it('keeps the first snapshot as the opening lines while later refreshes replace the pre-game one', async () => {
+    withProps = true;
+    const { io, files } = memoryIO();
+    let r = await run(io, '2026-01-16T20:00:00Z');
+    expect(r.propsOpen).toBe(1);
+    r = await run(io, '2026-01-16T23:00:00Z');
+    expect(r.refreshed).toBe(1);
+    expect(r.propsOpen).toBe(0);
+    const e = (files.get(PROPS) as PropLogFile)['401810131'];
+    expect(e.open!.takenAt).toBe('2026-01-16T20:00:00.000Z');
+    expect(e.pre!.takenAt).toBe('2026-01-16T23:00:00.000Z');
+    expect(e.open!.rows).toHaveLength(e.pre!.rows.length);
+  });
+
+  it('saves the closing lines just before tip for every game with props, once', async () => {
+    withProps = true;
+    const { io, files } = memoryIO();
+    let r = await run(io, '2026-01-16T22:00:00Z');
+    expect(r.propsClose).toBe(0);
+    r = await run(io, '2026-01-17T00:15:00Z');
+    expect(r.propsClose).toBe(1);
+    expect((files.get(PROPS) as PropLogFile)['401810131'].close!.lines).toContainEqual(['4432101', 'pts', 20.5, -110, -110]);
+    r = await run(io, '2026-01-17T00:25:00Z');
+    expect(r.propsClose).toBe(0);
+  });
+
   it("keeps the game's snapshot when the prop feed fails", async () => {
     withProps = true;
     coreStatus = 403;
@@ -400,6 +426,22 @@ describe('player props in the forward log', () => {
       ['pts', 'over', 27, 'win'],
       ['pra', 'under', 42, 'loss'],
     ]);
+    // New grades refit the pick model; one game is far too few for coefficients.
+    expect(r.fit).toBe(1);
+    expect(files.get(fitPath('nba'))).toEqual({ updatedAt: '2026-01-15T04:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: 20 });
+    // Nothing new to grade: the fit is left alone.
+    expect((await run(io, '2026-01-15T04:15:00Z')).fit).toBe(0);
+    // A re-simulated history by the current model arrives: refit once, and say what it used.
+    const replayed: PropEntry = { ...props, status: 'final', box: { '4432201': [27, 8, 7, 2], '4432209': null } };
+    files.set(historyPath('nba'), { model: MODEL_VERSION, updatedAt: '2026-01-15T05:00:00.000Z', entries: [replayed] });
+    expect((await run(io, '2026-01-15T05:15:00Z')).fit).toBe(1);
+    expect((files.get(fitPath('nba')) as { history?: unknown }).history).toEqual({ model: MODEL_VERSION, updatedAt: '2026-01-15T05:00:00.000Z' });
+    expect((await run(io, '2026-01-15T05:30:00Z')).fit).toBe(0);
+    // One by another model version is not this model's history.
+    files.set(historyPath('nba'), { model: '0.0.1', updatedAt: '2026-01-15T06:00:00.000Z', entries: [replayed] });
+    expect((await run(io, '2026-01-15T06:15:00Z')).fit).toBe(1);
+    expect((files.get(fitPath('nba')) as { history?: unknown }).history).toBeUndefined();
+    expect((await run(io, '2026-01-15T06:30:00Z')).fit).toBe(0);
   });
 });
 
