@@ -1,11 +1,11 @@
 {
 "v": 2,
-"updatedAt": "2026-11-12T02:30:23.128Z",
+"updatedAt": "2026-11-12T02:45:20.409Z",
 "league": "nba",
 "model": "1.2.0",
 "history": {"model":"1.2.0","updatedAt":"2026-11-11T23:30:52.117Z"},
 "minEdge": 0.03,
 "minTrainGames": 20,
-"pre": {"coef":[-0.0374,0.9788,0.1263],"lines":14161,"games":161,"models":{"1.2.0":14161},"flat":{"over":{"win":6669,"loss":7492,"roi":-0.1095},"under":{"win":7492,"loss":6669,"roi":-0.0164}},"resimulated":152,"test":{"lines":11707,"games":133,"days":18,"brier":{"fit":0.2479,"market":0.2482,"diff":-0.0003,"lo":-0.0012,"hi":0.0005},"picks":{"win":93,"loss":78,"units":6.54,"roi":0.0383,"lo":-0.0979,"hi":0.1776,"said":0.551,"unders":168},"moved":{"toward":3,"away":0,"same":6}}},
-"live": {"coef":[-0.0221,0.9305,0.1254],"lines":5969,"games":73,"models":{"1.1.0":4854,"1.2.0":1115},"flat":{"over":{"win":2864,"loss":3105,"roi":-0.0968},"under":{"win":3105,"loss":2864,"roi":-0.0251}},"test":{"lines":3128,"games":40,"days":7,"brier":{"fit":0.2464,"market":0.2478,"diff":-0.0014,"lo":-0.0025,"hi":-0.0003},"picks":{"win":31,"loss":21,"units":8.35,"roi":0.1606,"lo":-0.0022,"hi":0.3146,"said":0.5418,"unders":51}}}
+"pre": {"coef":[-0.0368,0.9776,0.1267],"lines":14324,"games":163,"models":{"1.2.0":14324},"flat":{"over":{"win":6748,"loss":7576,"roi":-0.1092},"under":{"win":7576,"loss":6748,"roi":-0.0167}},"resimulated":152,"test":{"lines":11870,"games":135,"days":18,"brier":{"fit":0.2479,"market":0.2483,"diff":-0.0003,"lo":-0.0012,"hi":0.0005},"picks":{"win":94,"loss":79,"units":6.42,"roi":0.0371,"lo":-0.0998,"hi":0.1721,"said":0.5509,"unders":170},"moved":{"toward":3,"away":0,"same":8}}},
+"live": {"coef":[-0.0355,0.9213,0.1151],"lines":6119,"games":75,"models":{"1.1.0":4854,"1.2.0":1265},"flat":{"over":{"win":2923,"loss":3196,"roi":-0.1005},"under":{"win":3196,"loss":2923,"roi":-0.0211}},"test":{"lines":3278,"games":42,"days":7,"brier":{"fit":0.2466,"market":0.2479,"diff":-0.0013,"lo":-0.0024,"hi":-0.0002},"picks":{"win":31,"loss":22,"units":7.35,"roi":0.1387,"lo":-0.032,"hi":0.3048,"said":0.5418,"unders":52}}}
 }
