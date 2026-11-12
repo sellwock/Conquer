@@ -66,15 +66,14 @@ interface Side {
 export function sidesOf(r: PropRow, w = PROP_SIM_WEIGHT): [Side, Side] {
   const [, , , over, under, pOver, pPush] = r;
   const pOverDecided = pPush < 1 ? pOver / (1 - pPush) : 0;
-  const pUnder = Math.max(0, 1 - pOver - pPush);
   const [mOver, mUnder] = noVig(over, under);
-  const side = (s: 'over' | 'under', price: number, p: number, pm: number, pWin: number): Side => {
+  const side = (s: 'over' | 'under', price: number, p: number, pm: number): Side => {
     const pPick = w * p + (1 - w) * pm;
-    // As `evaluate` scales a leg's simulated outcomes to its blended chance.
-    const scale = p > 0 ? pPick / p : 1;
-    return { side: s, price, pSim: p, pMarket: pm, pPick, pHit: Math.min(1, (pWin + pPush) * scale), ev: (pWin * toDecimal(price) + pPush) * scale - 1 };
+    // A push hands the stake back; otherwise the bet wins at the blended chance.
+    const decided = 1 - pPush;
+    return { side: s, price, pSim: p, pMarket: pm, pPick, pHit: pPush + decided * pPick, ev: pPush + decided * pPick * toDecimal(price) - 1 };
   };
-  return [side('over', over, pOverDecided, mOver, pOver), side('under', under, 1 - pOverDecided, mUnder, pUnder)];
+  return [side('over', over, pOverDecided, mOver), side('under', under, 1 - pOverDecided, mUnder)];
 }
 
 /** Order of a logged box line. */

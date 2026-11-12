@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { LeagueId, ScoreboardGame } from '../model/types';
 import { boardPicks, boardRow } from '../model/slate';
-import { MODEL_WEIGHT, modelHasSay, type GameMarket, type Parlay } from '../model/parlays';
+import { MODEL_WEIGHT, defaultPickMode, modelHasSay, weightsFor, type BlendWeights, type GameMarket, type Parlay } from '../model/parlays';
 import { LEAGUES } from '../model/leagues';
 import { fmtAmerican, impliedFromAmerican } from '../lib/stats';
 import { loadForwardLog } from '../track/forward';
@@ -17,6 +17,7 @@ import type { LiveSlate } from './liveSlate';
 import { blendText, LiveStatus, propMixText } from './parlays';
 import { NewsCard } from './newsCard';
 import type { NewsScan } from './news';
+import { BestBets, fitAhead, type FitState } from './bestBets';
 
 type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge' | 'prop';
 
@@ -38,6 +39,8 @@ interface Row {
   hasProps?: boolean;
   /** A game in progress whose picks come from the in-game book. */
   livePick?: boolean;
+  /** The prop pick is the pick model's, and that model isn't ahead: hidden until asked for. */
+  propHidden?: boolean;
   note?: string;
   logged?: { e: Entry; graded: Graded | null };
 }
@@ -82,12 +85,24 @@ export function SlateBoard(props: {
   live?: { slate: LiveSlate; markets: Record<string, GameMarket> };
   /** Injury news for the upcoming games (NBA). */
   news?: NewsScan;
+  /** The league's fitted pick model, when one has loaded. */
+  fit: FitState;
 }) {
-  const { slate, board } = props;
+  const { slate, board, fit } = props;
   const liveMarkets = props.live?.markets;
   const [sort, setSort] = useState<SortKey>('tip');
   const hasSay = modelHasSay(props.league);
   const [log, setLog] = useState<Record<string, Entry>>({});
+  const fits = fit.fits;
+  // Line picks keep the board's ranking; prop picks go by the pick model wherever one is fitted.
+  const weights = useMemo((): BlendWeights => {
+    const base = weightsFor(props.league, defaultPickMode(props.league));
+    return fits ? { ...base, fit: fits } : base;
+  }, [props.league, fits]);
+  // Picks from a fit that isn't ahead out of sample stay hidden until asked for.
+  const [revealed, setRevealed] = useState(false);
+  const hidePre = !!fits?.pre && !fitAhead(fit, 'pre') && !revealed;
+  const hideLive = !!fits?.live && !fitAhead(fit, 'live') && !revealed;
 
   // Started games show the prediction saved before tip, when the log has one.
   const started = board.games.some((g) => g.phase !== 'pre');
@@ -105,17 +120,24 @@ export function SlateBoard(props: {
       const m = slate.markets[g.id];
       if (g.phase === 'pre') {
         if (!m) return { g };
-        const r = boardRow(m);
-        return { g, n: r, best: r.best, bestProp: r.bestProp, hasProps: r.hasProps, note: m.note };
+        const r = boardRow(m, weights);
+        return { g, n: r, best: r.best, bestProp: r.bestProp, hasProps: r.hasProps, note: m.note, propHidden: hidePre };
       }
       const e = log[g.id];
       const row: Row = { g, n: e && fromEntry(e), logged: e ? { e, graded: e.status === 'final' ? gradeEntry(e) : null } : undefined };
       const lm = g.phase === 'in' ? liveMarkets?.[g.id] : undefined;
-      return lm ? { ...row, ...boardPicks(lm), livePick: true } : row;
+      return lm ? { ...row, ...boardPicks(lm, weights), livePick: true, propHidden: hideLive } : row;
     });
     const key = SORTS[sort];
     return out.sort((a, b) => key(b) - key(a) || Date.parse(a.g.date) - Date.parse(b.g.date));
-  }, [board.games, slate.markets, log, sort, liveMarkets]);
+  }, [board.games, slate.markets, log, sort, liveMarkets, weights, hidePre, hideLive]);
+
+  // The best-bets card: upcoming games that are priced and haven't tipped, and games in progress.
+  const preMarkets = useMemo(() => {
+    const now = Date.now();
+    return board.games.filter((g) => g.phase === 'pre' && Date.parse(g.date) > now && slate.markets[g.id]).map((g) => slate.markets[g.id]);
+  }, [board.games, slate.markets]);
+  const inPlay = useMemo(() => Object.values(liveMarkets ?? {}), [liveMarkets]);
 
   const pendingIds = new Set(slate.pending.map((g) => g.id));
   // The prop column appears once any game on the board has posted props priced.
@@ -133,6 +155,7 @@ export function SlateBoard(props: {
 
   return (
     <div class="slate">
+      <BestBets league={props.league} fit={fit} pre={preMarkets} live={inPlay} revealed={revealed} onReveal={() => setRevealed(true)} onOpen={props.onOpen} />
       {props.news && (props.news.watching > 0 || props.news.items.length > 0) && <NewsCard news={props.news} games={board.games} onOpen={props.onOpen} />}
       <section class="card">
         <header class="card-head">
@@ -148,9 +171,11 @@ export function SlateBoard(props: {
             ? `Line picks weight the simulation against the market by how it did in backtests (${blendText(MODEL_WEIGHT[props.league])}) and clear the same bar as the parlays tab's singles.`
             : `Line picks rank by the simulation alone and clear the same bar as the parlays tab's singles. In backtests the market's odds were more accurate than the simulation's on ${LEAGUES[props.league].label} games, so treat them as the simulation's leans.`}
           {showProps &&
-            (hasSay
-              ? ' Props have no backtest, so the blend leaves them to the market and the prop column passes; switch the parlays tab to Simulation to see prop leans.'
-              : ` Prop picks are each game's best player prop at ${propMixText()}: the first graded props showed the simulation far too sure of itself.`)}{' '}
+            (fits?.pre
+              ? " Prop picks are each game's top bet by the pick model, as in Best bets above."
+              : hasSay
+                ? ' Props have no backtest, so the blend leaves them to the market and the prop column passes; switch the parlays tab to Simulation to see prop leans.'
+                : ` Prop picks are each game's best player prop at ${propMixText()}: the first graded props showed the simulation far too sure of itself.`)}{' '}
           Suggestions, not advice.
         </p>
         <div class="scan">
@@ -181,7 +206,10 @@ export function SlateBoard(props: {
             <LiveStatus slate={props.live.slate} priced={Object.keys(props.live.markets).length} />
             <p class="muted small">
               Games in progress show live picks from the in-game book, priced from the current score and box score and refreshed every 2 minutes (about 1 MB per game
-              each time). They're the simulation's leans, never backtested.
+              each time).{' '}
+              {fits?.live
+                ? "Live prop picks go by the live pick model; live line picks are the simulation's leans, never backtested."
+                : "They're the simulation's leans, never backtested."}
             </p>
           </>
         )}
@@ -239,7 +267,8 @@ export function SlateBoard(props: {
 }
 
 function BoardRowView(props: { r: Row; showProps: boolean; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
-  const { g, n, best, bestProp, logged, livePick } = props.r;
+  const { g, n, best, bestProp, logged, livePick, propHidden } = props.r;
+  const hiddenProp = <span class="muted" title="The pick model isn't ahead on days it hadn't seen. Best bets, above, can show its picks.">Hidden</span>;
   const pre = g.phase === 'pre';
   const waiting = pre && !n;
   const placeholder = waiting ? (props.queued ? (props.scanning ? 'Queued' : '–') : props.open && g.odds ? 'Simulating' : 'No line') : '–';
@@ -284,12 +313,18 @@ function BoardRowView(props: { r: Row; showProps: boolean; queued: boolean; scan
         <td class="best">
           {livePick ? (
             props.r.hasProps ? (
-              <BestCell best={bestProp} waiting={false} live />
+              propHidden && bestProp ? (
+                hiddenProp
+              ) : (
+                <BestCell best={bestProp} waiting={false} live />
+              )
             ) : (
               <span class="muted">–</span>
             )
           ) : !pre || (n && !props.r.hasProps) ? (
             <span class="muted">–</span>
+          ) : propHidden && bestProp ? (
+            hiddenProp
           ) : (
             <BestCell best={bestProp} waiting={waiting} />
           )}

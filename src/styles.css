@@ -1339,6 +1339,10 @@ table.box + table.box,
   border-color: var(--out);
   background: var(--out-bg);
 }
+.chip.good {
+  color: var(--pos);
+  border-color: var(--pos);
+}
 .disclaimer {
   border-color: var(--out);
   background: var(--out-bg);
@@ -1440,6 +1444,7 @@ table.box + table.box,
 }
 .p-metrics dd.pos {
   color: var(--pos);
+  font-size: inherit;
 }
 .p-metrics dd.neg {
   color: var(--neg);
@@ -1744,4 +1749,64 @@ table.board td.best {
 .news-item table.data td {
   padding-left: 4px;
   padding-right: 4px;
+}
+
+/* Best bets */
+.best-bets {
+  border-color: var(--ink);
+}
+.best-bets .kicker {
+  margin: 14px 0 6px;
+}
+.fit-line {
+  margin: 0 0 8px;
+  max-width: 80ch;
+}
+.fit-line .chip {
+  margin-right: 4px;
+}
+.fit-line strong.pos {
+  color: var(--pos);
+}
+.fit-line strong.neg {
+  color: var(--neg);
+}
+.bets-table tbody th .muted {
+  font-weight: 400;
+}
+/* On a phone each bet stacks: the bet, then its numbers on one labelled line. */
+@media (max-width: 560px) {
+  .bets-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .bets-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  table.bets-table tbody th,
+  table.bets-table tbody td {
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  .bets-table tbody th {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+  .bets-table td[data-label]::before {
+    content: attr(data-label) ' ';
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
 }

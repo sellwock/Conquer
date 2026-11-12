@@ -36,6 +36,18 @@ export function fittedOver(coef: FitCoef, pMarket: number, pSim: number): number
   return fittedFrom(coef, fitFeatures(pMarket, pSim));
 }
 
+/**
+ * The coefficients pricing may use, by when a line is posted: before tip-off, and mid-game from
+ * the in-game book. Either can be missing (too few graded games, or fitted to an older model's
+ * simulations); those lines then fall back to the unfitted weights.
+ */
+export interface PropFits {
+  pre?: FitCoef;
+  live?: FitCoef;
+  /** The expected return per unit staked a pick needs at its price: the bar the record was tested at. */
+  minEdge: number;
+}
+
 /** How far a fit's picks have been borne out on days it never saw. */
 export type FitVerdict = 'tested' | 'promising' | 'none';
 

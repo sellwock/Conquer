@@ -14,6 +14,9 @@ export function spreadText(abbr: string, margin: number): string {
 /** A home margin as "BOS -3.5", naming whichever side is favored. */
 export const lineText = (home: string, away: string, homeMargin: number) => (homeMargin >= 0 ? spreadText(home, homeMargin) : spreadText(away, -homeMargin));
 
+/** A signed share as "+2.7%" or "−10.5%". */
+export const signedPct = (x: number, d = 1) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${pct(Math.abs(x), d)}`;
+
 /** Expected profit as "+$4 per $100". */
 export function perHundred(ev: number): string {
   const v = Math.round(ev * 100);

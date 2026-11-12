@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeRng } from '../src/lib/rng';
 import { TRUST_BOOK, fitFeatures, fitVerdict, fittedFrom, fittedOver, type FitCoef } from '../src/model/propFit';
-import { MIN_TRAIN_GAMES, buildFit, fitLogistic, fitRows, picksOf, testOf, walkForward, type FitRow, type Scored } from '../src/track/fit';
+import { FIT_FILE_VERSION, MIN_TRAIN_GAMES, buildFit, fitLogistic, fitRows, fitsFor, flatOf, picksOf, testOf, walkForward, type FitFile, type FitRow, type Scored } from '../src/track/fit';
 import type { PropEntry, PropRow } from '../src/track/types';
 
 const row = (o: Partial<FitRow> & { pMarket: number; pSim: number }): FitRow => {
@@ -157,7 +157,7 @@ describe('fitting the log', () => {
 
   it('writes no fit until enough games are graded, then coefficients and the test', () => {
     const few = buildFit([entry('g1', '2026-11-02T01:30:00Z')], 'nba', new Date('2026-11-03T00:00:00Z'));
-    expect(few).toEqual({ updatedAt: '2026-11-03T00:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: MIN_TRAIN_GAMES });
+    expect(few).toEqual({ v: FIT_FILE_VERSION, updatedAt: '2026-11-03T00:00:00.000Z', league: 'nba', minEdge: 0.03, minTrainGames: MIN_TRAIN_GAMES });
 
     const days = ['2026-11-02T01:30:00Z', '2026-11-03T01:30:00Z'];
     const many = days.flatMap((tip, d) =>
@@ -182,6 +182,31 @@ describe('fitting the log', () => {
     // Live picks aren't judged against the pre-game close.
     expect(fit.live!.test!.moved).toBeUndefined();
     expect(fit.live!.open).toBeUndefined();
+    // What betting blind did on the same lines: every over won here.
+    expect(fit.v).toBe(FIT_FILE_VERSION);
+    expect(fit.pre!.flat!.over).toMatchObject({ win: 4 * MIN_TRAIN_GAMES, loss: 0 });
+    expect(fit.pre!.flat!.under).toEqual({ win: 0, loss: 4 * MIN_TRAIN_GAMES, roi: -1 });
+  });
+
+  it('counts what every over and every under returned at the posted prices', () => {
+    const flat = flatOf([row({ pMarket: 0.5, pSim: 0.5, won: 1 }), row({ pMarket: 0.5, pSim: 0.5, won: 0, over: 150, under: -180 }), row({ pMarket: 0.5, pSim: 0.5, won: 0 })]);
+    expect(flat.over).toEqual({ win: 1, loss: 2, roi: Math.round(((100 / 110 - 2) / 3) * 1e4) / 1e4 });
+    expect(flat.under).toEqual({ win: 2, loss: 1, roi: Math.round(((100 / 180 + 100 / 110 - 1) / 3) * 1e4) / 1e4 });
+  });
+
+  it('lets the site price with a fit only where it applies to the current model', () => {
+    const part = (models: Record<string, number>, coef: [number, number, number]) => ({ coef, lines: 100, games: 30, models });
+    const base: FitFile = { updatedAt: '', league: 'nba', minEdge: 0.03, minTrainGames: 20 };
+    expect(fitsFor(undefined, '1.2.0')).toBeUndefined();
+    expect(fitsFor(base, '1.2.0')).toBeUndefined();
+    // A replayed history by this model: the pre-game fit counts, whatever the live rows' versions.
+    const replayed: FitFile = { ...base, model: '1.2.0', pre: part({ '1.2.0': 100 }, [-0.1, 1, 0.1]), live: part({ '1.1.0': 60, '1.2.0': 40 }, [0, 1, -0.2]) };
+    expect(fitsFor(replayed, '1.2.0')).toEqual({ pre: [-0.1, 1, 0.1], live: [0, 1, -0.2], minEdge: 0.03 });
+    // A newer model hasn't been replayed yet: its pre-game lines aren't what this fit was fitted to.
+    expect(fitsFor(replayed, '1.3.0')).toEqual({ live: [0, 1, -0.2], minEdge: 0.03 });
+    // No history: the pre-game fit counts only if this model priced every line behind it.
+    expect(fitsFor({ ...base, pre: part({ '1.2.0': 100 }, [0, 1, 0]) }, '1.2.0')).toEqual({ pre: [0, 1, 0], minEdge: 0.03 });
+    expect(fitsFor({ ...base, pre: part({ '1.1.0': 60, '1.2.0': 40 }, [0, 1, 0]) }, '1.2.0')).toBeUndefined();
   });
 
   it('trains the pre-game fit on the current model\'s rows when a re-simulated history exists', () => {
