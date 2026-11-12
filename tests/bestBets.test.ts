@@ -8,6 +8,7 @@ import { boardPicks } from '../src/model/slate';
 import { fitRows, picksOf } from '../src/track/fit';
 import { propRows } from '../src/track/job';
 import type { PropEntry } from '../src/track/types';
+import { ageText, lineAgeMin } from '../src/ui/format';
 
 const N = 2000;
 /** The over wins in the first `pOver` share of simulations (so two props with this are as linked as can be). */
@@ -262,5 +263,22 @@ describe('parlays from the pick model', () => {
     expect(one.bySize[2]).toEqual([]);
     expect(one.bySize[3]).toEqual([]);
     expect(one.sameGame.length).toBeGreaterThan(0);
+  });
+});
+
+describe('live line age', () => {
+  it('counts whole minutes since the book last changed a line, when the feed says', () => {
+    const now = Date.parse('2026-11-10T02:10:30Z');
+    expect(lineAgeMin('2026-11-10T02:04:00Z', now)).toBe(6);
+    expect(lineAgeMin('2026-11-10T02:10:10Z', now)).toBe(0);
+    expect(lineAgeMin('2026-11-10T02:11:00Z', now)).toBe(0); // a clock a little ahead
+    expect(lineAgeMin(undefined, now)).toBeUndefined();
+    expect(lineAgeMin('soon', now)).toBeUndefined();
+    expect([0, 4, 72].map(ageText)).toEqual(['just now', '4 min', '1 h 12 min']);
+  });
+
+  it('carries the time from the feed to the leg', () => {
+    const m = market('1', [{ ...prop('a', 'pts', 20.5, -110, -110, hits(0.3)), updated: '2026-11-10T02:04:00Z', now: 12 }], { live: true });
+    expect(legsForGame(m, W).find((l) => l.prop)!.prop).toMatchObject({ updated: '2026-11-10T02:04:00Z', now: 12 });
   });
 });

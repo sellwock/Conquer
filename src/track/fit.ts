@@ -35,10 +35,12 @@ export interface FitRow {
   won: 0 | 1;
   x: FitFeatures;
   model: string;
+  /** Set on a game's second live snapshot, so its lines are bets of their own. */
+  snap?: string;
 }
 
 /** Decided lines of final games from one kind of snapshot; players who sat are void, as at the book. */
-export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | 'live'): FitRow[] {
+export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | 'live' | 'live2'): FitRow[] {
   const out: FitRow[] = [];
   for (const e of entries) {
     const snap = e[key];
@@ -51,7 +53,7 @@ export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | 'live'): Fit
       if (final === line) continue;
       const pMarket = noVig(over, under)[0];
       const pSim = pPush < 1 ? pOver / (1 - pPush) : 0.5;
-      out.push({ gameId: e.id, day, athleteId, stat, line, over, under, pMarket, pSim, won: final > line ? 1 : 0, x: fitFeatures(pMarket, pSim), model: snap.model });
+      out.push({ gameId: e.id, day, athleteId, stat, line, over, under, pMarket, pSim, won: final > line ? 1 : 0, x: fitFeatures(pMarket, pSim), model: snap.model, ...(key === 'live2' ? { snap: key } : {}) });
     }
   }
   return out;
@@ -154,7 +156,7 @@ export function picksOf(scored: Scored[], minEdge = MIN_EDGE): FitPick[] {
     for (const side of ['over', 'under'] as const) {
       const p = side === 'over' ? pOver : 1 - pOver;
       const price = side === 'over' ? row.over : row.under;
-      cands.push({ gameId: row.gameId, athleteId: row.athleteId, row, side, price, p, ev: p * toDecimal(price) - 1, won: (side === 'over') === (row.won === 1) });
+      cands.push({ gameId: `${row.gameId}${row.snap ?? ''}`, athleteId: row.athleteId, row, side, price, p, ev: p * toDecimal(price) - 1, won: (side === 'over') === (row.won === 1) });
     }
   }
   return onePerPlayer(cands, minEdge);
@@ -334,7 +336,7 @@ export interface FitFile {
  * time, and the history for every other game. Without one, every logged pre-game line counts,
  * whatever model priced it. The test on each game's first snapshot only ever uses real-time rows,
  * because a re-simulation knows who went on to play, which opening lines didn't. Live lines can't
- * be replayed, so the live fit pools every version.
+ * be replayed, so the live fit pools every version, and both of a game's live snapshots.
  */
 export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts: FitOptions = {}): FitFile {
   const history = opts.model && opts.history?.model === opts.model && opts.history.entries.length ? opts.history : undefined;
@@ -342,7 +344,7 @@ export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts
   const freshIds = new Set(fresh.map((e) => e.id));
   const replayed = history ? history.entries.filter((e) => !freshIds.has(e.id)) : [];
   const part = (key: FitWhen): FitPart | undefined => {
-    const rows = key === 'pre' ? [...fitRows(replayed, 'pre'), ...fitRows(fresh, 'pre')] : fitRows(entries, key);
+    const rows = key === 'pre' ? [...fitRows(replayed, 'pre'), ...fitRows(fresh, 'pre')] : [...fitRows(entries, 'live'), ...fitRows(entries, 'live2')];
     const games = new Set(rows.map((r) => r.gameId)).size;
     if (games < MIN_TRAIN_GAMES) return undefined;
     const models: Record<string, number> = {};

@@ -135,7 +135,7 @@ const withPlayers = (prev: PropEntry, markets: PropMarket[]): PropEntry => ({
 });
 
 /** A game's first pre-game snapshot is also kept as its opening lines; later refreshes replace only `pre`. */
-const withSnap = (prev: PropEntry, markets: PropMarket[], key: 'pre' | 'live', snap: PropSnap): PropEntry => ({
+const withSnap = (prev: PropEntry, markets: PropMarket[], key: 'pre' | 'live' | 'live2', snap: PropSnap): PropEntry => ({
   ...withPlayers(prev, markets),
   ...(key === 'pre' && !prev.pre && !prev.open ? { open: snap } : {}),
   [key]: snap,
@@ -256,7 +256,11 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
       const ymd = easternYmd(new Date(g.date));
       const pp = propsPath(league, seasonYear(g.date, league), ymd);
       const prevP = propFile(pp)[g.id];
-      if (prevP?.live) continue;
+      // One snapshot per game, and a second after halftime when the first came before it: lines
+      // in the third quarter are a different bet from lines in the second.
+      const firstHalf = (at?: PropSnap['at']) => !!at && playedShare(league, at.period, at.clockSec) < 0.5;
+      const key = !prevP?.live ? 'live' : !prevP.live2 && firstHalf(prevP.live.at) && playedShare(league, g.period ?? 1, g.clockSec ?? 0) >= 0.5 ? 'live2' : undefined;
+      if (!key) continue;
       if (requestCount() > o.budget) {
         report.errors.push(`${league}: request budget reached; live props for ${g.away.abbr} @ ${g.home.abbr} skipped`);
         break;
@@ -268,9 +272,10 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
         const gd = r.game;
         const markets = r.market?.props ?? [];
         if (gd.phase !== 'in' || !midGame(league, gd.period, gd.clockSec) || !markets.length) continue;
+        if (key === 'live2' && playedShare(league, gd.period, gd.clockSec) < 0.5) continue;
         put(
           pp,
-          withSnap(prevP ?? propBase(league, gd), markets, 'live', {
+          withSnap(prevP ?? propBase(league, gd), markets, key, {
             model: MODEL_VERSION,
             takenAt: o.now.toISOString(),
             provider: r.market!.propsProvider,

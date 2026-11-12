@@ -14,6 +14,18 @@ export function spreadText(abbr: string, margin: number): string {
 /** A home margin as "BOS -3.5", naming whichever side is favored. */
 export const lineText = (home: string, away: string, homeMargin: number) => (homeMargin >= 0 ? spreadText(home, homeMargin) : spreadText(away, -homeMargin));
 
+/** Minutes after which a live line is too old to bet without checking the book. */
+export const STALE_LINE_MIN = 5;
+
+/** Whole minutes since the book last changed a line, or undefined when the feed doesn't say. */
+export function lineAgeMin(updated: string | undefined, now = Date.now()): number | undefined {
+  const t = updated ? Date.parse(updated) : NaN;
+  return Number.isNaN(t) ? undefined : Math.max(0, Math.floor((now - t) / 60_000));
+}
+
+/** "just now", "4 min", "1 h 12 min" */
+export const ageText = (min: number) => (min < 1 ? 'just now' : min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${min % 60} min`);
+
 /** A signed share as "+2.7%" or "−10.5%". */
 export const signedPct = (x: number, d = 1) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${pct(Math.abs(x), d)}`;
 
