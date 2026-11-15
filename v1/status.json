@@ -1,9 +1,9 @@
 {
-"lastRun": "2026-11-15T17:30:28.537Z",
+"lastRun": "2026-11-15T17:45:17.419Z",
 "model": "1.2.0",
-"requests": 55,
+"requests": 14,
 "snapshots": 0,
-"refreshed": 2,
+"refreshed": 0,
 "graded": 0,
 "voided": 0,
 "results": 0,
@@ -13,7 +13,7 @@
 "propsOpen": 0,
 "news": 0,
 "propsNews": 0,
-"propsClose": 0,
+"propsClose": 1,
 "fit": 0,
 "errors": []
 }
