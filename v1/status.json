@@ -1,8 +1,8 @@
 {
-"lastRun": "2026-11-16T18:15:28.944Z",
+"lastRun": "2026-11-16T18:27:36.817Z",
 "model": "1.2.0",
-"requests": 89,
-"snapshots": 1,
+"requests": 10,
+"snapshots": 0,
 "refreshed": 0,
 "graded": 0,
 "voided": 0,
@@ -11,8 +11,8 @@
 "propsLive": 0,
 "propsGraded": 0,
 "propsOpen": 0,
-"news": 3,
-"propsNews": 3,
+"news": 0,
+"propsNews": 0,
 "propsClose": 0,
 "fit": 0,
 "errors": []
