@@ -1,11 +1,11 @@
 {
 "v": 2,
-"updatedAt": "2026-11-17T03:15:20.412Z",
+"updatedAt": "2026-11-17T03:30:18.614Z",
 "league": "nba",
 "model": "1.2.0",
 "history": {"model":"1.2.0","updatedAt":"2026-11-16T20:40:53.283Z"},
 "minEdge": 0.03,
 "minTrainGames": 20,
-"pre": {"coef":[-0.0243,0.9515,0.1042],"lines":17592,"games":202,"models":{"1.2.0":17592},"flat":{"over":{"win":8403,"loss":9189,"roi":-0.0969},"under":{"win":9189,"loss":8403,"roi":-0.0284}},"resimulated":152,"test":{"lines":15138,"games":174,"days":23,"brier":{"fit":0.2484,"market":0.2484,"diff":0,"lo":-0.0007,"hi":0.0007},"picks":{"win":113,"loss":107,"units":-2.84,"roi":-0.0129,"lo":-0.1365,"hi":0.1035,"said":0.5467,"unders":217},"moved":{"toward":9,"away":5,"same":44}},"open":{"lines":2799,"games":34,"days":6,"brier":{"fit":0.2506,"market":0.2492,"diff":0.0014,"lo":0,"hi":0.0028},"picks":{"win":21,"loss":19,"units":0.27,"roi":0.0068,"lo":-0.2893,"hi":0.2877,"said":0.5334,"unders":40},"moved":{"toward":20,"away":12,"same":5}}},
-"live": {"coef":[0.0227,0.9395,0.168],"lines":9062,"games":113,"models":{"1.1.0":4854,"1.2.0":4208},"flat":{"over":{"win":4415,"loss":4647,"roi":-0.0815},"under":{"win":4647,"loss":4415,"roi":-0.041}},"test":{"lines":6221,"games":80,"days":12,"brier":{"fit":0.2464,"market":0.2477,"diff":-0.0013,"lo":-0.0022,"hi":-0.0003},"picks":{"win":103,"loss":75,"units":27.83,"roi":0.1564,"lo":0.016,"hi":0.28,"said":0.5338,"unders":146}}}
+"pre": {"coef":[-0.0261,0.9524,0.1047],"lines":17781,"games":204,"models":{"1.2.0":17781},"flat":{"over":{"win":8486,"loss":9295,"roi":-0.0978},"under":{"win":9295,"loss":8486,"roi":-0.0275}},"resimulated":152,"test":{"lines":15327,"games":176,"days":23,"brier":{"fit":0.2484,"market":0.2484,"diff":0,"lo":-0.0007,"hi":0.0007},"picks":{"win":113,"loss":109,"units":-4.84,"roi":-0.0218,"lo":-0.1441,"hi":0.0996,"said":0.5462,"unders":219},"moved":{"toward":9,"away":5,"same":46}},"open":{"lines":2983,"games":36,"days":6,"brier":{"fit":0.2503,"market":0.2491,"diff":0.0012,"lo":-0.0002,"hi":0.0027},"picks":{"win":21,"loss":20,"units":-0.73,"roi":-0.0177,"lo":-0.3277,"hi":0.2451,"said":0.5324,"unders":41},"moved":{"toward":20,"away":12,"same":6}}},
+"live": {"coef":[0.0167,0.9428,0.1701],"lines":9246,"games":115,"models":{"1.1.0":4854,"1.2.0":4392},"flat":{"over":{"win":4489,"loss":4757,"roi":-0.0848},"under":{"win":4757,"loss":4489,"roi":-0.0378}},"test":{"lines":6405,"games":82,"days":12,"brier":{"fit":0.2462,"market":0.2476,"diff":-0.0014,"lo":-0.0024,"hi":-0.0004},"picks":{"win":105,"loss":79,"units":25.84,"roi":0.1404,"lo":-0.0015,"hi":0.2714,"said":0.5334,"unders":152}}}
 }
