@@ -37,6 +37,8 @@ export interface FitRow {
   model: string;
   /** Set on a game's second live snapshot, so its lines are bets of their own. */
   snap?: string;
+  /** Live lines: seconds since the book last changed the line, when the feed said. */
+  age?: number;
 }
 
 /** Decided lines of final games from one kind of snapshot; players who sat are void, as at the book. */
@@ -46,14 +48,15 @@ export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | 'live' | 'li
     const snap = e[key];
     if (e.status !== 'final' || !e.box || !snap) continue;
     const day = easternYmd(new Date(e.tip));
-    for (const [athleteId, stat, line, over, under, pOver, pPush] of snap.rows) {
+    for (const [i, [athleteId, stat, line, over, under, pOver, pPush]] of snap.rows.entries()) {
       const b = e.box[athleteId];
       if (!b) continue;
       const final = PARTS[stat].reduce((a, k) => a + b[BOX.indexOf(k)], 0);
       if (final === line) continue;
       const pMarket = noVig(over, under)[0];
       const pSim = pPush < 1 ? pOver / (1 - pPush) : 0.5;
-      out.push({ gameId: e.id, day, athleteId, stat, line, over, under, pMarket, pSim, won: final > line ? 1 : 0, x: fitFeatures(pMarket, pSim), model: snap.model, ...(key === 'live2' ? { snap: key } : {}) });
+      const age = snap.age?.[i];
+      out.push({ gameId: e.id, day, athleteId, stat, line, over, under, pMarket, pSim, won: final > line ? 1 : 0, x: fitFeatures(pMarket, pSim), model: snap.model, ...(key === 'live2' ? { snap: key } : {}), ...(age != null ? { age } : {}) });
     }
   }
   return out;
@@ -183,7 +186,15 @@ export interface FitTest {
   };
   /** Picks with a closing line: how the book's line had moved by just before tip. */
   moved?: { toward: number; away: number; same: number };
+  /**
+   * Live picks, once the log has line ages: those on lines the book had changed within
+   * FRESH_LINE_SEC (a price you could likely still get) against older ones, and how many had no age.
+   */
+  byAge?: { fresh: Flat; stale: Flat; unknown: number };
 }
+
+/** A live line the book changed at most this long ago counts as fresh. */
+export const FRESH_LINE_SEC = 5 * 60;
 
 const r4 = (x: number) => Math.round(x * 1e4) / 1e4;
 
@@ -265,6 +276,15 @@ export function testOf(scored: Scored[], entries: PropEntry[] = [], minEdge = MI
     const m = lineMove(byId.get(k.row.gameId)?.close?.lines, { athleteId: k.row.athleteId, stat: k.row.stat, line: k.row.line, side: k.side, pMarket: k.side === 'over' ? k.row.pMarket : 1 - k.row.pMarket });
     if (m) moved[m]++;
   }
+  const record = (ks: FitPick[]): Flat => {
+    const w = ks.filter((k) => k.won).length;
+    const u = ks.reduce((a, k) => a + (k.won ? toDecimal(k.price) - 1 : -1), 0);
+    return { win: w, loss: ks.length - w, roi: r4(ks.length ? u / ks.length : 0) };
+  };
+  const aged = picks.filter((k) => k.row.age != null);
+  const byAge = aged.length
+    ? { fresh: record(aged.filter((k) => k.row.age! <= FRESH_LINE_SEC)), stale: record(aged.filter((k) => k.row.age! > FRESH_LINE_SEC)), unknown: picks.length - aged.length }
+    : undefined;
   return {
     lines: scored.length,
     games: games.length,
@@ -272,6 +292,7 @@ export function testOf(scored: Scored[], entries: PropEntry[] = [], minEdge = MI
     brier: { fit: r4(fit / n), market: r4(market / n), diff: r4(diff), ...range(diffs, diff) },
     picks: { win, loss: picks.length - win, units: Math.round(units * 100) / 100, roi: r4(roi), ...range(rois, roi), said: r4(picks.length ? said / picks.length : 0), unders },
     ...(moved.toward + moved.away + moved.same ? { moved } : {}),
+    ...(byAge ? { byAge } : {}),
   };
 }
 
