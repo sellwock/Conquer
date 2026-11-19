@@ -37,7 +37,8 @@ function coreBody(u: URL): unknown {
     };
   if (u.pathname.endsWith('/100/propBets')) return { pageCount: 1, items: [...pair('4432101', '1', 20.5, '-110', '-110'), ...pair('4432104', '2', 5.5, '+100', '-120')] };
   if (u.pathname.endsWith('/200/propBets') && noLiveProps) return { pageCount: 1, items: [] };
-  if (u.pathname.endsWith('/200/propBets')) return { pageCount: 1, items: [...pair('4432201', '1', 34.5, '-110', '-120'), ...pair('4432101', '3', 6.5, '+105', '-135')] };
+  if (u.pathname.endsWith('/200/propBets'))
+    return { pageCount: 1, items: [...pair('4432201', '1', 34.5, '-110', '-120').map((it) => ({ ...it, lastUpdated: '2026-01-15T01:12Z' })), ...pair('4432101', '3', 6.5, '+105', '-135')] };
   return undefined;
 }
 
@@ -344,6 +345,10 @@ describe('player props in the forward log', () => {
     expect(e.live).toMatchObject({ model: MODEL_VERSION, provider: 'DraftKings - Live Odds', n: 200, at: { period: 2, clockSec: 300, home: 122, away: 113 } });
     expect(e.players['4432201']).toBe('C. Vance');
     const vance = e.live!.rows.find((x) => x[0] === '4432201' && x[1] === 'pts')!;
+    // The line the book changed at 01:12 was 3 minutes old when saved at 01:15; the other gave no time.
+    expect(e.live!.age).toHaveLength(e.live!.rows.length);
+    expect(e.live!.age![e.live!.rows.indexOf(vance)]).toBe(180);
+    expect(e.live!.age!.filter((a) => a == null)).toHaveLength(e.live!.rows.length - 1);
     expect(vance[8]).toBe(27);
     expect(vance[7]).toBeGreaterThanOrEqual(27);
     expect(e.pre).toBeUndefined();

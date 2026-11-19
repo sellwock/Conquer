@@ -118,6 +118,15 @@ export function propRows(markets: PropMarket[]): PropRow[] {
   });
 }
 
+/** Each market's line age at `now`, in seconds, when the feed gave any update times. */
+export function lineAges(markets: PropMarket[], now: Date): Pick<PropSnap, 'age'> {
+  const age = markets.map((m) => {
+    const t = m.updated ? Date.parse(m.updated) : NaN;
+    return Number.isNaN(t) ? null : Math.max(0, Math.round((now.getTime() - t) / 1000));
+  });
+  return age.some((a) => a != null) ? { age } : {};
+}
+
 const propBase = (league: LeagueId, gd: GameData): PropEntry => ({
   id: gd.id,
   league,
@@ -282,6 +291,7 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
             n: r.market!.margin.length,
             rows: propRows(markets),
             at: { period: gd.period, clockSec: gd.clockSec, home: gd.homeScore ?? 0, away: gd.awayScore ?? 0 },
+            ...lineAges(markets, o.now),
           }),
         );
         report.propsLive++;
