@@ -7,7 +7,7 @@ import { fmtAmerican } from '../lib/stats';
 import { gradeEntry, summarize, type Graded, type Record3, type Summary } from '../track/grade';
 import { gradeNews, gradeProps, summarizeProps, TOP_PER_GAME, type GradedProp, type GradedSnap, type PropSummary, type PropWhen } from '../track/propGrade';
 import { loadFit, loadForwardLog, loadPropLog, type ForwardLog } from '../track/forward';
-import type { FitFile, FitPart, FitTest } from '../track/fit';
+import { FRESH_LINE_SEC, type FitFile, type FitPart, type FitTest } from '../track/fit';
 import { TESTED_MIN_PICKS, fitVerdict, fittedFrom, logit } from '../model/propFit';
 import { runBacktest, type BacktestProgress } from '../track/backtest';
 import type { Entry, PropEntry, PropSnap } from '../track/types';
@@ -282,6 +282,16 @@ function FitTestStats({ t, what }: { t: FitTest; what: string }) {
           {signed4(t.brier.hi)})
         </span>
       </div>
+      {t.byAge ? (
+        <div class="stat">
+          <span class="kicker">On fresh lines only</span>
+          <strong class={t.byAge.fresh.roi > 0 ? 'pos' : t.byAge.fresh.roi < 0 ? 'neg' : ''}>{t.byAge.fresh.win + t.byAge.fresh.loss ? signedPct(t.byAge.fresh.roi) : '–'}</strong>
+          <span class="muted">
+            {t.byAge.fresh.win}-{t.byAge.fresh.loss} on lines the book had changed in the last {FRESH_LINE_SEC / 60} minutes; {t.byAge.stale.win}-{t.byAge.stale.loss} (
+            {signedPct(t.byAge.stale.roi)}) on older ones{t.byAge.unknown ? `, ${t.byAge.unknown} with no time` : ''}. An old line may already have moved at the book.
+          </span>
+        </div>
+      ) : null}
       {t.moved && moved ? (
         <div class="stat">
           <span class="kicker">Line moved toward the pick</span>

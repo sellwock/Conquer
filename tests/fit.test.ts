@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeRng } from '../src/lib/rng';
 import { TRUST_BOOK, fitFeatures, fitVerdict, fittedFrom, fittedOver, type FitCoef } from '../src/model/propFit';
-import { FIT_FILE_VERSION, MIN_TRAIN_GAMES, buildFit, fitLogistic, fitRows, fitsFor, flatOf, picksOf, testOf, walkForward, type FitFile, type FitRow, type Scored } from '../src/track/fit';
+import { FIT_FILE_VERSION, FRESH_LINE_SEC, MIN_TRAIN_GAMES, buildFit, fitLogistic, fitRows, fitsFor, flatOf, picksOf, testOf, walkForward, type FitFile, type FitRow, type Scored } from '../src/track/fit';
 import type { PropEntry, PropRow } from '../src/track/types';
 
 const row = (o: Partial<FitRow> & { pMarket: number; pSim: number }): FitRow => {
@@ -200,6 +200,22 @@ describe('fitting the log', () => {
     expect(testOf(both.map((r) => ({ row: r, pOver: 0.7 }))).games).toBe(1);
     const many = Array.from({ length: MIN_TRAIN_GAMES }, (_, i) => ({ ...e, id: `g${i}` }));
     expect(buildFit(many, 'nba', new Date('2026-11-04T00:00:00Z')).live).toMatchObject({ games: MIN_TRAIN_GAMES, lines: 4 * MIN_TRAIN_GAMES });
+  });
+
+  it('splits live picks by how old their line was, once the log has ages', () => {
+    const snap = { model: '1.2.0', takenAt: '', n: 1000, rows, at: { period: 2, clockSec: 300, home: 50, away: 48 }, age: [60, 900, null, 30] };
+    const got = fitRows([entry('g1', '2026-11-02T01:30:00Z', { live: snap })], 'live');
+    expect(got.map((r) => [r.athleteId, r.stat, r.age])).toEqual([
+      ['p1', 'pts', 60],
+      ['p1', 'pra', 900],
+    ]);
+    // Each line as its own player, so both are picks: the over at -110 on a fresh line, at -120 on a stale one.
+    const scored = Array.from({ length: 6 }, (_, g) => got.map((row) => ({ row: { ...row, gameId: `g${g}`, athleteId: `${row.athleteId}-${row.stat}` }, pOver: 0.7 }))).flat();
+    const t = testOf(scored);
+    expect(t.byAge).toEqual({ fresh: { win: 6, loss: 0, roi: Math.round(1e4 * (100 / 110)) / 1e4 }, stale: { win: 6, loss: 0, roi: Math.round(1e4 * (100 / 120)) / 1e4 }, unknown: 0 });
+    // Without ages, no split.
+    expect(testOf(scored.map(({ row, pOver }) => ({ row: { ...row, age: undefined }, pOver }))).byAge).toBeUndefined();
+    expect(FRESH_LINE_SEC).toBe(300);
   });
 
   it('counts what every over and every under returned at the posted prices', () => {

@@ -60,6 +60,12 @@ export interface PropSnap {
   rows: PropRow[];
   /** Live snapshots: the game when the lines were saved. */
   at?: { period: number; clockSec: number; home: number; away: number };
+  /**
+   * Live snapshots: seconds since the book last changed each row's line, as the feed reported it,
+   * in row order (null where it didn't say). ESPN's copy of in-game lines lags the book's, so a
+   * pick on an old line may be one the book had already moved past.
+   */
+  age?: (number | null)[];
 }
 
 export interface PropEntry {

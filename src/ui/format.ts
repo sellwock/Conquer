@@ -1,4 +1,5 @@
 import { americanFromProb, fmtAmerican, signed } from '../lib/stats';
+import { FRESH_LINE_SEC } from '../track/fit';
 
 export const pct = (p: number, d = 1) => `${(p * 100).toFixed(d)}%`;
 export const one = (x: number) => x.toFixed(1);
@@ -15,7 +16,7 @@ export function spreadText(abbr: string, margin: number): string {
 export const lineText = (home: string, away: string, homeMargin: number) => (homeMargin >= 0 ? spreadText(home, homeMargin) : spreadText(away, -homeMargin));
 
 /** Minutes after which a live line is too old to bet without checking the book. */
-export const STALE_LINE_MIN = 5;
+export const STALE_LINE_MIN = FRESH_LINE_SEC / 60;
 
 /** Whole minutes since the book last changed a line, or undefined when the feed doesn't say. */
 export function lineAgeMin(updated: string | undefined, now = Date.now()): number | undefined {
