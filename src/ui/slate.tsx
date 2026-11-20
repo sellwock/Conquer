@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { LeagueId, ScoreboardGame } from '../model/types';
 import { boardPicks, boardRow } from '../model/slate';
 import { MODEL_WEIGHT, defaultPickMode, modelHasSay, weightsFor, type BlendWeights, type GameMarket, type Parlay } from '../model/parlays';
-import { LEAGUES } from '../model/leagues';
+import { LEAGUE_INFO } from '../model/leagues';
 import { fmtAmerican, impliedFromAmerican } from '../lib/stats';
 import { loadForwardLog } from '../track/forward';
 import { gradeEntry, type Graded } from '../track/grade';
@@ -169,7 +169,7 @@ export function SlateBoard(props: {
           Model numbers come from 2,000 simulations per game with everyone available (the open game uses your settings).{' '}
           {hasSay
             ? `Line picks weight the simulation against the market by how it did in backtests (${blendText(MODEL_WEIGHT[props.league])}) and clear the same bar as the parlays tab's singles.`
-            : `Line picks rank by the simulation alone and clear the same bar as the parlays tab's singles. In backtests the market's odds were more accurate than the simulation's on ${LEAGUES[props.league].label} games, so treat them as the simulation's leans.`}
+            : `Line picks rank by the simulation alone and clear the same bar as the parlays tab's singles. In backtests the market's odds were more accurate than the simulation's on ${LEAGUE_INFO[props.league].label} games, so treat them as the simulation's leans.`}
           {showProps &&
             (fits?.pre
               ? " Prop picks are each game's top bet by the pick model, as in Best bets above."

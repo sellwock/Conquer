@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { americanOf, parsePropBets, pickPropBook } from '../src/data/espn/props';
+import { americanOf, feedClock, parsePropBets, pickPropBook } from '../src/data/espn/props';
 import { propMarkets, MIN_MINUTES, type SoFar } from '../src/model/props';
 import { evaluate, legsForGame, suggestParlays, weightsFor, SIM_ONLY, type GameMarket } from '../src/model/parlays';
 import { packMarket, unpackMarket } from '../src/model/slate';
@@ -37,6 +37,27 @@ describe('prop feed', () => {
     ]);
     expect(americanOf('+131')).toBe(131);
     expect(americanOf('-')).toBeUndefined();
+  });
+});
+
+describe("the feed's clock", () => {
+  const line = (updated?: string) => ({ athleteId: '1', stat: 'pts' as const, line: 20.5, over: -110, under: -110, ...(updated ? { updated } : {}) });
+  // Thursday Night Football, Nov 20 2026, read at 01:55 UTC in the first quarter: the freshest live
+  // line was stamped 04:54Z and lines frozen at kickoff 04:14Z.
+  const now = Date.parse('2026-11-20T01:55:00Z');
+
+  it('takes back the whole hours that put the latest change just before now', () => {
+    const got = feedClock([line('2026-11-20T04:54Z'), line('2026-11-20T04:14Z'), line()], now);
+    expect(got.map((l) => l.updated)).toEqual(['2026-11-20T01:54:00.000Z', '2026-11-20T01:14:00.000Z', undefined]);
+  });
+
+  it('leaves a correct clock alone, a stale board included, and drops stamps no shift explains', () => {
+    const fine = [line('2026-11-20T01:40Z'), line('2026-11-20T01:10Z')];
+    expect(feedClock(fine, now)).toEqual(fine);
+    expect(feedClock([line('2026-11-20T01:56Z')], now)).toEqual([line('2026-11-20T01:56Z')]);
+    // A whole board 40 minutes behind under the same 3-hour error still reads 40 minutes behind.
+    expect(feedClock([line('2026-11-20T04:15Z')], now)[0].updated).toBe('2026-11-20T01:15:00.000Z');
+    expect(feedClock([line('2026-11-22T04:15Z')], now)[0].updated).toBeUndefined();
   });
 });
 

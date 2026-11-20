@@ -1,6 +1,6 @@
 import { useMemo } from 'preact/hooks';
 import { Hist } from '../lib/stats';
-import { LEAGUES, regulationSec } from '../model/leagues';
+import { hoopsConfig, regulationSec } from '../model/leagues';
 import type { GameData } from '../model/types';
 import { periodName } from '../sim/engine';
 import { stateWinProb, type SimSummary } from '../sim/run';
@@ -68,7 +68,7 @@ function RunTable(props: { game: GameData; s: SimSummary; palette: Palette }) {
 
 export function Flow(props: { game: GameData; summary: SimSummary; palette: Palette; from: string; onFrom: (from: string) => void }) {
   const { game: g, summary: s, palette } = props;
-  const lg = LEAGUES[g.league];
+  const lg = hoopsConfig(g.league);
   const reg = regulationSec(lg);
   const elapsedOf = (period: number, clockSec: number) =>
     period <= lg.periods ? (period - 1) * lg.periodSec + (lg.periodSec - clockSec) : reg + (period - lg.periods - 1) * lg.otSec + (lg.otSec - clockSec);

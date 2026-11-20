@@ -1,7 +1,8 @@
 // Grades logged player props against the final box score and the market. Pure functions only.
 import { HIT_FLOOR, MAX_PRICE, PROP_SIM_WEIGHT, noVig, toDecimal } from '../model/parlays';
 import { PARTS } from '../model/props';
-import type { PropStat } from '../model/types';
+import type { LeagueId, PropStat } from '../model/types';
+import { LEAGUE_INFO } from '../model/leagues';
 import { bootstrapMean, record, type BetResult, type Record3 } from './grade';
 import type { CloseLine, NewsSnap, PropEntry, PropRow, PropSnap } from './types';
 
@@ -36,7 +37,7 @@ export interface GradedProp {
   now?: number;
   at?: PropSnap['at'];
   /** News picks: the scratched player, and how the book's line moved by just before tip. */
-  news?: { name: string; shift: number; moved?: 'toward' | 'away' | 'same' };
+  news?: { name: string; shift: number; back?: boolean; moved?: 'toward' | 'away' | 'same' };
 }
 
 export interface GradedSnap {
@@ -78,6 +79,16 @@ export function sidesOf(r: PropRow, w = PROP_SIM_WEIGHT): [Side, Side] {
 
 /** Order of a logged box line. */
 export const BOX = ['pts', 'reb', 'ast', 'tpm'] as const;
+/** Order of a logged NFL box line. */
+export const NFL_BOX = ['passYds', 'passComp', 'passAtt', 'rushYds', 'rushAtt', 'recYds', 'rec'] as const;
+
+const boxOf = (league: LeagueId): readonly string[] => (LEAGUE_INFO[league].sport === 'football' ? NFL_BOX : BOX);
+
+/** A player's final number on a prop's stat, from his logged box line. */
+export const finalOf = (league: LeagueId, stat: PropStat, b: readonly number[]) => {
+  const keys = boxOf(league);
+  return PARTS[stat].reduce((a, k) => a + (b[keys.indexOf(k)] ?? 0), 0);
+};
 
 const settle = (v: number): BetResult => (v > 0 ? 'win' : v < 0 ? 'loss' : 'push');
 
@@ -131,7 +142,7 @@ function gradeSnap(e: PropEntry, snap: PropSnap, news?: NewsSnap): GradedSnap {
     if (!b) continue;
     // News: only the side the scratch points to can be a pick.
     const shift = news ? mean - news.meanWith[i] : NaN;
-    const final = PARTS[stat].reduce((a, k) => a + b[BOX.indexOf(k)], 0);
+    const final = finalOf(e.league, stat, b);
     const [over, under] = sidesOf(r);
     const base = { gameId: e.id, tip: e.tip, label, model: snap.model, athleteId, player: e.players[athleteId] ?? athleteId, stat, line, final, mean, ...(now != null ? { now } : {}), ...(snap.at ? { at: snap.at } : {}) };
     const grade = (s: Side): GradedProp => ({
@@ -148,7 +159,7 @@ function gradeSnap(e: PropEntry, snap: PropSnap, news?: NewsSnap): GradedSnap {
     if (final !== line) brier.push([over.pSim, over.pMarket, final > line ? 1 : 0]);
     for (const s of [over, under]) {
       if (news && !(Math.abs(shift) >= (stat === 'tpm' ? 0.2 : 0.5) && (s.side === 'over') === shift > 0)) continue;
-      if (s.ev > 0 && s.pHit >= HIT_FLOOR[1] && s.price <= MAX_PRICE[1]) picks.push({ s, grade: news ? (x) => ({ ...grade(x), news: { name: news.out.name, shift } }) : grade });
+      if (s.ev > 0 && s.pHit >= HIT_FLOOR[1] && s.price <= MAX_PRICE[1]) picks.push({ s, grade: news ? (x) => ({ ...grade(x), news: { name: news.out.name, shift, ...(news.kind === 'back' ? { back: true } : {}) } }) : grade });
     }
   }
   const top = picks

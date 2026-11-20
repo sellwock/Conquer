@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'preact/hooks';
 import { planMinutes } from '../model/build';
-import { LEAGUES } from '../model/leagues';
+import { hoopsConfig } from '../model/leagues';
 import type { GameData, PlayerProfile, TeamProfile } from '../model/types';
 import { randomSeed } from '../lib/rng';
 import { periodName } from '../sim/engine';
@@ -18,7 +18,7 @@ function statusOf(p: PlayerProfile, url: UrlState, asPlayed: boolean): Status {
 
 function Roster(props: { team: TeamProfile; color: string; game: GameData; url: UrlState; sim: SimState; asPlayed: boolean; onToggle: (id: string, injuredOut: boolean) => void }) {
   const { team, sim, url } = props;
-  const lg = LEAGUES[props.game.league];
+  const lg = hoopsConfig(props.game.league);
   const side = team.id === props.game.home.id ? 'home' : 'away';
   const plan = sim.built?.plans[side];
   const healthy = useMemo(
@@ -113,7 +113,7 @@ export function Sheet(props: {
   onReset: () => void;
 }) {
   const { game: g, url } = props;
-  const lg = LEAGUES[g.league];
+  const lg = hoopsConfig(g.league);
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const asPlayed = g.phase !== 'pre' && url.mode === 'actual';
   const hasActual = g.phase !== 'pre' && [...g.home.players, ...g.away.players].some((p) => p.actual?.played);

@@ -49,6 +49,10 @@ export interface PropMarket {
   mean: number;
   /** Live games: what the player has so far. */
   now?: number;
+  /** When the book last changed this line or its prices (ISO), where the feed says. */
+  updated?: string;
+  /** The book posted no prices (NFL), so `over` and `under` are an assumed -110 each. */
+  assumed?: true;
 }
 
 export type LegKind = 'ml' | 'spread' | 'total' | 'prop';
@@ -74,7 +78,7 @@ export interface Leg {
   /** Per simulation: 0 lose, 1 win, 2 push. */
   outcome: Uint8Array;
   /** Player props only. */
-  prop?: { athleteId: string; player: string; stat: PropStat; line: number; mean: number; now?: number };
+  prop?: { athleteId: string; player: string; stat: PropStat; line: number; mean: number; now?: number; updated?: string };
   /** A prop whose `pBlend` is the fitted pick model's chance. */
   fitted?: boolean;
 }
@@ -117,6 +121,8 @@ export const MODEL_WEIGHT: Record<LeagueId, BlendWeights> = {
   // Player props have no backtest yet, so the blend leaves them to the market.
   nba: { ml: 0, spread: 0, total: 0, prop: 0 },
   ncaam: { ml: 0, spread: 0.2, total: 0.2, prop: 0 },
+  // No NFL game lines are priced by a model; its props go by the pick model alone.
+  nfl: { ml: 0, spread: 0, total: 0, prop: 0 },
 };
 
 /** False when the market alone ranks every bet in this league, so no leg can beat the vig. */
@@ -227,7 +233,7 @@ export function legsForGame(g: GameMarket, weights: BlendWeights = MODEL_WEIGHT[
   for (const pm of g.props ?? []) {
     if (pm.hits.length !== n) continue;
     const [po, pu] = noVig(pm.over, pm.under);
-    const info = { athleteId: pm.athleteId, player: pm.player, stat: pm.stat, line: pm.line, mean: pm.mean, now: pm.now };
+    const info = { athleteId: pm.athleteId, player: pm.player, stat: pm.stat, line: pm.line, mean: pm.mean, now: pm.now, updated: pm.updated };
     const what = `${pm.line} ${PROP_WORDS[pm.stat]}`;
     const h = pm.hits;
     add('prop', 'over', `${pm.player} over ${what}`, pm.over, po, (_m, _t, s) => h[s], info);
@@ -245,6 +251,15 @@ export const PROP_WORDS: Record<PropStat, string> = {
   pr: 'pts + reb',
   pa: 'pts + ast',
   ar: 'reb + ast',
+  passYds: 'passing yards',
+  passComp: 'completions',
+  passAtt: 'pass attempts',
+  rushYds: 'rushing yards',
+  rushAtt: 'rush attempts',
+  recYds: 'receiving yards',
+  rec: 'receptions',
+  passRushYds: 'pass + rush yards',
+  rushRecYds: 'rush + rec yards',
 };
 
 /**

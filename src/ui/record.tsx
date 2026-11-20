@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { LeagueId } from '../model/types';
-import { LEAGUES } from '../model/leagues';
+import { LEAGUE_INFO } from '../model/leagues';
 import { PROP_WORDS } from '../model/parlays';
 import { MODEL_VERSION } from '../model/version';
 import { fmtAmerican } from '../lib/stats';
 import { gradeEntry, summarize, type Graded, type Record3, type Summary } from '../track/grade';
 import { gradeNews, gradeProps, summarizeProps, TOP_PER_GAME, type GradedProp, type GradedSnap, type PropSummary, type PropWhen } from '../track/propGrade';
 import { loadFit, loadForwardLog, loadPropLog, type ForwardLog } from '../track/forward';
-import type { FitFile, FitPart, FitTest } from '../track/fit';
+import { FRESH_LINE_SEC, type FitFile, type FitPart, type FitTest } from '../track/fit';
 import { TESTED_MIN_PICKS, fitVerdict, fittedFrom, logit } from '../model/propFit';
 import { runBacktest, type BacktestProgress } from '../track/backtest';
 import type { Entry, PropEntry, PropSnap } from '../track/types';
@@ -188,7 +188,7 @@ const record3 = (r: Record3) => `${r.win}–${r.loss}${r.push ? `–${r.push}` :
 
 /** "Q2 5:00" or "H1 10:00": the moment a live line was saved. */
 function momentText(league: LeagueId, at: NonNullable<PropSnap['at']>): string {
-  const L = LEAGUES[league];
+  const L = LEAGUE_INFO[league];
   const p = at.period > L.periods ? (at.period - L.periods > 1 ? `${at.period - L.periods}OT` : 'OT') : `${L.periods === 4 ? 'Q' : 'H'}${at.period}`;
   const m = Math.floor(at.clockSec / 60), sec = Math.floor(at.clockSec % 60);
   return `${p} ${m}:${String(sec).padStart(2, '0')}`;
@@ -282,6 +282,16 @@ function FitTestStats({ t, what }: { t: FitTest; what: string }) {
           {signed4(t.brier.hi)})
         </span>
       </div>
+      {t.byAge ? (
+        <div class="stat">
+          <span class="kicker">On fresh lines only</span>
+          <strong class={t.byAge.fresh.roi > 0 ? 'pos' : t.byAge.fresh.roi < 0 ? 'neg' : ''}>{t.byAge.fresh.win + t.byAge.fresh.loss ? signedPct(t.byAge.fresh.roi) : '–'}</strong>
+          <span class="muted">
+            {t.byAge.fresh.win}-{t.byAge.fresh.loss} on lines the book had changed in the last {FRESH_LINE_SEC / 60} minutes; {t.byAge.stale.win}-{t.byAge.stale.loss} (
+            {signedPct(t.byAge.stale.roi)}) on older ones{t.byAge.unknown ? `, ${t.byAge.unknown} with no time` : ''}. An old line may already have moved at the book.
+          </span>
+        </div>
+      ) : null}
       {t.moved && moved ? (
         <div class="stat">
           <span class="kicker">Line moved toward the pick</span>
@@ -373,7 +383,7 @@ function PropTable({ rows, league, live }: { rows: GradedProp[]; league: LeagueI
                   {r.news && (
                     <>
                       <br />
-                      {r.news.name} out · sim {r.news.shift > 0 ? '+' : '−'}
+                      {r.news.name} {r.news.back ? 'back' : 'out'} · sim {r.news.shift > 0 ? '+' : '−'}
                       {Math.abs(r.news.shift).toFixed(1)}
                       {r.news.moved ? ` · line moved ${r.news.moved === 'same' ? 'nowhere' : r.news.moved === 'toward' ? 'toward it' : 'away'} by tip` : ''}
                     </>
@@ -458,7 +468,7 @@ function PropRecord(props: { league: LeagueId; model: string }) {
           {when === 'pre'
             ? "The posted prop lines and the sim's chance on each, saved with the game's last snapshot before tip-off and graded from the final box score."
             : when === 'live'
-              ? `The book's in-game prop lines, saved once per game mid-game (${LEAGUES[props.league].periods === 4 ? '2nd or 3rd quarter' : 'between 10:00 left in the first half and 10:00 left in the second'}) with the sim's chances from that score, then never changed. Graded from the final box score.`
+              ? `The book's in-game prop lines, saved once per game mid-game (${LEAGUE_INFO[props.league].periods === 4 ? '2nd or 3rd quarter' : 'between 10:00 left in the first half and 10:00 left in the second'}) with the sim's chances from that score, then never changed. Graded from the final box score.`
               : "Saved by the scheduled job within about 15 minutes of a player being ruled out before tip: the game's prop lines with the sim's chances with him out, and what each player would have done had he played. Picks are the side the news points to. Graded from the final box score, and each pick's line is checked again just before tip to see whether the book moved toward it."}
           {waiting ? ` ${waiting} game${waiting === 1 ? '' : 's'} waiting on a result.` : ''}
         </p>

@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [src/model/version.ts, scripts/props-backtest.ts, .github/workflows/props-history.yml]
+    paths: [src/model/version.ts, scripts/props-backtest.ts, scripts/nfl-replay.ts, src/model/nfl/**, .github/workflows/props-history.yml]
   schedule:
     - cron: '41 10 * * 1'
 
@@ -41,6 +41,8 @@ jobs:
           restore-keys: bt-espn-nba-
       - name: Replay the season's prop lines with the current model
         run: npx tsx scripts/props-backtest.ts --league nba --season --max 2000 --sims 1000 --cache .cache/bt --history data/v1/history/props/nba.json --out props.md
+      - name: Replay the NFL season's prop lines with the NFL prop model
+        run: npx tsx scripts/props-backtest.ts --league nfl --max 400 --cache .cache/bt --history data/v1/history/props/nfl.json --out props-nfl.md
       - name: Commit to the data branch
         working-directory: data
         run: |
@@ -58,5 +60,5 @@ jobs:
         if: always()
         with:
           name: props-history
-          path: props.md
+          path: props*.md
           if-no-files-found: ignore

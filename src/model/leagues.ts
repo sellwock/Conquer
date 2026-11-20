@@ -1,7 +1,7 @@
-import type { LeagueId, Zone } from './types';
+import type { HoopsLeague, LeagueId, Zone } from './types';
 
 export interface LeagueConfig {
-  id: LeagueId;
+  id: HoopsLeague;
   label: string;
   espnPath: string; // segment under /sports/basketball/
   periods: number;
@@ -42,7 +42,7 @@ export interface LeagueConfig {
 const per36 = (v: number) => v / 36;
 const per40 = (v: number) => v / 40;
 
-export const LEAGUES: Record<LeagueId, LeagueConfig> = {
+export const LEAGUES: Record<HoopsLeague, LeagueConfig> = {
   nba: {
     id: 'nba',
     label: 'NBA',
@@ -115,3 +115,30 @@ export const LEAGUES: Record<LeagueId, LeagueConfig> = {
 };
 
 export const regulationSec = (lg: LeagueConfig) => lg.periods * lg.periodSec;
+
+export type Sport = 'basketball' | 'football';
+
+/** What every league has, the NFL included: its name, where ESPN keeps it, and how its clock runs. */
+export interface LeagueInfo {
+  id: LeagueId;
+  label: string;
+  sport: Sport;
+  /** Segment under ESPN's /sports/{sport}/. */
+  espnPath: string;
+  periods: number;
+  periodSec: number;
+}
+
+export const LEAGUE_INFO: Record<LeagueId, LeagueInfo> = {
+  nba: { id: 'nba', label: LEAGUES.nba.label, sport: 'basketball', espnPath: LEAGUES.nba.espnPath, periods: LEAGUES.nba.periods, periodSec: LEAGUES.nba.periodSec },
+  ncaam: { id: 'ncaam', label: LEAGUES.ncaam.label, sport: 'basketball', espnPath: LEAGUES.ncaam.espnPath, periods: LEAGUES.ncaam.periods, periodSec: LEAGUES.ncaam.periodSec },
+  nfl: { id: 'nfl', label: 'NFL', sport: 'football', espnPath: 'nfl', periods: 4, periodSec: 900 },
+};
+
+export const isHoops = (league: LeagueId): league is HoopsLeague => LEAGUE_INFO[league].sport === 'basketball';
+
+/** The basketball simulator's settings for a league; only basketball games reach the simulator. */
+export function hoopsConfig(league: LeagueId): LeagueConfig {
+  if (!isHoops(league)) throw new Error(`${LEAGUE_INFO[league].label} has no basketball simulation`);
+  return LEAGUES[league];
+}

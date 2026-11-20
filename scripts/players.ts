@@ -15,7 +15,7 @@ import { appendFileSync, writeFileSync } from 'node:fs';
 import { setStore, mapLimit, requestCount } from '../src/data/espn/client';
 import { loadGame, loadScoreboard, pregameView } from '../src/data/espn/load';
 import { buildSpec, PLAYER_TUNING, type PlayerTuning } from '../src/model/build';
-import { LEAGUES } from '../src/model/leagues';
+import { hoopsConfig } from '../src/model/leagues';
 import type { GameData, LeagueId } from '../src/model/types';
 import { seasonYear } from '../src/data/espn/parse';
 import { runOutcomes } from '../src/sim/quick';
@@ -76,7 +76,7 @@ async function main() {
   }
 
   // --- Simulate every game with a setting, and grade the players and the game ---------------------
-  const tuning = PLAYER_TUNING[league];
+  const tuning = PLAYER_TUNING[hoopsConfig(league).id];
   const defaults = { ...tuning };
   const evaluate = (s: Setting): { rows: Record<string, PlayerEval[]>; entries: Entry[] } => {
     Object.assign(tuning, defaults, s);
@@ -101,7 +101,7 @@ async function main() {
           status: 'final',
           pred: predictionFromOutcomes(o, built, g.date, g.date),
           line: g.odds ? { ...g.odds, fetchedAt: '' } : undefined,
-          result: { home: g.homeScore!, away: g.awayScore!, ot: g.period > LEAGUES[league].periods, gradedAt: '' },
+          result: { home: g.homeScore!, away: g.awayScore!, ot: g.period > hoopsConfig(league).periods, gradedAt: '' },
         });
       }
     }

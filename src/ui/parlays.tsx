@@ -20,7 +20,7 @@ import {
   type Parlay,
   type PickMode,
 } from '../model/parlays';
-import { LEAGUES } from '../model/leagues';
+import { LEAGUE_INFO } from '../model/leagues';
 import type { GameData, LeagueId } from '../model/types';
 import { fmtAmerican } from '../lib/stats';
 import { one, pct, perHundred, tipTime } from './format';
@@ -52,7 +52,7 @@ export function blendText(w: BlendWeights, kinds: LegKind[] = ['ml', 'spread', '
 
 /** Shown in place of blended suggestions when the market alone ranks every bet in a league. */
 export function NoEdgeNote(props: { league: LeagueId; onSim?: () => void }) {
-  const label = LEAGUES[props.league].label;
+  const label = LEAGUE_INFO[props.league].label;
   return (
     <>
       <p>
@@ -78,7 +78,7 @@ export const propMixText = () => `${pct(PROP_SIM_WEIGHT, 0)} simulation, ${pct(1
 
 /** Why the simulation's picks deserve less trust than their numbers suggest. */
 export function simOnlyText(league: LeagueId): string {
-  const label = LEAGUES[league].label;
+  const label = LEAGUE_INFO[league].label;
   return `Ranked by the simulation: its chances replace the market's on moneylines, spreads and totals. Player props count ${propMixText()}, because the first graded props showed the simulation far too sure of itself. In backtests the market's odds were more accurate than the simulation's on ${label} games, so read these expected returns as the simulation's opinion, and expect them to be overstated.`;
 }
 
@@ -236,7 +236,7 @@ export function Parlays(props: {
   const weights = weightsFor(g.league, mode, fits);
   const s = useMemo(() => suggestParlays(pool, 3, weights), [pool, weights]);
   const changed = pool.filter((m) => m.note);
-  const label = LEAGUES[g.league].label;
+  const label = LEAGUE_INFO[g.league].label;
 
   return (
     <div class="parlays">

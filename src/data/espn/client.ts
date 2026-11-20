@@ -2,7 +2,7 @@
 // cache for immutable responses, retries, and an optional proxy prefix. Runs in the browser and,
 // for the forward-log job, under Node (which swaps in its own store with setStore).
 import type { LeagueId } from '../../model/types';
-import { LEAGUES } from '../../model/leagues';
+import { LEAGUE_INFO } from '../../model/leagues';
 
 const SITE = 'https://site.api.espn.com';
 const WEB = 'https://site.web.api.espn.com';
@@ -156,9 +156,9 @@ async function getJsonFrom<T>(host: Host, path: string, opts: GetOptions): Promi
   }
 }
 
-export const sitePath = (league: LeagueId, rest: string) => `/apis/site/v2/sports/basketball/${LEAGUES[league].espnPath}${rest}`;
-export const webPath = (league: LeagueId, rest: string) => `/apis/common/v3/sports/basketball/${LEAGUES[league].espnPath}${rest}`;
-export const corePath = (league: LeagueId, rest: string) => `/v2/sports/basketball/leagues/${LEAGUES[league].espnPath}${rest}`;
+export const sitePath = (league: LeagueId, rest: string) => `/apis/site/v2/sports/${LEAGUE_INFO[league].sport}/${LEAGUE_INFO[league].espnPath}${rest}`;
+export const webPath = (league: LeagueId, rest: string) => `/apis/common/v3/sports/${LEAGUE_INFO[league].sport}/${LEAGUE_INFO[league].espnPath}${rest}`;
+export const corePath = (league: LeagueId, rest: string) => `/v2/sports/${LEAGUE_INFO[league].sport}/leagues/${LEAGUE_INFO[league].espnPath}${rest}`;
 
 // --- Small persistent cache for derived, immutable data (completed-game extracts) ---------------
 const CACHE_PREFIX = 'conquer.c1.';

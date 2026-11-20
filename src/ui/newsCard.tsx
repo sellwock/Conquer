@@ -38,7 +38,7 @@ function NewsEvent(props: { item: NewsItem; team: string; entry?: PropEntry; now
   return (
     <article class="news-item">
       <p class="news-head">
-        <strong>{e.name}</strong> ({props.team}) {e.status.toLowerCase()}
+        <strong>{e.name}</strong> ({props.team}) {e.kind === 'back' ? <span class="chip good">Back</span> : null} {e.status.toLowerCase()}
         {e.since ? <span class="muted"> · {ago(e.since, now)}</span> : null}
         {e.was ? <span class="muted"> · was {e.was.toLowerCase()}</span> : null}
       </p>
@@ -48,7 +48,7 @@ function NewsEvent(props: { item: NewsItem; team: string; entry?: PropEntry; now
           {p?.label ?? 'His game'}
         </button>{' '}
         · tips {tipTime(e.tip)}
-        {p ? ` · projected ${Math.round(p.minutes)} min had he played` : ''}
+        {p ? ` · projected ${Math.round(p.minutes)} min ${e.kind === 'back' ? 'if he plays' : 'had he played'}` : ''}
         {item.loggedAt ? ` · logged ${ago(item.loggedAt, now)}` : ''}
       </p>
       {item.status === 'pricing' && !p && <p class="muted">Repricing his game with and without him…</p>}
@@ -158,13 +158,14 @@ export function NewsCard(props: { news: NewsScan; games: ScoreboardGame[]; onOpe
       {news.error && <p class="note">Couldn't read ESPN's injury report: {news.error}</p>}
       {!shown.length && !news.error && (
         <p class="muted">
-          {news.checkedAt ? 'Nobody with real minutes has been ruled out since the last report.' : "Reading ESPN's injury report…"} When someone is, his game is
-          simulated with and without him, and the props his absence moves most show here.
+          {news.checkedAt ? 'Nobody with real minutes has been ruled out, or come back, since the last report.' : "Reading ESPN's injury report…"} When someone is, his
+          game is simulated with and without him, and the props the news moves most show here.
         </p>
       )}
       {shown.length > 0 && (
         <p class="note caution">
-          Books often move props within minutes of a scratch, so check the line before betting. The shift is the simulation with him out minus with him in; hit chances
+          Books often move props within minutes of news, so check the line before betting. The shift is the simulation as reported minus the other way (him in after a
+          scratch, him out after a return). A player upgraded from out isn't certain to play. Hit chances
           count {propMixText()}. The track record grades these as "After news". Suggestions, not advice.
         </p>
       )}
@@ -173,7 +174,7 @@ export function NewsCard(props: { news: NewsScan; games: ScoreboardGame[]; onOpe
       ))}
       {quiet.length > 0 && (
         <p class="muted small">
-          Also ruled out, without real minutes to move: {quiet.map((i) => `${i.event.name} (${teams.get(i.event.teamId) ?? ''})`).join(', ')}.
+          Also in the news, without real minutes to move: {quiet.map((i) => `${i.event.name} (${teams.get(i.event.teamId) ?? ''})`).join(', ')}.
         </p>
       )}
     </section>

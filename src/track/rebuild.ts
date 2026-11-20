@@ -1,7 +1,7 @@
 // Rebuilds one finished game as it looked at tip-off and simulates it. Season stats stop at tip;
 // who dressed comes from the box score ("known availability"). Node-safe: the caller supplies the
 // simulator (a worker in the browser, a direct call in scripts).
-import { LEAGUES } from '../model/leagues';
+import { hoopsConfig } from '../model/leagues';
 import { buildSpec } from '../model/build';
 import type { LeagueId, ScoreboardGame } from '../model/types';
 import { loadGame, pregameView } from '../data/espn/load';
@@ -47,6 +47,6 @@ export async function rebuildGame(league: LeagueId, game: Pick<ScoreboardGame, '
     status: 'final',
     pred: predictionFromOutcomes(outcomes, built, g.date, g.date),
     line: g.odds ? { ...g.odds, fetchedAt: '' } : undefined,
-    result: { home: g.homeScore, away: g.awayScore, ot: g.period > LEAGUES[league].periods, gradedAt: '' },
+    result: { home: g.homeScore, away: g.awayScore, ot: g.period > hoopsConfig(league).periods, gradedAt: '' },
   };
 }

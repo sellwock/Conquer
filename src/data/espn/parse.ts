@@ -554,6 +554,7 @@ export function seasonYear(dateIso: string, league: LeagueId): number {
   const d = new Date(dateIso);
   const y = d.getUTCFullYear();
   const m = d.getUTCMonth() + 1;
-  void league;
+  // Basketball seasons are named by the year they end; ESPN names NFL seasons by the year they start.
+  if (league === 'nfl') return m >= 3 ? y : y - 1;
   return m >= 8 ? y + 1 : y;
 }

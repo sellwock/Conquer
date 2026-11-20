@@ -5,13 +5,16 @@
 // player sits.
 import type { PropLine } from '../data/espn/props';
 import type { PropMarket } from './parlays';
-import type { GameData, PropStat } from './types';
+import type { GameData, HoopsStat, PropStat } from './types';
 import type { PlayerOutcomes } from '../sim/players';
 
 export const MIN_MINUTES = 15;
 
-/** The box-score stats each prop adds up. */
-export const PARTS: Record<PropStat, ('pts' | 'reb' | 'ast' | 'tpm')[]> = {
+export type HoopsBoxStat = 'pts' | 'reb' | 'ast' | 'tpm';
+export type NflBoxStat = 'passYds' | 'passComp' | 'passAtt' | 'rushYds' | 'rushAtt' | 'recYds' | 'rec';
+
+/** The basketball box-score stats each prop adds up. */
+export const HOOPS_PARTS: Record<HoopsStat, HoopsBoxStat[]> = {
   pts: ['pts'],
   reb: ['reb'],
   ast: ['ast'],
@@ -21,6 +24,22 @@ export const PARTS: Record<PropStat, ('pts' | 'reb' | 'ast' | 'tpm')[]> = {
   pa: ['pts', 'ast'],
   ar: ['reb', 'ast'],
 };
+
+/** The box-score stats each prop adds up, in either sport. */
+export const PARTS: Record<PropStat, (HoopsBoxStat | NflBoxStat)[]> = {
+  ...HOOPS_PARTS,
+  passYds: ['passYds'],
+  passComp: ['passComp'],
+  passAtt: ['passAtt'],
+  rushYds: ['rushYds'],
+  rushAtt: ['rushAtt'],
+  recYds: ['recYds'],
+  rec: ['rec'],
+  passRushYds: ['passYds', 'rushYds'],
+  rushRecYds: ['rushYds', 'recYds'],
+};
+
+export const isHoopsStat = (s: PropStat): s is HoopsStat => s in HOOPS_PARTS;
 
 /** A player's box score so far, for live props: the simulation then only plays the rest of the game. */
 export type SoFar = Record<'pts' | 'reb' | 'ast' | 'tpm', number> & { played: boolean };
@@ -37,21 +56,23 @@ export function propMarkets(lines: PropLine[], po: PlayerOutcomes, names: Map<st
   const index = new Map(po.ids.map((id, i) => [id, i]));
   const out: PropMarket[] = [];
   for (const l of lines) {
+    if (!isHoopsStat(l.stat)) continue;
+    const parts = HOOPS_PARTS[l.stat];
     const j = index.get(l.athleteId);
     const name = names.get(l.athleteId);
     if (j == null || !name) continue;
     const now = soFar?.get(l.athleteId);
     if (soFar ? !now?.played && po.min[j] < 1 : po.min[j] < MIN_MINUTES) continue;
-    const base = now ? PARTS[l.stat].reduce((a, k) => a + now[k], 0) : 0;
+    const base = now ? parts.reduce((a, k) => a + now[k], 0) : 0;
     const hits = new Uint8Array(n);
     let sum = 0;
     for (let s = 0; s < n; s++) {
       let v = base;
-      for (const k of PARTS[l.stat]) v += po[k][s * P + j];
+      for (const k of parts) v += po[k][s * P + j];
       hits[s] = v > l.line ? 1 : v < l.line ? 0 : 2;
       sum += v;
     }
-    out.push({ athleteId: l.athleteId, player: name, stat: l.stat, line: l.line, over: l.over, under: l.under, hits, mean: sum / n, ...(now ? { now: base } : {}) });
+    out.push({ athleteId: l.athleteId, player: name, stat: l.stat, line: l.line, over: l.over, under: l.under, hits, mean: sum / n, ...(now ? { now: base } : {}), ...(l.updated ? { updated: l.updated } : {}) });
   }
   return out;
 }

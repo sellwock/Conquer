@@ -66,11 +66,11 @@ export function newsHeadline(item: NewsItem): { title: string; body: string } {
   const e = item.event;
   const top = item.pricing?.rows[0];
   const body = top
-    ? `${top.player} ${top.side} ${top.line} ${PROP_WORDS[top.stat]}: sim ${top.shift > 0 ? '+' : '−'}${Math.abs(top.shift).toFixed(1)} with him out`
+    ? `${top.player} ${top.side} ${top.line} ${PROP_WORDS[top.stat]}: sim ${top.shift > 0 ? '+' : '−'}${Math.abs(top.shift).toFixed(1)} with him ${e.kind === 'back' ? 'back' : 'out'}`
     : item.pricing
       ? `${item.pricing.label}: no posted prop moves enough to matter yet.`
       : 'Repricing his game now.';
-  return { title: `${e.name} ruled out (${e.status})`, body };
+  return { title: e.kind === 'back' ? `${e.name} may be back (${e.status})` : `${e.name} ruled out (${e.status})`, body };
 }
 
 const backgroundSimulate: Simulate = (spec, n, seed, opts) => runOutcomesInBackground(spec, n, seed, opts).promise;

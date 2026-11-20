@@ -23,7 +23,7 @@ import type { Outcomes } from '../src/sim/quick';
 import { args, fileStore } from './cli';
 
 /** Last season's regular season by default: big enough to settle a Brier difference. */
-const DEFAULT_RANGE: Record<LeagueId, [string, string]> = {
+const DEFAULT_RANGE: Partial<Record<LeagueId, [string, string]>> = {
   nba: ['20260105', '20260331'],
   ncaam: ['20260110', '20260301'],
 };
@@ -72,7 +72,9 @@ async function run(a: Record<string, string | boolean>) {
   if (typeof a.games === 'string') {
     games = (JSON.parse(readFileSync(a.games, 'utf8')) as RunFile).games;
   } else {
-    const [from, to] = [String(a.from ?? DEFAULT_RANGE[league][0]), String(a.to ?? DEFAULT_RANGE[league][1])];
+    const range = DEFAULT_RANGE[league];
+    if (!range && (a.from == null || a.to == null)) throw new Error(`No default range for ${league}: pass --from and --to`);
+    const [from, to] = [String(a.from ?? range![0]), String(a.to ?? range![1])];
     const found = new Map<string, GameRef>();
     await client.mapLimit(days(from, to), 3, async (ymd: string) => {
       try {
