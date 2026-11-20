@@ -14,8 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Probe ESPN's NFL feeds and the NBA in-game prop feed
-        run: node scripts/probe/nfl.mjs
+      - name: Which NFL prop types carry prices
+        run: node scripts/probe/nfl-odds.mjs
       - name: Keep the responses on this branch
         if: always()
         run: |
