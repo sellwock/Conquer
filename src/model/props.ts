@@ -51,7 +51,7 @@ export function propMarkets(lines: PropLine[], po: PlayerOutcomes, names: Map<st
       hits[s] = v > l.line ? 1 : v < l.line ? 0 : 2;
       sum += v;
     }
-    out.push({ athleteId: l.athleteId, player: name, stat: l.stat, line: l.line, over: l.over, under: l.under, hits, mean: sum / n, ...(now ? { now: base } : {}) });
+    out.push({ athleteId: l.athleteId, player: name, stat: l.stat, line: l.line, over: l.over, under: l.under, hits, mean: sum / n, ...(now ? { now: base } : {}), ...(l.updated ? { updated: l.updated } : {}) });
   }
   return out;
 }

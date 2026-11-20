@@ -37,7 +37,8 @@ function coreBody(u: URL): unknown {
     };
   if (u.pathname.endsWith('/100/propBets')) return { pageCount: 1, items: [...pair('4432101', '1', 20.5, '-110', '-110'), ...pair('4432104', '2', 5.5, '+100', '-120')] };
   if (u.pathname.endsWith('/200/propBets') && noLiveProps) return { pageCount: 1, items: [] };
-  if (u.pathname.endsWith('/200/propBets')) return { pageCount: 1, items: [...pair('4432201', '1', 34.5, '-110', '-120'), ...pair('4432101', '3', 6.5, '+105', '-135')] };
+  if (u.pathname.endsWith('/200/propBets'))
+    return { pageCount: 1, items: [...pair('4432201', '1', 34.5, '-110', '-120').map((it) => ({ ...it, lastUpdated: '2026-01-15T01:12Z' })), ...pair('4432101', '3', 6.5, '+105', '-135')] };
   return undefined;
 }
 
@@ -344,16 +345,43 @@ describe('player props in the forward log', () => {
     expect(e.live).toMatchObject({ model: MODEL_VERSION, provider: 'DraftKings - Live Odds', n: 200, at: { period: 2, clockSec: 300, home: 122, away: 113 } });
     expect(e.players['4432201']).toBe('C. Vance');
     const vance = e.live!.rows.find((x) => x[0] === '4432201' && x[1] === 'pts')!;
+    // The line the book changed at 01:12 was 3 minutes old when saved at 01:15; the other gave no time.
+    expect(e.live!.age).toHaveLength(e.live!.rows.length);
+    expect(e.live!.age![e.live!.rows.indexOf(vance)]).toBe(180);
+    expect(e.live!.age!.filter((a) => a == null)).toHaveLength(e.live!.rows.length - 1);
     expect(vance[8]).toBe(27);
     expect(vance[7]).toBeGreaterThanOrEqual(27);
     expect(e.pre).toBeUndefined();
 
-    // A later run, still mid-game: the saved lines stay as they were.
-    liveAt = { period: 3, clock: '6:00' };
+    // Later in the same half: the saved lines stay as they were.
+    liveAt = { period: 2, clock: '1:00' };
     const before = JSON.stringify(files.get(PROPS));
-    r = await run(io, '2026-01-15T01:45:00Z');
+    r = await run(io, '2026-01-15T01:30:00Z');
     expect(r.propsLive).toBe(0);
     expect(JSON.stringify(files.get(PROPS))).toBe(before);
+
+    // After halftime: one more look, kept apart from the first.
+    liveAt = { period: 3, clock: '6:00' };
+    r = await run(io, '2026-01-15T01:45:00Z');
+    expect(r.propsLive).toBe(1);
+    const again = (files.get(PROPS) as PropLogFile)['401810123'];
+    expect(JSON.stringify(again.live)).toBe(JSON.stringify(e.live));
+    expect(again.live2).toMatchObject({ model: MODEL_VERSION, at: { period: 3, clockSec: 360 } });
+    // And no third.
+    const twice = JSON.stringify(files.get(PROPS));
+    r = await run(io, '2026-01-15T02:00:00Z');
+    expect(r.propsLive).toBe(0);
+    expect(JSON.stringify(files.get(PROPS))).toBe(twice);
+  });
+
+  it('takes no second look when the first came after halftime', async () => {
+    withProps = true;
+    const { io, files } = memoryIO();
+    liveAt = { period: 3, clock: '10:00' };
+    expect((await run(io, '2026-01-15T01:45:00Z')).propsLive).toBe(1);
+    liveAt = { period: 3, clock: '2:00' };
+    expect((await run(io, '2026-01-15T02:00:00Z')).propsLive).toBe(0);
+    expect((files.get(PROPS) as PropLogFile)['401810123'].live2).toBeUndefined();
   });
 
   it('loads nothing more for a live game whose book has no in-game props', async () => {
