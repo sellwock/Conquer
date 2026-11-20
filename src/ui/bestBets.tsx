@@ -12,6 +12,7 @@ import { fmtAmerican } from '../lib/stats';
 import { fitsFor, type FitFile } from '../track/fit';
 import { loadFit } from '../track/forward';
 import { STALE_LINE_MIN, ageText, lineAgeMin, one, pct, perHundred, signedPct } from './format';
+import { BankrollNote, LogBet } from './myBets';
 
 export interface FitState {
   /** The fit as the scheduled job wrote it, for its record. */
@@ -74,7 +75,7 @@ export function FitRecordLine(props: { fit: FitState; when: FitWhen; league: Lea
 }
 
 /** Fitted single bets: the price, the fit's chance, the chance the price needs, and the return per $100. */
-export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (id: string) => void }) {
+export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (id: string) => void; league?: LeagueId; tested?: boolean }) {
   return (
     <div class="table-wrap">
       <table class="data props-table bets-table">
@@ -130,6 +131,12 @@ export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (i
                       </>
                     )}
                   </span>
+                  {props.league && (
+                    <>
+                      <br />
+                      <LogBet leg={l} league={props.league} live={props.live} tested={!!props.tested} />
+                    </>
+                  )}
                 </th>
                 <td class="num" data-label="Price">
                   {fmtAmerican(l.price)}
@@ -195,7 +202,7 @@ export function FitPicks(props: {
         <p class="muted">No prop clears the bar right now: {barText(fits)}. Passing is a fine choice.</p>
       ) : (
         <>
-          <BetTable singles={shown} live={when === 'live'} onOpen={props.onOpen} />
+          <BetTable singles={shown} live={when === 'live'} onOpen={props.onOpen} league={props.league} tested={verdictOf(fit, when) === 'tested'} />
           {singles.length > shown.length && (
             <p>
               <button type="button" class="link" onClick={() => setAll(true)}>
@@ -203,6 +210,7 @@ export function FitPicks(props: {
               </button>
             </p>
           )}
+          <BankrollNote />
           <p class="muted small">
             One bet per player: the line and side with the best return by the fit, if it clears {barText(fits)}. The record stakes every pick equally, so the order
             here is untested.
