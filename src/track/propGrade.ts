@@ -36,7 +36,7 @@ export interface GradedProp {
   now?: number;
   at?: PropSnap['at'];
   /** News picks: the scratched player, and how the book's line moved by just before tip. */
-  news?: { name: string; shift: number; moved?: 'toward' | 'away' | 'same' };
+  news?: { name: string; shift: number; back?: boolean; moved?: 'toward' | 'away' | 'same' };
 }
 
 export interface GradedSnap {
@@ -148,7 +148,7 @@ function gradeSnap(e: PropEntry, snap: PropSnap, news?: NewsSnap): GradedSnap {
     if (final !== line) brier.push([over.pSim, over.pMarket, final > line ? 1 : 0]);
     for (const s of [over, under]) {
       if (news && !(Math.abs(shift) >= (stat === 'tpm' ? 0.2 : 0.5) && (s.side === 'over') === shift > 0)) continue;
-      if (s.ev > 0 && s.pHit >= HIT_FLOOR[1] && s.price <= MAX_PRICE[1]) picks.push({ s, grade: news ? (x) => ({ ...grade(x), news: { name: news.out.name, shift } }) : grade });
+      if (s.ev > 0 && s.pHit >= HIT_FLOOR[1] && s.price <= MAX_PRICE[1]) picks.push({ s, grade: news ? (x) => ({ ...grade(x), news: { name: news.out.name, shift, ...(news.kind === 'back' ? { back: true } : {}) } }) : grade });
     }
   }
   const top = picks
