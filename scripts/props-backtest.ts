@@ -29,13 +29,14 @@ import { noVig, toDecimal } from '../src/model/parlays';
 import { PARTS, propMarkets, rosterNames } from '../src/model/props';
 import { seasonYear } from '../src/data/espn/parse';
 import type { GameData, LeagueId, PropStat } from '../src/model/types';
-import { MODEL_VERSION } from '../src/model/version';
+import { modelVersion } from '../src/model/version';
 import { runOutcomes } from '../src/sim/quick';
 import { buildFit, fitRows, type FitPart, type FitRow, type FitTest, type PropHistory } from '../src/track/fit';
 import { propRows } from '../src/track/job';
 import { evenly, finalsToGrade } from '../src/track/rebuild';
 import type { PropEntry, PropRow } from '../src/track/types';
 import { args, fileStore } from './cli';
+import { nflReplay } from './nfl-replay';
 
 function days(from: string, to: string): string[] {
   const d = (s: string) => Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8));
@@ -97,7 +98,7 @@ const withoutSim = (entries: PropEntry[]): PropEntry[] =>
 
 async function main() {
   const a = args(process.argv.slice(2));
-  const league = (a.league === 'ncaam' ? 'ncaam' : 'nba') as LeagueId;
+  const league = (a.league === 'ncaam' || a.league === 'nfl' ? a.league : 'nba') as LeagueId;
   const sims = Number(a.sims ?? 1000);
   const max = Number(a.max ?? 1200);
   const book = new RegExp(String(a.book ?? 'draft'), 'i');
@@ -119,84 +120,88 @@ async function main() {
       if (e.pre) archived.set(e.id, { provider: e.pre.provider ?? '', lines: e.pre.rows.map(([athleteId, stat, line, over, under]) => ({ athleteId, stat, line, over, under })) });
   }
 
-  // --- Finished games ------------------------------------------------------------------------------
-  const found = new Map<string, { id: string; date: string }>();
-  for (const [from, to] of ranges) {
-    await mapLimit(days(from, to), 3, async (ymd: string) => {
-      try {
-        for (const g of finalsToGrade(await loadScoreboard(league, ymd), league)) found.set(g.id, { id: g.id, date: g.date });
-      } catch (e) {
-        console.log(`scoreboard ${ymd}: ${(e as Error).message}`);
-      }
-    });
-  }
-  const refs = evenly([...found.values()].sort((x, y) => x.date.localeCompare(y.date) || x.id.localeCompare(y.id)), max);
-  console.log(`${league}: ${found.size} finished games; using ${refs.length}.`);
-
-  // --- Each game as of tip-off, with the book's prop lines ----------------------------------------
-  const loaded: { g: GameData; lines: PropLine[]; provider: string }[] = [];
-  const skipped: Record<string, number> = {};
-  const skip = (why: string) => void (skipped[why] = (skipped[why] ?? 0) + 1);
-  let done = 0, fromArchive = 0;
-  const t0 = Date.now();
-  await mapLimit(refs, 3, async (r) => {
-    try {
-      // Closed games' lines never change, so one fetch per game is kept in the cache.
-      const key = `props-history:${league}:${r.id}`;
-      let board = JSON.parse(store.get(key) ?? 'null') as { provider?: string; lines: PropLine[] } | null;
-      if (!board) {
-        const b = await loadProps(league, r.id).catch((e) => {
-          if ((e as { status?: number }).status === 404 && archived.has(r.id)) return { provider: undefined, lines: [] as PropLine[] };
-          throw e;
-        });
-        board = { provider: b.provider, lines: b.lines };
-        if (b.lines.length) store.set(key, JSON.stringify(board));
-      }
-      if (!board.lines.length && archived.has(r.id)) {
-        board = archived.get(r.id)!;
-        fromArchive++;
-      }
-      if (!board.lines.length) skip('no prop lines kept');
-      else if (!book.test(board.provider ?? '')) skip(`another book (${board.provider})`);
-      else {
-        const g = await loadGame(league, r.id, { sampleGames: 10, asOf: r.date });
-        if (g.homeScore == null) skip('no final score');
-        else loaded.push({ g, lines: board.lines, provider: board.provider ?? '' });
-      }
-    } catch (e) {
-      skip((e as { status?: number }).status === 404 ? 'no odds kept' : `error: ${(e as Error).message.slice(0, 60)}`);
+  let entries: PropEntry[] = [];
+  let skipped: Record<string, number> = {};
+  let fromArchive = 0;
+  if (league === 'nfl') ({ entries, skipped, fromArchive } = await nflReplay({ max, book, store, archived }));
+  else {
+    // --- Finished games ------------------------------------------------------------------------------
+    const found = new Map<string, { id: string; date: string }>();
+    for (const [from, to] of ranges) {
+      await mapLimit(days(from, to), 3, async (ymd: string) => {
+        try {
+          for (const g of finalsToGrade(await loadScoreboard(league, ymd), league)) found.set(g.id, { id: g.id, date: g.date });
+        } catch (e) {
+          console.log(`scoreboard ${ymd}: ${(e as Error).message}`);
+        }
+      });
     }
-    if (++done % 50 === 0 || done === refs.length) console.log(`${done}/${refs.length} · ${loaded.length} with props · ${requestCount()} requests · ${Math.round((Date.now() - t0) / 1000)}s`);
-  });
-  loaded.sort((x, y) => x.g.date.localeCompare(y.g.date) || x.g.id.localeCompare(y.g.id));
+    const refs = evenly([...found.values()].sort((x, y) => x.date.localeCompare(y.date) || x.id.localeCompare(y.id)), max);
+    console.log(`${league}: ${found.size} finished games; using ${refs.length}.`);
 
-  // --- Simulate and price ---------------------------------------------------------------------------
-  const entries: PropEntry[] = [];
-  for (const { g, lines, provider } of loaded) {
-    const { spec } = buildSpec(pregameView(g), { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
-    const o = runOutcomes(spec, sims, g.id, { players: true });
-    if (!o.players) continue;
-    const names = rosterNames(g);
-    const close = propMarkets(lines, o.players, names);
-    const open = propMarkets(lines.filter((l) => l.open).map((l) => ({ ...l, ...l.open! })), o.players, names);
-    if (!close.length) continue;
-    const box: NonNullable<PropEntry['box']> = {};
-    for (const p of [...g.home.players, ...g.away.players]) box[p.id] = p.actual?.played ? [p.actual.pts, p.actual.oreb + p.actual.dreb, p.actual.ast, p.actual.tpm] : null;
-    const snap = (rows: PropRow[]) => ({ model: MODEL_VERSION, takenAt: g.date, provider, n: sims, rows });
-    entries.push({
-      id: g.id,
-      league,
-      season: seasonYear(g.date, league),
-      tip: g.date,
-      home: { id: g.home.id, abbr: g.home.abbr },
-      away: { id: g.away.id, abbr: g.away.abbr },
-      status: 'final',
-      players: Object.fromEntries(close.map((m) => [m.athleteId, m.player])),
-      pre: snap(propRows(close)),
-      ...(open.length ? { open: snap(propRows(open)) } : {}),
-      close: { takenAt: g.date, lines: lines.map((l) => [l.athleteId, l.stat, l.line, l.over, l.under]) },
-      box,
+    // --- Each game as of tip-off, with the book's prop lines ----------------------------------------
+    const loaded: { g: GameData; lines: PropLine[]; provider: string }[] = [];
+    const skip = (why: string) => void (skipped[why] = (skipped[why] ?? 0) + 1);
+    let done = 0;
+    const t0 = Date.now();
+    await mapLimit(refs, 3, async (r) => {
+      try {
+        // Closed games' lines never change, so one fetch per game is kept in the cache.
+        const key = `props-history:${league}:${r.id}`;
+        let board = JSON.parse(store.get(key) ?? 'null') as { provider?: string; lines: PropLine[] } | null;
+        if (!board) {
+          const b = await loadProps(league, r.id).catch((e) => {
+            if ((e as { status?: number }).status === 404 && archived.has(r.id)) return { provider: undefined, lines: [] as PropLine[] };
+            throw e;
+          });
+          board = { provider: b.provider, lines: b.lines };
+          if (b.lines.length) store.set(key, JSON.stringify(board));
+        }
+        if (!board.lines.length && archived.has(r.id)) {
+          board = archived.get(r.id)!;
+          fromArchive++;
+        }
+        if (!board.lines.length) skip('no prop lines kept');
+        else if (!book.test(board.provider ?? '')) skip(`another book (${board.provider})`);
+        else {
+          const g = await loadGame(league, r.id, { sampleGames: 10, asOf: r.date });
+          if (g.homeScore == null) skip('no final score');
+          else loaded.push({ g, lines: board.lines, provider: board.provider ?? '' });
+        }
+      } catch (e) {
+        skip((e as { status?: number }).status === 404 ? 'no odds kept' : `error: ${(e as Error).message.slice(0, 60)}`);
+      }
+      if (++done % 50 === 0 || done === refs.length) console.log(`${done}/${refs.length} · ${loaded.length} with props · ${requestCount()} requests · ${Math.round((Date.now() - t0) / 1000)}s`);
     });
+    loaded.sort((x, y) => x.g.date.localeCompare(y.g.date) || x.g.id.localeCompare(y.g.id));
+
+    // --- Simulate and price ---------------------------------------------------------------------------
+    for (const { g, lines, provider } of loaded) {
+      const { spec } = buildSpec(pregameView(g), { outs: new Set(), ins: new Set(), whistle: 1, homeCourt: true, minutesMode: 'projected' });
+      const o = runOutcomes(spec, sims, g.id, { players: true });
+      if (!o.players) continue;
+      const names = rosterNames(g);
+      const close = propMarkets(lines, o.players, names);
+      const open = propMarkets(lines.filter((l) => l.open).map((l) => ({ ...l, ...l.open! })), o.players, names);
+      if (!close.length) continue;
+      const box: NonNullable<PropEntry['box']> = {};
+      for (const p of [...g.home.players, ...g.away.players]) box[p.id] = p.actual?.played ? [p.actual.pts, p.actual.oreb + p.actual.dreb, p.actual.ast, p.actual.tpm] : null;
+      const snap = (rows: PropRow[]) => ({ model: modelVersion(league), takenAt: g.date, provider, n: sims, rows });
+      entries.push({
+        id: g.id,
+        league,
+        season: seasonYear(g.date, league),
+        tip: g.date,
+        home: { id: g.home.id, abbr: g.home.abbr },
+        away: { id: g.away.id, abbr: g.away.abbr },
+        status: 'final',
+        players: Object.fromEntries(close.map((m) => [m.athleteId, m.player])),
+        pre: snap(propRows(close)),
+        ...(open.length ? { open: snap(propRows(open)) } : {}),
+        close: { takenAt: g.date, lines: lines.map((l) => [l.athleteId, l.stat, l.line, l.over, l.under]) },
+        box,
+      });
+    }
   }
 
   // --- Report ----------------------------------------------------------------------------------------
@@ -208,11 +213,11 @@ async function main() {
   for (const e of entries) byMonth[e.tip.slice(0, 7)] = (byMonth[e.tip.slice(0, 7)] ?? 0) + 1;
 
   const tuned = Object.keys(tuning).length ? `, with ${Object.entries(tuning).map(([k, v]) => `${k}=${v}`).join(' ')}` : '';
-  let md = `## Props backtest, ${league.toUpperCase()}: ${entries.length} games, ${closeRows.length} decided closing lines, ${sims} sims per game (model ${MODEL_VERSION}${tuned})\n\n`;
+  let md = `## Props backtest, ${league.toUpperCase()}: ${entries.length} games, ${closeRows.length} decided closing lines, ${sims} sims per game (model ${modelVersion(league)}${tuned})\n\n`;
   md += `Games by month: ${Object.entries(byMonth).map(([m, n]) => `${m} ${n}`).join(', ')}. Left out: ${Object.entries(skipped).map(([k, n]) => `${n} ${k}`).join('; ') || 'none'}.${fromArchive ? ` ${fromArchive} games used lines from the earlier history file.` : ''}\n\n`;
   md += `### The pick model, each day scored by a fit of earlier days (picks need ${pct(fit.minEdge, 0)} expected return)\n\n`;
-  md += partLines('With the simulation', fit.pre);
-  md += partLines("Book's odds only", blind.pre);
+  md += partLines(league === 'nfl' ? 'With the prop model' : 'With the simulation', fit.pre);
+  md += partLines(league === 'nfl' ? "The book's line only (no prices posted; -110 assumed)" : "Book's odds only", blind.pre);
 
   // Typical posted lines per stat, to sort lines by size: the NBA log's medians (November 2026), and
   // rough NFL ones until its replay gives medians of its own.
@@ -267,7 +272,7 @@ async function main() {
       const ids = new Set(e.pre!.rows.map((r) => r[0]));
       return { id: e.id, league: e.league, season: e.season, tip: e.tip, home: e.home, away: e.away, status: 'final', players: {}, pre: e.pre, box: Object.fromEntries(Object.entries(e.box!).filter(([id]) => ids.has(id))) };
     });
-    const history: PropHistory = { model: MODEL_VERSION, updatedAt: now.toISOString(), entries: slim };
+    const history: PropHistory = { model: modelVersion(league), updatedAt: now.toISOString(), entries: slim };
     mkdirSync(dirname(historyFile), { recursive: true });
     writeFileSync(historyFile, `{"model":${JSON.stringify(history.model)},"updatedAt":${JSON.stringify(history.updatedAt)},"entries":[\n${slim.map((e) => JSON.stringify(e)).join(',\n')}\n]}\n`);
     console.log(`Wrote ${slim.length} games to ${historyFile}.`);
