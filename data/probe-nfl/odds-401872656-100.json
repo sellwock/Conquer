@@ -1,0 +1,387 @@
+{
+ "8:Total Passing Yards (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "9:Total Pass Completions (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "10:Total Passing Touchdowns (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "11:Total Carries (incl. overtime)": {
+  "n": 10,
+  "priced": 0,
+  "samples": []
+ },
+ "12:Total Rushing Yards (incl. overtime)": {
+  "n": 16,
+  "priced": 0,
+  "samples": []
+ },
+ "13:Total Receiving Yards (incl. overtime)": {
+  "n": 32,
+  "priced": 0,
+  "samples": []
+ },
+ "14:Total Receptions (incl. overtime)": {
+  "n": 32,
+  "priced": 0,
+  "samples": []
+ },
+ "15:Total Passing Interceptions (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "16:Total Passing Attempts (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "17:Longest Passing Completion (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "18:Total Passing Plus Rushing Yards (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "19:Longest Reception (incl. overtime)": {
+  "n": 22,
+  "priced": 0,
+  "samples": []
+ },
+ "20:Total Rushing Plus Receiving Yards (incl. overtime)": {
+  "n": 10,
+  "priced": 0,
+  "samples": []
+ },
+ "21:Longest Rush (incl. overtime)": {
+  "n": 12,
+  "priced": 0,
+  "samples": []
+ },
+ "22:Total Kicking Points (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "23:Total Extra Points Made (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "24:Total Field Goals Made (incl. overtime)": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "25:Total Assists (incl. overtime)": {
+  "n": 16,
+  "priced": 0,
+  "samples": []
+ },
+ "26:Total Tackles (incl. overtime)": {
+  "n": 16,
+  "priced": 0,
+  "samples": []
+ },
+ "27:Total Tackles Plus Assists (incl. overtime)": {
+  "n": 16,
+  "priced": 0,
+  "samples": []
+ },
+ "28:Total Sacks (incl. overtime)": {
+  "n": 16,
+  "priced": 0,
+  "samples": []
+ },
+ "29:First Touchdown Scorer": {
+  "n": 36,
+  "priced": 0,
+  "samples": []
+ },
+ "30:Last Touchdown Scorer": {
+  "n": 34,
+  "priced": 0,
+  "samples": []
+ },
+ "31:Anytime Touchdown Scorer": {
+  "n": 35,
+  "priced": 0,
+  "samples": []
+ },
+ "32:Player to score 2 or more touchdowns": {
+  "n": 35,
+  "priced": 0,
+  "samples": []
+ },
+ "33:Player to score 3 or more touchdowns": {
+  "n": 31,
+  "priced": 0,
+  "samples": []
+ },
+ "66:1st Half Touchdown Scorer": {
+  "n": 33,
+  "priced": 0,
+  "samples": []
+ },
+ "67:1st Quarter Touchdown Scorer": {
+  "n": 33,
+  "priced": 0,
+  "samples": []
+ },
+ "72:1st Half Total": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "73:1st Half Moneyline": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "74:1st Half Spread": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "75:1st Quarter Total": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "76:1st Quarter Moneyline": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "77:1st Quarter Spread": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "78:2nd Quarter Total": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "79:2nd Quarter Moneyline": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "80:2nd Quarter Spread": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "81:3rd Quarter Total": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "82:3rd Quarter Moneyline": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "83:3rd Quarter Spread": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "84:4th Quarter Total": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "85:4th Quarter Moneyline": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "86:4th Quarter Spread": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "98:Team Total Points": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "99:Team 1st Half Total Points": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "104:Team Total Touchdowns": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "153:Will There Be Overtime?": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "181:First Team Touchdown Scorer": {
+  "n": 33,
+  "priced": 0,
+  "samples": []
+ },
+ "186:1st Half Total Passing Yards": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "187:1st Half Total Receiving Yards": {
+  "n": 22,
+  "priced": 0,
+  "samples": []
+ },
+ "189:1st Half Total Rushing Yards": {
+  "n": 8,
+  "priced": 0,
+  "samples": []
+ },
+ "191:1st Quarter Total Passing Yards": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "192:1st Quarter Total Receiving Yards": {
+  "n": 22,
+  "priced": 0,
+  "samples": []
+ },
+ "193:1st Quarter Total Rushing Yards": {
+  "n": 8,
+  "priced": 0,
+  "samples": []
+ },
+ "194:Passing Yards Milestones": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "195:Receiving Yards Milestones": {
+  "n": 16,
+  "priced": 0,
+  "samples": []
+ },
+ "196:Rushing Yards Milestones": {
+  "n": 7,
+  "priced": 0,
+  "samples": []
+ },
+ "197:Rushing + Receiving Yards Milestones": {
+  "n": 5,
+  "priced": 0,
+  "samples": []
+ },
+ "198:Passing Touchdown Milestones": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "199:Interceptions Thrown Milestones": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "200:Passing Attempts Milestones": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "201:Rushing Attempts Milestones": {
+  "n": 5,
+  "priced": 0,
+  "samples": []
+ },
+ "202:Receptions Milestones": {
+  "n": 16,
+  "priced": 0,
+  "samples": []
+ },
+ "203:Kicking Points Milestones": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "205:Field Goals Made Milestones": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "206:Tackles + Assists Milestones": {
+  "n": 8,
+  "priced": 0,
+  "samples": []
+ },
+ "207:Passing Completions Milestones": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "208:Tackles Milestones": {
+  "n": 8,
+  "priced": 0,
+  "samples": []
+ },
+ "209:Passing + Rushing Yards Milestones": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "210:Sacks Milestones": {
+  "n": 9,
+  "priced": 0,
+  "samples": []
+ },
+ "211:Passing Yards Milestones - 1st Quarter": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "212:Rushing Yards Milestones - 1st Quarter": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "213:Receiving Yards Milestones - 1st Quarter": {
+  "n": 11,
+  "priced": 0,
+  "samples": []
+ },
+ "214:Passing Yards Milestones - 1st Half": {
+  "n": 2,
+  "priced": 0,
+  "samples": []
+ },
+ "215:Rushing Yards Milestones - 1st Half": {
+  "n": 4,
+  "priced": 0,
+  "samples": []
+ },
+ "216:Receiving Yards Milestones - 1st Half": {
+  "n": 11,
+  "priced": 0,
+  "samples": []
+ },
+ "217:Assists Milestones (Football)": {
+  "n": 8,
+  "priced": 0,
+  "samples": []
+ }
+}

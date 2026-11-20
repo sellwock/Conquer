@@ -1,0 +1,274 @@
+## 401873070 DraftKings: 1099 items, 0 priced
+- 8:Total Passing Yards (incl. overtime): 0/4 priced
+- 9:Total Pass Completions (incl. overtime): 0/4 priced
+- 10:Total Passing Touchdowns (incl. overtime): 0/4 priced
+- 11:Total Carries (incl. overtime): 0/6 priced
+- 12:Total Rushing Yards (incl. overtime): 0/6 priced
+- 13:Total Receiving Yards (incl. overtime): 0/12 priced
+- 14:Total Receptions (incl. overtime): 0/12 priced
+- 15:Total Passing Interceptions (incl. overtime): 0/4 priced
+- 16:Total Passing Attempts (incl. overtime): 0/4 priced
+- 17:Longest Passing Completion (incl. overtime): 0/4 priced
+- 18:Total Passing Plus Rushing Yards (incl. overtime): 0/2 priced
+- 19:Longest Reception (incl. overtime): 0/10 priced
+- 20:Total Rushing Plus Receiving Yards (incl. overtime): 0/2 priced
+- 21:Longest Rush (incl. overtime): 0/6 priced
+- 22:Total Kicking Points (incl. overtime): 0/4 priced
+- 23:Total Extra Points Made (incl. overtime): 0/4 priced
+- 24:Total Field Goals Made (incl. overtime): 0/4 priced
+- 29:First Touchdown Scorer: 0/30 priced
+- 30:Last Touchdown Scorer: 0/30 priced
+- 31:Anytime Touchdown Scorer: 0/29 priced
+- 32:Player to score 2 or more touchdowns: 0/28 priced
+- 33:Player to score 3 or more touchdowns: 0/18 priced
+- 66:1st Half Touchdown Scorer: 0/29 priced
+- 67:1st Quarter Touchdown Scorer: 0/29 priced
+- 72:1st Half Total: 0/2 priced
+- 73:1st Half Moneyline: 0/2 priced
+- 74:1st Half Spread: 0/2 priced
+- 75:1st Quarter Total: 0/2 priced
+- 76:1st Quarter Moneyline: 0/2 priced
+- 77:1st Quarter Spread: 0/2 priced
+- 78:2nd Quarter Total: 0/2 priced
+- 79:2nd Quarter Moneyline: 0/2 priced
+- 80:2nd Quarter Spread: 0/2 priced
+- 81:3rd Quarter Total: 0/2 priced
+- 82:3rd Quarter Moneyline: 0/2 priced
+- 83:3rd Quarter Spread: 0/2 priced
+- 84:4th Quarter Total: 0/2 priced
+- 85:4th Quarter Moneyline: 0/2 priced
+- 86:4th Quarter Spread: 0/2 priced
+- 98:Team Total Points: 0/76 priced
+- 99:Team 1st Half Total Points: 0/4 priced
+- 104:Team Total Touchdowns: 0/4 priced
+- 153:Will There Be Overtime?: 0/1 priced
+- 181:First Team Touchdown Scorer: 0/31 priced
+- 186:1st Half Total Passing Yards: 0/4 priced
+- 187:1st Half Total Receiving Yards: 0/12 priced
+- 189:1st Half Total Rushing Yards: 0/6 priced
+- 191:1st Quarter Total Passing Yards: 0/4 priced
+- 192:1st Quarter Total Receiving Yards: 0/12 priced
+- 193:1st Quarter Total Rushing Yards: 0/6 priced
+- 194:Passing Yards Milestones: 0/48 priced
+- 195:Receiving Yards Milestones: 0/89 priced
+- 196:Rushing Yards Milestones: 0/45 priced
+- 197:Rushing + Receiving Yards Milestones: 0/17 priced
+- 198:Passing Touchdown Milestones: 0/8 priced
+- 199:Interceptions Thrown Milestones: 0/5 priced
+- 200:Passing Attempts Milestones: 0/21 priced
+- 201:Rushing Attempts Milestones: 0/23 priced
+- 202:Receptions Milestones: 0/42 priced
+- 203:Kicking Points Milestones: 0/8 priced
+- 205:Field Goals Made Milestones: 0/7 priced
+- 207:Passing Completions Milestones: 0/16 priced
+- 209:Passing + Rushing Yards Milestones: 0/29 priced
+- 211:Passing Yards Milestones - 1st Quarter: 0/38 priced
+- 212:Rushing Yards Milestones - 1st Quarter: 0/24 priced
+- 213:Receiving Yards Milestones - 1st Quarter: 0/49 priced
+- 214:Passing Yards Milestones - 1st Half: 0/51 priced
+- 215:Rushing Yards Milestones - 1st Half: 0/32 priced
+- 216:Receiving Yards Milestones - 1st Half: 0/72 priced
+## 401872656 DraftKings: 752 items, 0 priced
+- 8:Total Passing Yards (incl. overtime): 0/4 priced
+- 9:Total Pass Completions (incl. overtime): 0/4 priced
+- 10:Total Passing Touchdowns (incl. overtime): 0/4 priced
+- 11:Total Carries (incl. overtime): 0/10 priced
+- 12:Total Rushing Yards (incl. overtime): 0/16 priced
+- 13:Total Receiving Yards (incl. overtime): 0/32 priced
+- 14:Total Receptions (incl. overtime): 0/32 priced
+- 15:Total Passing Interceptions (incl. overtime): 0/4 priced
+- 16:Total Passing Attempts (incl. overtime): 0/4 priced
+- 17:Longest Passing Completion (incl. overtime): 0/4 priced
+- 18:Total Passing Plus Rushing Yards (incl. overtime): 0/4 priced
+- 19:Longest Reception (incl. overtime): 0/22 priced
+- 20:Total Rushing Plus Receiving Yards (incl. overtime): 0/10 priced
+- 21:Longest Rush (incl. overtime): 0/12 priced
+- 22:Total Kicking Points (incl. overtime): 0/4 priced
+- 23:Total Extra Points Made (incl. overtime): 0/4 priced
+- 24:Total Field Goals Made (incl. overtime): 0/4 priced
+- 25:Total Assists (incl. overtime): 0/16 priced
+- 26:Total Tackles (incl. overtime): 0/16 priced
+- 27:Total Tackles Plus Assists (incl. overtime): 0/16 priced
+- 28:Total Sacks (incl. overtime): 0/16 priced
+- 29:First Touchdown Scorer: 0/36 priced
+- 30:Last Touchdown Scorer: 0/34 priced
+- 31:Anytime Touchdown Scorer: 0/35 priced
+- 32:Player to score 2 or more touchdowns: 0/35 priced
+- 33:Player to score 3 or more touchdowns: 0/31 priced
+- 66:1st Half Touchdown Scorer: 0/33 priced
+- 67:1st Quarter Touchdown Scorer: 0/33 priced
+- 72:1st Half Total: 0/2 priced
+- 73:1st Half Moneyline: 0/2 priced
+- 74:1st Half Spread: 0/2 priced
+- 75:1st Quarter Total: 0/2 priced
+- 76:1st Quarter Moneyline: 0/2 priced
+- 77:1st Quarter Spread: 0/2 priced
+- 78:2nd Quarter Total: 0/2 priced
+- 79:2nd Quarter Moneyline: 0/2 priced
+- 80:2nd Quarter Spread: 0/2 priced
+- 81:3rd Quarter Total: 0/2 priced
+- 82:3rd Quarter Moneyline: 0/2 priced
+- 83:3rd Quarter Spread: 0/2 priced
+- 84:4th Quarter Total: 0/2 priced
+- 85:4th Quarter Moneyline: 0/2 priced
+- 86:4th Quarter Spread: 0/2 priced
+- 98:Team Total Points: 0/4 priced
+- 99:Team 1st Half Total Points: 0/4 priced
+- 104:Team Total Touchdowns: 0/4 priced
+- 153:Will There Be Overtime?: 0/2 priced
+- 181:First Team Touchdown Scorer: 0/33 priced
+- 186:1st Half Total Passing Yards: 0/4 priced
+- 187:1st Half Total Receiving Yards: 0/22 priced
+- 189:1st Half Total Rushing Yards: 0/8 priced
+- 191:1st Quarter Total Passing Yards: 0/4 priced
+- 192:1st Quarter Total Receiving Yards: 0/22 priced
+- 193:1st Quarter Total Rushing Yards: 0/8 priced
+- 194:Passing Yards Milestones: 0/2 priced
+- 195:Receiving Yards Milestones: 0/16 priced
+- 196:Rushing Yards Milestones: 0/7 priced
+- 197:Rushing + Receiving Yards Milestones: 0/5 priced
+- 198:Passing Touchdown Milestones: 0/2 priced
+- 199:Interceptions Thrown Milestones: 0/2 priced
+- 200:Passing Attempts Milestones: 0/2 priced
+- 201:Rushing Attempts Milestones: 0/5 priced
+- 202:Receptions Milestones: 0/16 priced
+- 203:Kicking Points Milestones: 0/2 priced
+- 205:Field Goals Made Milestones: 0/2 priced
+- 206:Tackles + Assists Milestones: 0/8 priced
+- 207:Passing Completions Milestones: 0/2 priced
+- 208:Tackles Milestones: 0/8 priced
+- 209:Passing + Rushing Yards Milestones: 0/2 priced
+- 210:Sacks Milestones: 0/9 priced
+- 211:Passing Yards Milestones - 1st Quarter: 0/2 priced
+- 212:Rushing Yards Milestones - 1st Quarter: 0/4 priced
+- 213:Receiving Yards Milestones - 1st Quarter: 0/11 priced
+- 214:Passing Yards Milestones - 1st Half: 0/2 priced
+- 215:Rushing Yards Milestones - 1st Half: 0/4 priced
+- 216:Receiving Yards Milestones - 1st Half: 0/11 priced
+- 217:Assists Milestones (Football): 0/8 priced
+## 401873066 DraftKings: 730 items, 0 priced
+- 8:Total Passing Yards (incl. overtime): 0/4 priced
+- 9:Total Pass Completions (incl. overtime): 0/4 priced
+- 10:Total Passing Touchdowns (incl. overtime): 0/4 priced
+- 11:Total Carries (incl. overtime): 0/8 priced
+- 12:Total Rushing Yards (incl. overtime): 0/12 priced
+- 13:Total Receiving Yards (incl. overtime): 0/28 priced
+- 14:Total Receptions (incl. overtime): 0/28 priced
+- 15:Total Passing Interceptions (incl. overtime): 0/4 priced
+- 16:Total Passing Attempts (incl. overtime): 0/4 priced
+- 17:Longest Passing Completion (incl. overtime): 0/4 priced
+- 18:Total Passing Plus Rushing Yards (incl. overtime): 0/4 priced
+- 19:Longest Reception (incl. overtime): 0/24 priced
+- 20:Total Rushing Plus Receiving Yards (incl. overtime): 0/4 priced
+- 21:Longest Rush (incl. overtime): 0/10 priced
+- 22:Total Kicking Points (incl. overtime): 0/4 priced
+- 23:Total Extra Points Made (incl. overtime): 0/4 priced
+- 24:Total Field Goals Made (incl. overtime): 0/4 priced
+- 25:Total Assists (incl. overtime): 0/20 priced
+- 26:Total Tackles (incl. overtime): 0/20 priced
+- 27:Total Tackles Plus Assists (incl. overtime): 0/20 priced
+- 28:Total Sacks (incl. overtime): 0/6 priced
+- 29:First Touchdown Scorer: 0/33 priced
+- 30:Last Touchdown Scorer: 0/33 priced
+- 31:Anytime Touchdown Scorer: 0/32 priced
+- 32:Player to score 2 or more touchdowns: 0/32 priced
+- 33:Player to score 3 or more touchdowns: 0/29 priced
+- 66:1st Half Touchdown Scorer: 0/32 priced
+- 67:1st Quarter Touchdown Scorer: 0/31 priced
+- 72:1st Half Total: 0/2 priced
+- 73:1st Half Moneyline: 0/2 priced
+- 74:1st Half Spread: 0/2 priced
+- 75:1st Quarter Total: 0/2 priced
+- 76:1st Quarter Moneyline: 0/2 priced
+- 77:1st Quarter Spread: 0/2 priced
+- 78:2nd Quarter Total: 0/2 priced
+- 79:2nd Quarter Moneyline: 0/2 priced
+- 80:2nd Quarter Spread: 0/2 priced
+- 81:3rd Quarter Total: 0/2 priced
+- 82:3rd Quarter Moneyline: 0/2 priced
+- 83:3rd Quarter Spread: 0/2 priced
+- 84:4th Quarter Total: 0/2 priced
+- 85:4th Quarter Moneyline: 0/2 priced
+- 86:4th Quarter Spread: 0/2 priced
+- 98:Team Total Points: 0/4 priced
+- 99:Team 1st Half Total Points: 0/4 priced
+- 104:Team Total Touchdowns: 0/4 priced
+- 153:Will There Be Overtime?: 0/2 priced
+- 181:First Team Touchdown Scorer: 0/32 priced
+- 186:1st Half Total Passing Yards: 0/4 priced
+- 187:1st Half Total Receiving Yards: 0/22 priced
+- 189:1st Half Total Rushing Yards: 0/10 priced
+- 191:1st Quarter Total Passing Yards: 0/4 priced
+- 192:1st Quarter Total Receiving Yards: 0/22 priced
+- 193:1st Quarter Total Rushing Yards: 0/12 priced
+- 194:Passing Yards Milestones: 0/2 priced
+- 195:Receiving Yards Milestones: 0/14 priced
+- 196:Rushing Yards Milestones: 0/6 priced
+- 197:Rushing + Receiving Yards Milestones: 0/2 priced
+- 198:Passing Touchdown Milestones: 0/2 priced
+- 199:Interceptions Thrown Milestones: 0/2 priced
+- 200:Passing Attempts Milestones: 0/2 priced
+- 201:Rushing Attempts Milestones: 0/4 priced
+- 202:Receptions Milestones: 0/19 priced
+- 203:Kicking Points Milestones: 0/2 priced
+- 205:Field Goals Made Milestones: 0/2 priced
+- 206:Tackles + Assists Milestones: 0/10 priced
+- 207:Passing Completions Milestones: 0/2 priced
+- 208:Tackles Milestones: 0/10 priced
+- 209:Passing + Rushing Yards Milestones: 0/2 priced
+- 210:Sacks Milestones: 0/11 priced
+- 211:Passing Yards Milestones - 1st Quarter: 0/2 priced
+- 212:Rushing Yards Milestones - 1st Quarter: 0/5 priced
+- 213:Receiving Yards Milestones - 1st Quarter: 0/11 priced
+- 214:Passing Yards Milestones - 1st Half: 0/2 priced
+- 215:Rushing Yards Milestones - 1st Half: 0/5 priced
+- 216:Receiving Yards Milestones - 1st Half: 0/11 priced
+- 217:Assists Milestones (Football): 0/10 priced
+## 401873066 DraftKings - Live Odds: 712 items, 0 priced
+- 8:Total Passing Yards (incl. overtime): 0/4 priced
+- 9:Total Pass Completions (incl. overtime): 0/4 priced
+- 10:Total Passing Touchdowns (incl. overtime): 0/4 priced
+- 11:Total Carries (incl. overtime): 0/8 priced
+- 12:Total Rushing Yards (incl. overtime): 0/12 priced
+- 13:Total Receiving Yards (incl. overtime): 0/28 priced
+- 14:Total Receptions (incl. overtime): 0/28 priced
+- 15:Total Passing Interceptions (incl. overtime): 0/4 priced
+- 16:Total Passing Attempts (incl. overtime): 0/2 priced
+- 20:Total Rushing Plus Receiving Yards (incl. overtime): 0/4 priced
+- 27:Total Tackles Plus Assists (incl. overtime): 0/20 priced
+- 28:Total Sacks (incl. overtime): 0/6 priced
+- 31:Anytime Touchdown Scorer: 0/27 priced
+- 32:Player to score 2 or more touchdowns: 0/24 priced
+- 33:Player to score 3 or more touchdowns: 0/15 priced
+- 72:1st Half Total: 0/2 priced
+- 73:1st Half Moneyline: 0/2 priced
+- 74:1st Half Spread: 0/2 priced
+- 75:1st Quarter Total: 0/2 priced
+- 76:1st Quarter Moneyline: 0/2 priced
+- 77:1st Quarter Spread: 0/2 priced
+- 78:2nd Quarter Total: 0/2 priced
+- 79:2nd Quarter Moneyline: 0/2 priced
+- 80:2nd Quarter Spread: 0/2 priced
+- 81:3rd Quarter Total: 0/2 priced
+- 82:3rd Quarter Moneyline: 0/2 priced
+- 83:3rd Quarter Spread: 0/2 priced
+- 84:4th Quarter Total: 0/2 priced
+- 85:4th Quarter Moneyline: 0/2 priced
+- 86:4th Quarter Spread: 0/2 priced
+- 98:Team Total Points: 0/4 priced
+- 99:Team 1st Half Total Points: 0/4 priced
+- 153:Will There Be Overtime?: 0/2 priced
+- 194:Passing Yards Milestones: 0/22 priced
+- 195:Receiving Yards Milestones: 0/165 priced
+- 196:Rushing Yards Milestones: 0/71 priced
+- 197:Rushing + Receiving Yards Milestones: 0/28 priced
+- 198:Passing Touchdown Milestones: 0/8 priced
+- 199:Interceptions Thrown Milestones: 0/7 priced
+- 200:Passing Attempts Milestones: 0/24 priced
+- 201:Rushing Attempts Milestones: 0/24 priced
+- 202:Receptions Milestones: 0/82 priced
+- 207:Passing Completions Milestones: 0/17 priced
+- 286:2nd Half Moneyline: 0/2 priced
+- 312:2nd Half Spread: 0/2 priced
+- 313:2nd Half Total: 0/2 priced
+- 314:Next Touchdown Scorer: 0/28 priced
