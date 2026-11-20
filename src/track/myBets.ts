@@ -3,7 +3,7 @@
 import { noVig, toDecimal } from '../model/parlays';
 import { PARTS } from '../model/props';
 import type { LeagueId, PropStat } from '../model/types';
-import { BOX, lineMove } from './propGrade';
+import { finalOf, lineMove } from './propGrade';
 import type { PropEntry } from './types';
 
 export interface MyBet {
@@ -49,7 +49,7 @@ export function gradeBet(bet: MyBet, entry: PropEntry | undefined): GradedBet {
   if (!entry || entry.status !== 'final' || !entry.box || !(bet.athleteId in entry.box)) return { bet, ...(moved ? { moved } : {}) };
   const b = entry.box[bet.athleteId];
   if (!b) return { bet, result: 'void', profit: 0, ...(moved ? { moved } : {}) };
-  const final = PARTS[bet.stat].reduce((a, k) => a + b[BOX.indexOf(k)], 0);
+  const final = finalOf(bet.league, bet.stat, b);
   const result: BetResult = final === bet.line ? 'push' : final > bet.line === (bet.side === 'over') ? 'win' : 'loss';
   const profit = result === 'win' ? bet.stake * (toDecimal(bet.price) - 1) : result === 'loss' ? -bet.stake : 0;
   return { bet, result, final, profit: Math.round(profit * 100) / 100, ...(moved ? { moved } : {}) };
@@ -95,7 +95,7 @@ export function summarizeBets(graded: GradedBet[]): BetSummary {
   return s;
 }
 
-const STATS: PropStat[] = ['pts', 'reb', 'ast', 'tpm', 'pra', 'pr', 'pa', 'ar'];
+const STATS = Object.keys(PARTS) as PropStat[];
 
 /** Bets read from an exported file or from storage: anything malformed is dropped. */
 export function parseBets(json: unknown): MyBet[] {
@@ -106,7 +106,7 @@ export function parseBets(json: unknown): MyBet[] {
   const seen = new Set<string>();
   for (const b of list as Partial<MyBet>[]) {
     if (!b || !str(b.id) || seen.has(b.id) || !str(b.gameId) || !str(b.athleteId) || !str(b.player) || !str(b.at)) continue;
-    if (!STATS.includes(b.stat as PropStat) || (b.side !== 'over' && b.side !== 'under') || (b.league !== 'nba' && b.league !== 'ncaam')) continue;
+    if (!STATS.includes(b.stat as PropStat) || (b.side !== 'over' && b.side !== 'under') || !(b.league === 'nba' || b.league === 'ncaam' || b.league === 'nfl')) continue;
     if (!num(b.line) || !num(b.price) || Math.abs(b.price) < 100 || !num(b.stake) || b.stake <= 0 || !num(b.pFit)) continue;
     seen.add(b.id);
     out.push({

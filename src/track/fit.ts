@@ -3,11 +3,10 @@
 // scheduled job writes the result to v1/fit/{league}.json and the site reads it.
 import { makeRng } from '../lib/rng';
 import { noVig, onePerPlayer, toDecimal } from '../model/parlays';
-import { PARTS } from '../model/props';
 import { TRUST_BOOK, fitFeatures, fittedFrom, type FitCoef, type FitFeatures, type PropFits } from '../model/propFit';
 import type { LeagueId, PropStat } from '../model/types';
 import { easternYmd } from './dates';
-import { BOX, lineMove } from './propGrade';
+import { finalOf, lineMove } from './propGrade';
 import type { PropEntry } from './types';
 
 /** Games a fit must have seen before its picks are scored, and before the site uses it. */
@@ -51,7 +50,7 @@ export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | 'live' | 'li
     for (const [i, [athleteId, stat, line, over, under, pOver, pPush]] of snap.rows.entries()) {
       const b = e.box[athleteId];
       if (!b) continue;
-      const final = PARTS[stat].reduce((a, k) => a + b[BOX.indexOf(k)], 0);
+      const final = finalOf(e.league, stat, b);
       if (final === line) continue;
       const pMarket = noVig(over, under)[0];
       const pSim = pPush < 1 ? pOver / (1 - pPush) : 0.5;

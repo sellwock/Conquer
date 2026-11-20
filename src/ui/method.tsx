@@ -1,11 +1,11 @@
-import { LEAGUES } from '../model/leagues';
+import { hoopsConfig } from '../model/leagues';
 import { MODEL_WEIGHT, modelHasSay } from '../model/parlays';
 import type { GameData } from '../model/types';
 import { blendText, propMixText } from './parlays';
 
 export function Method(props: { game: GameData }) {
   const g = props.game;
-  const lg = LEAGUES[g.league];
+  const lg = hoopsConfig(g.league);
   return (
     <div class="method card prose">
       <h2>How the simulator works</h2>

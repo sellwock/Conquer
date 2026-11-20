@@ -1,6 +1,8 @@
 // Domain model shared by the data layer, the simulator and the UI.
 
-export type LeagueId = 'nba' | 'ncaam';
+export type LeagueId = 'nba' | 'ncaam' | 'nfl';
+/** The leagues the basketball simulator plays. */
+export type HoopsLeague = Exclude<LeagueId, 'nfl'>;
 export type Zone = 'rim' | 'paint' | 'mid' | 'c3' | 'ab3';
 export const ZONES: Zone[] = ['rim', 'paint', 'mid', 'c3', 'ab3'];
 export const ZONE_LABEL: Record<Zone, string> = {
@@ -13,8 +15,11 @@ export const ZONE_LABEL: Record<Zone, string> = {
 export const isThree = (z: Zone | number) => z === 'c3' || z === 'ab3' || z === 3 || z === 4;
 export type PosGroup = 'G' | 'F' | 'C';
 
-/** Player prop stats: single stats and the combos books post. */
-export type PropStat = 'pts' | 'reb' | 'ast' | 'tpm' | 'pra' | 'pr' | 'pa' | 'ar';
+/** Basketball player prop stats: single stats and the combos books post. */
+export type HoopsStat = 'pts' | 'reb' | 'ast' | 'tpm' | 'pra' | 'pr' | 'pa' | 'ar';
+/** NFL player prop stats the prop model prices: yards and volume, and the two yardage combos. */
+export type NflStat = 'passYds' | 'passComp' | 'passAtt' | 'rushYds' | 'rushAtt' | 'recYds' | 'rec' | 'passRushYds' | 'rushRecYds';
+export type PropStat = HoopsStat | NflStat;
 
 /** Box-score totals over some sample (not averages). */
 export interface BoxLine {

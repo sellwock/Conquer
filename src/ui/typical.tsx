@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { LEAGUES } from '../model/leagues';
+import { hoopsConfig } from '../model/leagues';
 import type { BuiltSpec } from '../model/build';
 import type { GameData } from '../model/types';
 import { fmtClock, periodName } from '../sim/engine';
@@ -72,7 +72,7 @@ function BoxTable(props: { team: SimTeam; box: number[]; label: string; color: s
 export function TypicalGame(props: { game: GameData; summary: SimSummary; built: BuiltSpec; palette: Palette }) {
   const { game: g, summary: s, built, palette } = props;
   const r = s.typical.result;
-  const lg = LEAGUES[g.league];
+  const lg = hoopsConfig(g.league);
   const [filter, setFilter] = useState<'all' | 'scoring' | 'runs'>('scoring');
   const log = r.log ?? [];
   const shown = log.filter((e) => (filter === 'all' ? true : filter === 'scoring' ? e.pts > 0 || e.team === -1 : e.run != null || e.team === -1));

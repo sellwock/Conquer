@@ -141,3 +141,14 @@ src/ui         Preact components (scoreboard, lineup sheet, outlook, typical gam
 tests          vitest: engine calibration and behavior, parsers against fixtures
 scripts        calibration report
 ```
+
+## NFL (props only, in progress)
+
+The NFL has no game simulator. Its player props are priced by `src/model/nfl/props.ts` from each player's recent games:
+
+- **Mean:** a recency-weighted average of his last 10 games, scaled by his team's implied points from the book's spread and total against its points in those games, and pulled toward the book's line by two games' worth.
+- **Shape:** 2,000 draws per line (counts negative binomial, yards gamma), so NFL lines produce the same per-draw results as basketball and use the same pick model, log and track record.
+- **No prices:** ESPN relays DraftKings' NFL prop lines without prices (`ASSUMED_PRICE`, checked on every NFL prop type on Nov 20, 2026), so NFL lines carry an assumed −110 on both sides and are flagged `assumed`.
+- **Live:** a player's final number is what he has so far plus the remaining share of the game's distribution.
+- **Feeds:** box scores, game logs and rosters are parsed in `src/data/espn/nfl.ts`.
+- **Code layout:** shared league facts (name, ESPN path, clock) live in `LEAGUE_INFO`; the basketball simulator's settings are reached only through `hoopsConfig`.

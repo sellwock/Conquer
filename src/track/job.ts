@@ -3,7 +3,7 @@
 // use memory. Predictions are never written after tip, and never backfilled. Player props are
 // logged alongside: the posted lines with the sim's chances before tip-off, and once more mid-game
 // from the book's in-game feed, each saved once and graded from the final box score.
-import { LEAGUES } from '../model/leagues';
+import { LEAGUE_INFO } from '../model/leagues';
 import { buildSpec } from '../model/build';
 import type { GameData, LeagueId, ScoreboardGame } from '../model/types';
 import type { PropMarket } from '../model/parlays';
@@ -81,7 +81,7 @@ const LIVE_TO = 0.75;
 
 /** Share of regulation played; 1 once in overtime. */
 export function playedShare(league: LeagueId, period: number, clockSec: number): number {
-  const L = LEAGUES[league];
+  const L = LEAGUE_INFO[league];
   if (period > L.periods) return 1;
   return ((Math.max(1, period) - 1) * L.periodSec + (L.periodSec - clockSec)) / (L.periods * L.periodSec);
 }
@@ -398,7 +398,7 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
             put(path, {
               ...e,
               status: 'final',
-              result: { home, away, ot: periodOf(comp, LEAGUES[league].periods) > LEAGUES[league].periods, gradedAt: o.now.toISOString() },
+              result: { home, away, ot: periodOf(comp, LEAGUE_INFO[league].periods) > LEAGUE_INFO[league].periods, gradedAt: o.now.toISOString() },
               closeReported: close ? { ...close, fetchedAt: o.now.toISOString() } : undefined,
             });
             report.graded++;

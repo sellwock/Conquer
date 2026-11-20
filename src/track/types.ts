@@ -91,7 +91,7 @@ export interface PropEntry {
   /** The pre-game book's lines in the last 20 minutes before tip (until model 1.2.0, only for games with news). */
   close?: { takenAt: string; lines: CloseLine[] };
   /** Each logged player's final [pts, reb, ast, tpm], or null if they didn't play (their props are void). */
-  box?: Record<string, [number, number, number, number] | null>;
+  box?: Record<string, number[] | null>;
   gradedAt?: string;
 }
 

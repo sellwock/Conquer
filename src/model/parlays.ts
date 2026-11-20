@@ -51,6 +51,8 @@ export interface PropMarket {
   now?: number;
   /** When the book last changed this line or its prices (ISO), where the feed says. */
   updated?: string;
+  /** The book posted no prices (NFL), so `over` and `under` are an assumed -110 each. */
+  assumed?: true;
 }
 
 export type LegKind = 'ml' | 'spread' | 'total' | 'prop';
@@ -119,6 +121,8 @@ export const MODEL_WEIGHT: Record<LeagueId, BlendWeights> = {
   // Player props have no backtest yet, so the blend leaves them to the market.
   nba: { ml: 0, spread: 0, total: 0, prop: 0 },
   ncaam: { ml: 0, spread: 0.2, total: 0.2, prop: 0 },
+  // No NFL game lines are priced by a model; its props go by the pick model alone.
+  nfl: { ml: 0, spread: 0, total: 0, prop: 0 },
 };
 
 /** False when the market alone ranks every bet in this league, so no leg can beat the vig. */
@@ -247,6 +251,15 @@ export const PROP_WORDS: Record<PropStat, string> = {
   pr: 'pts + reb',
   pa: 'pts + ast',
   ar: 'reb + ast',
+  passYds: 'passing yards',
+  passComp: 'completions',
+  passAtt: 'pass attempts',
+  rushYds: 'rushing yards',
+  rushAtt: 'rush attempts',
+  recYds: 'receiving yards',
+  rec: 'receptions',
+  passRushYds: 'pass + rush yards',
+  rushRecYds: 'rush + rec yards',
 };
 
 /**

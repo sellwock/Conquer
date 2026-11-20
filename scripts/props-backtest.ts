@@ -24,6 +24,7 @@ import { loadGame, loadScoreboard, pregameView } from '../src/data/espn/load';
 import { loadProps, type PropLine } from '../src/data/espn/props';
 import { makeRng } from '../src/lib/rng';
 import { buildSpec, PLAYER_TUNING } from '../src/model/build';
+import { isHoops } from '../src/model/leagues';
 import { noVig, toDecimal } from '../src/model/parlays';
 import { PARTS, propMarkets, rosterNames } from '../src/model/props';
 import { seasonYear } from '../src/data/espn/parse';
@@ -103,7 +104,7 @@ async function main() {
   const store = fileStore(String(a.cache ?? '.cache/bt'));
   setStore(store);
   const tuning = typeof a.tuning === 'string' ? Object.fromEntries(a.tuning.split(',').map((kv) => [kv.split('=')[0].trim(), Number(kv.split('=')[1])])) : {};
-  Object.assign(PLAYER_TUNING[league], tuning);
+  if (isHoops(league)) Object.assign(PLAYER_TUNING[league], tuning);
   const ymd = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '');
   const today = new Date();
   // The season that's under way: it starts in October of this year, or of last year until summer.
@@ -213,8 +214,12 @@ async function main() {
   md += partLines('With the simulation', fit.pre);
   md += partLines("Book's odds only", blind.pre);
 
-  // Typical posted lines per stat (the log's medians, November 2026), to sort lines by size.
-  const REF_LINE: Record<PropStat, number> = { pts: 12.5, reb: 4.5, ast: 3.5, tpm: 1.5, pra: 23.5, pr: 18.5, pa: 18.5, ar: 8.5 };
+  // Typical posted lines per stat, to sort lines by size: the NBA log's medians (November 2026), and
+  // rough NFL ones until its replay gives medians of its own.
+  const REF_LINE: Record<PropStat, number> = {
+    pts: 12.5, reb: 4.5, ast: 3.5, tpm: 1.5, pra: 23.5, pr: 18.5, pa: 18.5, ar: 8.5,
+    passYds: 229.5, passComp: 21.5, passAtt: 33.5, rushYds: 49.5, rushAtt: 13.5, recYds: 39.5, rec: 3.5, passRushYds: 249.5, rushRecYds: 69.5,
+  };
   const scoring = (s: PropStat) => PARTS[s].includes('pts');
   const small = (r: FitRow) => r.line < REF_LINE[r.stat] * 0.8;
   md += `\n### Flat bets, no model (record, return per bet, 95% range by game)\n\n| Rule | At the close | At the open |\n|---|---|---|\n`;
@@ -230,7 +235,7 @@ async function main() {
   for (const [name, pick] of rules) md += `| ${name} | ${flat(closeRows, pick)} | ${flat(openRows, pick)} |\n`;
 
   md += `\n### Overs won, by stat and line size, at the close (book's average chance for the over in brackets)\n\n| Stat | Small lines | Typical | Large lines |\n|---|---|---|---|\n`;
-  for (const stat of Object.keys(REF_LINE) as PropStat[]) {
+  for (const stat of [...new Set(closeRows.map((r) => r.stat))]) {
     const cell = (f: (r: FitRow) => boolean) => {
       const x = closeRows.filter((r) => r.stat === stat && f(r));
       return x.length ? `${pct(mean(x.map((r) => r.won)), 0)} [${pct(mean(x.map((r) => r.pMarket)), 0)}] of ${x.length}` : '–';

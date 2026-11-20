@@ -4,6 +4,7 @@
 // shooter's 1.5 threes priced at -188 (the over). Milestone ladders ("25+ points"), team, quarter
 // and first-basket props are left out.
 import type { LeagueId, Odds, PropStat } from '../../model/types';
+import { LEAGUE_INFO, type Sport } from '../../model/leagues';
 import { corePath, getJson } from './client';
 import { oddsFromItem } from './parse';
 
@@ -19,6 +20,8 @@ export interface PropLine {
   under: number;
   /** The line and prices the book first posted, when the feed carries them. */
   open?: { line: number; over: number; under: number };
+  /** The book posted the line without prices, so `over` and `under` are ASSUMED_PRICE. */
+  assumed?: true;
   /**
    * When the book last changed this line or its prices (ISO UTC), from the feed's clock as
    * corrected by `feedClock`. Reliable on live boards only.
@@ -36,8 +39,18 @@ export interface PropBoard {
   odds?: Odds;
 }
 
-/** ESPN prop type ids for the over/under player props this app can simulate. */
-const TYPE_STAT: Record<string, PropStat> = { '1': 'pts', '2': 'ast', '3': 'reb', '4': 'tpm', '87': 'pa', '88': 'pr', '89': 'ar', '90': 'pra' };
+/** ESPN prop type ids for the over/under player props this app can price, by sport. */
+const TYPE_STAT: Record<Sport, Record<string, PropStat>> = {
+  basketball: { '1': 'pts', '2': 'ast', '3': 'reb', '4': 'tpm', '87': 'pa', '88': 'pr', '89': 'ar', '90': 'pra' },
+  // From DraftKings' NFL board on Nov 20, 2026 ("Total Passing Yards (incl. overtime)" and so on).
+  football: { '8': 'passYds', '9': 'passComp', '16': 'passAtt', '11': 'rushAtt', '12': 'rushYds', '13': 'recYds', '14': 'rec', '18': 'passRushYds', '20': 'rushRecYds' },
+};
+
+/**
+ * ESPN relays DraftKings' NFL prop lines without prices (checked on every NFL prop type, pre-game,
+ * live and kept, Nov 20, 2026), so those lines carry this price on both sides, flagged `assumed`.
+ */
+export const ASSUMED_PRICE = -110;
 
 const athleteOf = (it: J): string | undefined => /\/athletes\/(\d+)/.exec(String(it?.athlete?.$ref ?? ''))?.[1];
 
@@ -49,10 +62,11 @@ export function americanOf(v: unknown): number | undefined {
   return Number.isFinite(n) && Math.abs(n) >= 100 ? n : undefined;
 }
 
-export function parsePropBets(items: J[]): PropLine[] {
+export function parsePropBets(items: J[], sport: Sport = 'basketball'): PropLine[] {
+  const types = TYPE_STAT[sport];
   const groups = new Map<string, J[]>();
   for (const it of items) {
-    const stat = TYPE_STAT[String(it?.type?.id)];
+    const stat = types[String(it?.type?.id)];
     const id = athleteOf(it);
     if (!stat || !id) continue;
     const k = `${id}|${stat}`;
@@ -63,11 +77,15 @@ export function parsePropBets(items: J[]): PropLine[] {
     if (!a || !b) continue;
     const line = Number(a?.current?.target?.value ?? a?.odds?.total?.value);
     const lineB = Number(b?.current?.target?.value ?? b?.odds?.total?.value);
-    const over = americanOf(a?.odds?.american?.value), under = americanOf(b?.odds?.american?.value);
+    // NFL lines come without prices: both sides at the assumed price, flagged.
+    const unpriced = sport === 'football' && !a?.odds && !b?.odds;
+    const over = unpriced ? ASSUMED_PRICE : americanOf(a?.odds?.american?.value);
+    const under = unpriced ? ASSUMED_PRICE : americanOf(b?.odds?.american?.value);
     if (!Number.isFinite(line) || line !== lineB || over == null || under == null) continue;
     const [athleteId, stat] = k.split('|') as [string, PropStat];
     const openLine = Number(a?.open?.target?.value ?? a?.odds?.total?.open);
-    const openOver = americanOf(a?.odds?.american?.open), openUnder = americanOf(b?.odds?.american?.open);
+    const openOver = unpriced ? ASSUMED_PRICE : americanOf(a?.odds?.american?.open);
+    const openUnder = unpriced ? ASSUMED_PRICE : americanOf(b?.odds?.american?.open);
     // The later of the two sides' update times.
     const updated = [a?.lastUpdated, b?.lastUpdated].filter((t): t is string => typeof t === 'string' && !Number.isNaN(Date.parse(t))).sort().pop();
     out.push({
@@ -78,6 +96,7 @@ export function parsePropBets(items: J[]): PropLine[] {
       under,
       ...(Number.isFinite(openLine) && openOver != null && openUnder != null ? { open: { line: openLine, over: openOver, under: openUnder } } : {}),
       ...(updated ? { updated } : {}),
+      ...(unpriced ? { assumed: true as const } : {}),
     });
   }
   return out;
@@ -135,6 +154,6 @@ export async function loadProps(league: LeagueId, eventId: string, signal?: Abor
     items.push(...(json?.items ?? []));
     pages = Number(json?.pageCount) || 1;
   }
-  board.lines = feedClock(parsePropBets(items), board.fetchedAt);
+  board.lines = feedClock(parsePropBets(items, LEAGUE_INFO[league].sport), board.fetchedAt);
   return board;
 }

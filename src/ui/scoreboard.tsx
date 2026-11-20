@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Hist } from '../lib/stats';
 import { periodName } from '../sim/engine';
-import { LEAGUES } from '../model/leagues';
+import { hoopsConfig } from '../model/leagues';
 import type { GameData, GameSnapshot } from '../model/types';
 import { SplitBar } from './charts';
 import { inkOn } from './colors';
@@ -68,7 +68,7 @@ function LiveAge(props: { live: LiveState }) {
 export function Scoreboard(props: { game: GameData; sim: SimState; palette: Palette; start?: GameSnapshot; live?: LiveState }) {
   const { game: g, sim, palette } = props;
   const s = sim.scenario;
-  const lg = LEAGUES[g.league];
+  const lg = hoopsConfig(g.league);
   const margin = s ? Hist.from(s.margin).mean() : 0;
   const total = s ? s.homeScore + s.awayScore : 0;
   const score = g.homeScore != null ? ` · ${g.away.abbr} ${g.awayScore}, ${g.home.abbr} ${g.homeScore}` : '';

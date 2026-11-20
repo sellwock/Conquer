@@ -1,6 +1,6 @@
 import { useMemo } from 'preact/hooks';
 import { Hist, impliedFromAmerican, fmtAmerican } from '../lib/stats';
-import { LEAGUES } from '../model/leagues';
+import { hoopsConfig } from '../model/leagues';
 import type { GameData, GameSnapshot, TeamProfile } from '../model/types';
 import { Histogram, type Marker } from './charts';
 import { fair, pct, signed1, spreadText } from './format';
@@ -13,7 +13,7 @@ function outList(t: TeamProfile, unavailable: Set<string>) {
 export function Outlook(props: { game: GameData; sim: Required<SimState>; palette: Palette; start?: GameSnapshot }) {
   const { game: g, sim, palette } = props;
   const s = sim.scenario;
-  const lg = LEAGUES[g.league];
+  const lg = hoopsConfig(g.league);
   const margin = useMemo(() => Hist.from(s.margin), [s]);
   const total = useMemo(() => Hist.from(s.total), [s]);
   const m = margin.mean();

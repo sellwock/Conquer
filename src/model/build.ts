@@ -1,8 +1,8 @@
 // Turns player/team profiles into simulator inputs: who is available, how the minutes get
 // redistributed, and per-player shot, usage and counting-stat rates (shrunk toward priors).
 import { clamp, shrink } from '../lib/stats';
-import { LEAGUES, regulationSec, type LeagueConfig } from './leagues';
-import { ZONES, type GameData, type GameSnapshot, type LeagueId, type PlayerProfile, type PosGroup, type TeamProfile, type Zone } from './types';
+import { hoopsConfig, regulationSec, type LeagueConfig } from './leagues';
+import { ZONES, type GameData, type GameSnapshot, type HoopsLeague, type PlayerProfile, type PosGroup, type TeamProfile, type Zone } from './types';
 import type { SimPlayer, SimSpec, SimTeam } from '../sim/types';
 
 export type MinutesMode = 'projected' | 'actual';
@@ -68,7 +68,7 @@ export interface PlayerTuning {
  * prior there made its game lines significantly better (Brier −0.003), and varying minutes didn't
  * help. Changing a value changes the simulation's output, so MODEL_VERSION moves with it.
  */
-export const PLAYER_TUNING: Record<LeagueId, PlayerTuning> = {
+export const PLAYER_TUNING: Record<HoopsLeague, PlayerTuning> = {
   nba: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 120, ratePriorMin: 20, minutesNoise: 1.5, usageNoise: 0 },
   ncaam: { usagePriorMin: 15, usagePriorScale: 0.85, creationPriorMin: 15, ratePriorMin: 20, minutesNoise: 0, usageNoise: 0 },
 };
@@ -334,8 +334,8 @@ export interface BuiltSpec {
 }
 
 export function buildSpec(game: GameData, opts: BuildOptions): BuiltSpec {
-  const lg = LEAGUES[game.league];
-  const tuning = PLAYER_TUNING[game.league];
+  const lg = hoopsConfig(game.league);
+  const tuning = PLAYER_TUNING[hoopsConfig(game.league).id];
   const homePlan = planMinutes(game.home, lg, opts);
   const awayPlan = planMinutes(game.away, lg, opts);
   const pace = (teamPace(game.home, lg) * teamPace(game.away, lg)) / lg.pace;
