@@ -2,7 +2,7 @@
 // rule its record is scored on), and parlays built from them.
 import { describe, expect, it } from 'vitest';
 import { makeRng } from '../src/lib/rng';
-import { MAX_PRICE, defaultPickMode, evaluate, fitSingles, legsForGame, noVig, onePerPlayer, suggestParlays, toDecimal, weightsFor, worthAt, SIM_ONLY, type GameMarket, type PropMarket } from '../src/model/parlays';
+import { MAX_PRICE, defaultPickMode, evaluate, fitSingles, legsForGame, noVig, onePerPlayer, stillABet, suggestParlays, toAmerican, toDecimal, weightsFor, worthAt, SIM_ONLY, type GameMarket, type PropMarket } from '../src/model/parlays';
 import { fittedOver, type FitCoef, type PropFits } from '../src/model/propFit';
 import { boardPicks } from '../src/model/slate';
 import { fitRows, picksOf } from '../src/track/fit';
@@ -280,5 +280,38 @@ describe('live line age', () => {
   it('carries the time from the feed to the leg', () => {
     const m = market('1', [{ ...prop('a', 'pts', 20.5, -110, -110, hits(0.3)), updated: '2026-11-10T02:04:00Z', now: 12 }], { live: true });
     expect(legsForGame(m, W).find((l) => l.prop)!.prop).toMatchObject({ updated: '2026-11-10T02:04:00Z', now: 12 });
+  });
+});
+
+describe('still a bet at', () => {
+  // Live: the simulation puts the over at 20.5 at 30%, and fades fast at higher lines.
+  const alt: [number, number][] = [[17.5, 0.62], [18.5, 0.5], [19.5, 0.4], [21.5, 0.22], [22.5, 0.15], [23.5, 0.1]];
+  // A live fit that trusts half the simulation's disagreement.
+  const TRUST: FitCoef = [0, 1, 0.5];
+  const fits: PropFits = { live: TRUST, minEdge: 0.03 };
+  const m = market('1', [{ ...prop('a', 'pts', 20.5, -110, -110, hits(0.3)), alt }], { live: true });
+  const legs = legsForGame(m, weightsFor('nba', 'blend', fits));
+  const under = legs.find((l) => l.prop && l.side === 'under')!;
+  const over = legs.find((l) => l.prop && l.side === 'over')!;
+
+  it('names the worst price still worth taking, from the fitted chance', () => {
+    // Under at 20.5: 1 - sigmoid(0.5 * logit(0.3)) = 0.604, so 1.03 / 0.604 in decimal.
+    expect(under.pBlend).toBeCloseTo(1 - 1 / (1 + Math.exp(-0.5 * Math.log(0.3 / 0.7))), 9);
+    const s = stillABet(under, TRUST, 0.03)!;
+    expect(s.price).toBe(toAmerican(1.03 / under.pBlend));
+    expect(s.price).toBe(-142);
+  });
+
+  it('walks to the furthest line against the pick that still clears the bar at today\'s price', () => {
+    // At 19.5 the under is 55% (+5% at -110), at 18.5 a coin flip (-4.5%): the under holds down to 19.5.
+    expect(stillABet(under, TRUST, 0.03)!.line).toBe(19.5);
+    // A higher bar stops it at the posted line.
+    expect(stillABet(under, TRUST, 0.1)!.line).toBe(20.5);
+  });
+
+  it('says nothing for legs the fit didn\'t price', () => {
+    expect(stillABet(legsForGame(m, SIM_ONLY).find((l) => l.prop && l.side === 'under')!, TRUST, 0.03)).toBeUndefined();
+    // The over isn't a bet; asked anyway, it can't move past its own line.
+    expect(stillABet(over, TRUST, 0.03)!.line).toBe(20.5);
   });
 });

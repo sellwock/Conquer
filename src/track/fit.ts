@@ -191,6 +191,8 @@ export interface FitTest {
    * FRESH_LINE_SEC (a price you could likely still get) against older ones, and how many had no age.
    */
   byAge?: { fresh: Flat; stale: Flat; unknown: number };
+  /** Live picks, once the log has second looks: the first snapshot's against the one after halftime. */
+  bySnap?: { first: Flat; second: Flat };
 }
 
 /** A live line the book changed at most this long ago counts as fresh. */
@@ -285,6 +287,8 @@ export function testOf(scored: Scored[], entries: PropEntry[] = [], minEdge = MI
   const byAge = aged.length
     ? { fresh: record(aged.filter((k) => k.row.age! <= FRESH_LINE_SEC)), stale: record(aged.filter((k) => k.row.age! > FRESH_LINE_SEC)), unknown: picks.length - aged.length }
     : undefined;
+  const second = picks.filter((k) => k.row.snap === 'live2');
+  const bySnap = second.length ? { first: record(picks.filter((k) => k.row.snap !== 'live2')), second: record(second) } : undefined;
   return {
     lines: scored.length,
     games: games.length,
@@ -293,6 +297,7 @@ export function testOf(scored: Scored[], entries: PropEntry[] = [], minEdge = MI
     picks: { win, loss: picks.length - win, units: Math.round(units * 100) / 100, roi: r4(roi), ...range(rois, roi), said: r4(picks.length ? said / picks.length : 0), unders },
     ...(moved.toward + moved.away + moved.same ? { moved } : {}),
     ...(byAge ? { byAge } : {}),
+    ...(bySnap ? { bySnap } : {}),
   };
 }
 

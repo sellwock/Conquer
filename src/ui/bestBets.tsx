@@ -4,7 +4,7 @@
 // from a fit that isn't ahead on days it hadn't seen stay hidden until asked for.
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { MAX_PRICE, fitSingles, weightsFor, type GameMarket, type Parlay } from '../model/parlays';
+import { MAX_PRICE, fitSingles, stillABet, weightsFor, type GameMarket, type Parlay } from '../model/parlays';
 import { fitVerdict, type FitVerdict, type PropFits } from '../model/propFit';
 import type { LeagueId } from '../model/types';
 import { MODEL_VERSION } from '../model/version';
@@ -75,7 +75,21 @@ export function FitRecordLine(props: { fit: FitState; when: FitWhen; league: Lea
 }
 
 /** Fitted single bets: the price, the fit's chance, the chance the price needs, and the return per $100. */
-export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (id: string) => void; league?: LeagueId; tested?: boolean }) {
+/** "Still a bet at 23.5 or lower, at -129 or better" for a fitted live pick; nothing for others. */
+function StillLine(props: { leg: Parlay['legs'][number]; fits?: PropFits }) {
+  const coef = props.fits?.live;
+  const s = coef && stillABet(props.leg, coef, props.fits!.minEdge);
+  if (!s) return null;
+  const over = props.leg.side === 'over';
+  const moved = s.line !== props.leg.prop!.line;
+  return (
+    <span class="still" title="What to check at the book: its live line can be this far from the one shown and the bet still clears the bar, at today's price. A moved line is assumed to carry the same price.">
+      Still a bet at {moved ? `${s.line} or ${over ? 'lower' : 'higher'}` : `${s.line} only`}, {fmtAmerican(s.price)} or better
+    </span>
+  );
+}
+
+export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (id: string) => void; league?: LeagueId; tested?: boolean; fits?: PropFits }) {
   return (
     <div class="table-wrap">
       <table class="data props-table bets-table">
@@ -131,6 +145,12 @@ export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (i
                       </>
                     )}
                   </span>
+                  {props.live && (
+                    <>
+                      <br />
+                      <StillLine leg={l} fits={props.fits} />
+                    </>
+                  )}
                   {props.league && (
                     <>
                       <br />
@@ -202,7 +222,7 @@ export function FitPicks(props: {
         <p class="muted">No prop clears the bar right now: {barText(fits)}. Passing is a fine choice.</p>
       ) : (
         <>
-          <BetTable singles={shown} live={when === 'live'} onOpen={props.onOpen} league={props.league} tested={verdictOf(fit, when) === 'tested'} />
+          <BetTable singles={shown} live={when === 'live'} onOpen={props.onOpen} league={props.league} tested={verdictOf(fit, when) === 'tested'} fits={fits} />
           {singles.length > shown.length && (
             <p>
               <button type="button" class="link" onClick={() => setAll(true)}>

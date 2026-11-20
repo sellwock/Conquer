@@ -9,7 +9,7 @@
 // alone instead, labeled as such. Player props have their own evidence: a pick model fitted to
 // graded lines (propFit.ts), which prices them wherever it has been fitted.
 import { impliedFromAmerican } from '../lib/stats';
-import { fittedOver, type PropFits } from './propFit';
+import { fittedOver, type FitCoef, type PropFits } from './propFit';
 import type { LeagueId, Odds, PropStat } from './types';
 
 export interface GameMarket {
@@ -51,6 +51,11 @@ export interface PropMarket {
   now?: number;
   /** When the book last changed this line or its prices (ISO), where the feed says. */
   updated?: string;
+  /**
+   * Live props: the simulated chance of the over, pushes left out, at nearby lines (ALT_STEPS from
+   * the posted one), so a pick can say which lines it is still worth taking at after the book moves.
+   */
+  alt?: [line: number, pOver: number][];
 }
 
 export type LegKind = 'ml' | 'spread' | 'total' | 'prop';
@@ -76,7 +81,7 @@ export interface Leg {
   /** Per simulation: 0 lose, 1 win, 2 push. */
   outcome: Uint8Array;
   /** Player props only. */
-  prop?: { athleteId: string; player: string; stat: PropStat; line: number; mean: number; now?: number; updated?: string };
+  prop?: { athleteId: string; player: string; stat: PropStat; line: number; mean: number; now?: number; updated?: string; alt?: [number, number][] };
   /** A prop whose `pBlend` is the fitted pick model's chance. */
   fitted?: boolean;
 }
@@ -229,7 +234,7 @@ export function legsForGame(g: GameMarket, weights: BlendWeights = MODEL_WEIGHT[
   for (const pm of g.props ?? []) {
     if (pm.hits.length !== n) continue;
     const [po, pu] = noVig(pm.over, pm.under);
-    const info = { athleteId: pm.athleteId, player: pm.player, stat: pm.stat, line: pm.line, mean: pm.mean, now: pm.now, updated: pm.updated };
+    const info = { athleteId: pm.athleteId, player: pm.player, stat: pm.stat, line: pm.line, mean: pm.mean, now: pm.now, updated: pm.updated, alt: pm.alt };
     const what = `${pm.line} ${PROP_WORDS[pm.stat]}`;
     const h = pm.hits;
     add('prop', 'over', `${pm.player} over ${what}`, pm.over, po, (_m, _t, s) => h[s], info);
@@ -483,4 +488,39 @@ export function suggestParlays(games: GameMarket[], perSize = 3, weights?: Blend
   const room = (p: Parlay) => worthAt(p, fit!.minEdge) / p.decimal;
   const sameGame = fit ? varied([...candidates[2], ...candidates[3]].filter((p) => p.sameGame && bar(p)).sort((a, b) => room(a) - room(b)), perSize) : [];
   return { bySize, sameGame, legs };
+}
+
+/** How far from the posted line a live prop's simulated chances are kept: whole points, so half-point lines stay half-point lines. */
+export const ALT_STEPS = [-3, -2, -1, 1, 2, 3];
+
+export interface StillABet {
+  /** The furthest line the pick still clears the bar at, at today's price: the over's highest, the under's lowest. */
+  line: number;
+  /** The worst price still worth taking at the posted line. */
+  price: number;
+}
+
+/**
+ * How far a fitted live pick can move at the book and still be worth taking, for a reader whose
+ * book has moved since ESPN's copy of the line. The price is the worst one that still returns
+ * `minEdge` at the fitted chance. The line is the furthest of the leg's nearby lines (`prop.alt`)
+ * at which the fitted chance, at today's price and the book's current no-vig chance, still clears
+ * `minEdge`; a moved line is assumed priced like this one. Undefined for legs the fit didn't price.
+ */
+export function stillABet(leg: Leg, coef: FitCoef, minEdge: number): StillABet | undefined {
+  if (!leg.fitted || !leg.prop) return undefined;
+  const over = leg.side === 'over';
+  const pOverMarket = over ? leg.pFair : 1 - leg.pFair;
+  const clears = (pSimOver: number) => {
+    const pOver = fittedOver(coef, pOverMarket, pSimOver);
+    return (over ? pOver : 1 - pOver) * leg.decimal - 1 >= minEdge;
+  };
+  let line = leg.prop.line;
+  // Lines that are worse for the pick, nearest first; stop at the first that no longer clears.
+  const worse = (leg.prop.alt ?? []).filter(([l]) => (over ? l > leg.prop!.line : l < leg.prop!.line)).sort((a, b) => (over ? a[0] - b[0] : b[0] - a[0]));
+  for (const [l, p] of worse) {
+    if (!clears(p)) break;
+    line = l;
+  }
+  return { line, price: toAmerican((1 + minEdge) / leg.pBlend) };
 }

@@ -915,7 +915,7 @@ export function LiveBetsPreview(props: { game: GameData; market?: GameMarket; st
             ))}
           </ul>
         )}
-        {picks.length > 0 && (fitted ? <BetTable singles={picks} live /> : <PropTable singles={picks} live />)}
+        {picks.length > 0 && (fitted ? <BetTable singles={picks} live fits={fits} /> : <PropTable singles={picks} live />)}
       </>
     );
 

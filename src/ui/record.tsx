@@ -292,6 +292,16 @@ function FitTestStats({ t, what }: { t: FitTest; what: string }) {
           </span>
         </div>
       ) : null}
+      {t.bySnap ? (
+        <div class="stat">
+          <span class="kicker">After halftime</span>
+          <strong class={t.bySnap.second.roi > 0 ? 'pos' : t.bySnap.second.roi < 0 ? 'neg' : ''}>{signedPct(t.bySnap.second.roi)}</strong>
+          <span class="muted">
+            {t.bySnap.second.win}-{t.bySnap.second.loss} on each game's second look, after halftime; {t.bySnap.first.win}-{t.bySnap.first.loss} ({signedPct(t.bySnap.first.roi)}) on the
+            first, before it
+          </span>
+        </div>
+      ) : null}
       {t.moved && moved ? (
         <div class="stat">
           <span class="kicker">Line moved toward the pick</span>

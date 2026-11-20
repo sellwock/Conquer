@@ -217,9 +217,25 @@ describe('player props in parlays', () => {
     }
     expect(pts.mean).toBeCloseTo(sum / 2000, 6);
     expect(ast.hits.every((h) => h === 1)).toBe(true);
+    // The chance of the over at nearby lines, from the same simulations, pushes left out.
+    expect(pts.alt!.map(([l]) => l)).toEqual([27.5, 28.5, 29.5, 31.5, 32.5, 33.5]);
+    for (const [l, p] of pts.alt!) {
+      let over = 0;
+      for (let k = 0; k < 2000; k++) if (10 + po.pts[k * po.ids.length + j] > l) over++;
+      expect(p).toBeCloseTo(over / 2000, 9);
+    }
+    // Higher lines are harder to clear.
+    const ps = pts.alt!.map(([, p]) => p);
+    expect([...ps].sort((a, b) => b - a)).toEqual(ps);
+    // Lines at zero or below aren't kept; pre-game props keep none.
+    expect(ast.alt!.every(([l]) => l > 0)).toBe(true);
     // A player who hasn't played yet is still priced live if the simulation gives them any minutes,
     // because a live prop is settled on whatever they end with.
     expect(live.some((p) => p.athleteId === bench.id)).toBe(po.min[po.ids.indexOf(bench.id)] >= 1);
+  });
+
+  it('keeps no nearby lines for pre-game props', () => {
+    expect(propMarkets([{ athleteId: star.id, stat: 'pts', line: 20.5, over: -110, under: -110 }], po, names)[0].alt).toBeUndefined();
   });
 
   it('the slate pass records the same player lines as the full simulation', () => {
