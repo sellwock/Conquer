@@ -1837,3 +1837,9 @@ table.board td.best {
 .bankroll {
   margin: 8px 0 4px;
 }
+
+.bets-table .still {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+}

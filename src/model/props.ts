@@ -4,7 +4,7 @@
 // MIN_MINUTES are left out: their minutes are too uncertain to price, and books void a prop when the
 // player sits.
 import type { PropLine } from '../data/espn/props';
-import type { PropMarket } from './parlays';
+import { ALT_STEPS, type PropMarket } from './parlays';
 import type { GameData, PropStat } from './types';
 import type { PlayerOutcomes } from '../sim/players';
 
@@ -44,14 +44,23 @@ export function propMarkets(lines: PropLine[], po: PlayerOutcomes, names: Map<st
     if (soFar ? !now?.played && po.min[j] < 1 : po.min[j] < MIN_MINUTES) continue;
     const base = now ? PARTS[l.stat].reduce((a, k) => a + now[k], 0) : 0;
     const hits = new Uint8Array(n);
+    // Live: over and decided counts at nearby lines too.
+    const alts = soFar ? ALT_STEPS.map((d) => l.line + d).filter((x) => x > 0) : [];
+    const altOver = alts.map(() => 0), altDecided = alts.map(() => 0);
     let sum = 0;
     for (let s = 0; s < n; s++) {
       let v = base;
       for (const k of PARTS[l.stat]) v += po[k][s * P + j];
       hits[s] = v > l.line ? 1 : v < l.line ? 0 : 2;
       sum += v;
+      for (let a = 0; a < alts.length; a++) {
+        if (v === alts[a]) continue;
+        altDecided[a]++;
+        if (v > alts[a]) altOver[a]++;
+      }
     }
-    out.push({ athleteId: l.athleteId, player: name, stat: l.stat, line: l.line, over: l.over, under: l.under, hits, mean: sum / n, ...(now ? { now: base } : {}), ...(l.updated ? { updated: l.updated } : {}) });
+    const alt = alts.map((x, a): [number, number] => [x, altDecided[a] ? altOver[a] / altDecided[a] : 0.5]);
+    out.push({ athleteId: l.athleteId, player: name, stat: l.stat, line: l.line, over: l.over, under: l.under, hits, mean: sum / n, ...(now ? { now: base } : {}), ...(l.updated ? { updated: l.updated } : {}), ...(alt.length ? { alt } : {}) });
   }
   return out;
 }

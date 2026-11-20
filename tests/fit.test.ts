@@ -200,6 +200,10 @@ describe('fitting the log', () => {
     expect(testOf(both.map((r) => ({ row: r, pOver: 0.7 }))).games).toBe(1);
     const many = Array.from({ length: MIN_TRAIN_GAMES }, (_, i) => ({ ...e, id: `g${i}` }));
     expect(buildFit(many, 'nba', new Date('2026-11-04T00:00:00Z')).live).toMatchObject({ games: MIN_TRAIN_GAMES, lines: 4 * MIN_TRAIN_GAMES });
+    // The record splits the second looks from the first.
+    const t = testOf(both.map((r) => ({ row: r, pOver: 0.7 })));
+    expect(t.bySnap).toEqual({ first: { win: 1, loss: 0, roi: expect.any(Number) }, second: { win: 1, loss: 0, roi: expect.any(Number) } });
+    expect(testOf(fitRows([e], 'live').map((r) => ({ row: r, pOver: 0.7 }))).bySnap).toBeUndefined();
   });
 
   it('splits live picks by how old their line was, once the log has ages', () => {
