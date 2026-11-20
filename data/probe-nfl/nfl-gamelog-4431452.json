@@ -1,0 +1,6359 @@
+{
+ "categories": [
+  {
+   "name": "passing",
+   "displayName": "Passing",
+   "count": 11
+  },
+  {
+   "name": "rushing",
+   "displayName": "Rushing",
+   "count": 5
+  }
+ ],
+ "filters": [
+  {
+   "displayName": "League",
+   "name": "league",
+   "value": "nfl",
+   "options": [
+    {
+     "value": "college-football",
+     "displayValue": "NCAA - Football",
+     "shortDisplayName": "NCAAF"
+    },
+    {
+     "value": "nfl",
+     "displayValue": "National Football League",
+     "shortDisplayName": "NFL"
+    }
+   ]
+  },
+  {
+   "displayName": "Season",
+   "name": "season",
+   "value": "2026",
+   "options": [
+    {
+     "value": "2026",
+     "displayValue": "2026"
+    },
+    {
+     "value": "2025",
+     "displayValue": "2025"
+    },
+    {
+     "value": "2024",
+     "displayValue": "2024"
+    }
+   ]
+  }
+ ],
+ "labels": [
+  "CMP",
+  "ATT",
+  "YDS",
+  "CMP%",
+  "AVG",
+  "TD",
+  "INT",
+  "LNG",
+  "SACK",
+  "RTG",
+  "QBR",
+  "CAR",
+  "YDS",
+  "AVG",
+  "TD",
+  "LNG"
+ ],
+ "names": [
+  "completions",
+  "passingAttempts",
+  "passingYards",
+  "completionPct",
+  "yardsPerPassAttempt",
+  "passingTouchdowns",
+  "interceptions",
+  "longPassing",
+  "sacks",
+  "QBRating",
+  "adjQBR",
+  "rushingAttempts",
+  "rushingYards",
+  "yardsPerRushAttempt",
+  "rushingTouchdowns",
+  "longRushing"
+ ],
+ "displayNames": [
+  "Completions",
+  "Passing Attempts",
+  "Passing Yards",
+  "Completion Percentage",
+  "Yards Per Pass Attempt",
+  "Passing Touchdowns",
+  "Interceptions",
+  "Longest Pass",
+  "Total Sacks",
+  "Passer Rating",
+  "Adjusted QBR",
+  "Rushing Attempts",
+  "Rushing Yards",
+  "Yards Per Rush Attempt",
+  "Rushing Touchdowns",
+  "Long Rushing"
+ ],
+ "events": {
+  "401872656": {
+   "id": "401872656",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872656/patriots-seahawks",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872656",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872656",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401872656",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401872656",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872656",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872656",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401872656&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872656",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401872656",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401872656",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401872656",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401872656",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401872656",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 1,
+   "atVs": "@",
+   "gameDate": "2026-09-10T00:20:00.000+00:00",
+   "score": "13-10",
+   "homeTeamId": "26",
+   "awayTeamId": "17",
+   "homeTeamScore": "13",
+   "awayTeamScore": "10",
+   "gameResult": "L",
+   "opponent": {
+    "id": "26",
+    "uid": "s:20~l:28~t:26",
+    "displayName": "Seattle Seahawks",
+    "abbreviation": "SEA",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/sea/seattle-seahawks",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/sea/seattle-seahawks",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:26&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/sea/seattle-seahawks",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:26&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/sea",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:26&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/sea",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/seattle-seahawks-tickets--sports-nfl-football/performer/772?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/sea/seattle-seahawks",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/sea",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/sea",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/sea",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:26&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/sea.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401872946": {
+   "id": "401872946",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872946/steelers-patriots",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872946",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872946",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401872946",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401872946",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872946",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872946",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401872946&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872946",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401872946",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401872946",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401872946",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401872946",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401872946",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 2,
+   "atVs": "vs",
+   "gameDate": "2026-09-20T17:00:00.000+00:00",
+   "score": "20-3",
+   "homeTeamId": "17",
+   "awayTeamId": "23",
+   "homeTeamScore": "20",
+   "awayTeamScore": "3",
+   "gameResult": "W",
+   "opponent": {
+    "id": "23",
+    "uid": "s:20~l:28~t:23",
+    "displayName": "Pittsburgh Steelers",
+    "abbreviation": "PIT",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/pit/pittsburgh-steelers",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/pit/pittsburgh-steelers",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:23&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/pit/pittsburgh-steelers",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:23&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/pit",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:23&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/pit",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/pittsburgh-steelers-tickets--sports-nfl-football/performer/686?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/pit/pittsburgh-steelers",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/pit",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/pit",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/pit",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:23&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/pit.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/pit.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401872957": {
+   "id": "401872957",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872957/patriots-jaguars",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872957",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872957",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401872957",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401872957",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872957",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872957",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401872957&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872957",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401872957",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401872957",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401872957",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401872957",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401872957",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 3,
+   "atVs": "@",
+   "gameDate": "2026-09-27T17:00:00.000+00:00",
+   "score": "35-6",
+   "homeTeamId": "30",
+   "awayTeamId": "17",
+   "homeTeamScore": "35",
+   "awayTeamScore": "6",
+   "gameResult": "L",
+   "opponent": {
+    "id": "30",
+    "uid": "s:20~l:28~t:30",
+    "displayName": "Jacksonville Jaguars",
+    "abbreviation": "JAX",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/jax/jacksonville-jaguars",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/jax/jacksonville-jaguars",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:30&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/jax/jacksonville-jaguars",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:30&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/jax",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:30&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/jax",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/jacksonville-jaguars-tickets--sports-nfl-football/performer/381?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/jax/jacksonville-jaguars",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/jax",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/jax",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/jax",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:30&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/jax.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/jax.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401872971": {
+   "id": "401872971",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872971/patriots-bills",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872971",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872971",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401872971",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401872971",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872971",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872971",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401872971&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872971",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401872971",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401872971",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401872971",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401872971",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401872971",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 4,
+   "atVs": "@",
+   "gameDate": "2026-10-04T17:00:00.000+00:00",
+   "score": "29-26",
+   "homeTeamId": "2",
+   "awayTeamId": "17",
+   "homeTeamScore": "26",
+   "awayTeamScore": "29",
+   "gameResult": "W",
+   "opponent": {
+    "id": "2",
+    "uid": "s:20~l:28~t:2",
+    "displayName": "Buffalo Bills",
+    "abbreviation": "BUF",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/buf/buffalo-bills",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/buf/buffalo-bills",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:2&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/buf/buffalo-bills",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:2&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/buf",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:2&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/buf",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/buffalo-bills-tickets--sports-nfl-football/performer/128?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/buf/buffalo-bills",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/buf",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/buf",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/buf",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:2&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/buf.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401872986": {
+   "id": "401872986",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872986/raiders-patriots",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872986",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872986",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401872986",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401872986",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872986",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401872986",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401872986&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401872986",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401872986",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401872986",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401872986",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401872986",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401872986",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 5,
+   "atVs": "vs",
+   "gameDate": "2026-10-11T17:00:00.000+00:00",
+   "score": "45-17",
+   "homeTeamId": "17",
+   "awayTeamId": "13",
+   "homeTeamScore": "45",
+   "awayTeamScore": "17",
+   "gameResult": "W",
+   "opponent": {
+    "id": "13",
+    "uid": "s:20~l:28~t:13",
+    "displayName": "Las Vegas Raiders",
+    "abbreviation": "LV",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/lv/las-vegas-raiders",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/lv/las-vegas-raiders",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:13&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/lv/las-vegas-raiders",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:13&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/lv",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:13&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/lv",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/las-vegas-raiders-tickets--sports-nfl-football/performer/626?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/lv/las-vegas-raiders",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/lv",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/lv",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/lv",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:13&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/lv.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/lv.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401873001": {
+   "id": "401873001",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873001/jets-patriots",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873001",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873001",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401873001",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401873001",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873001",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873001",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401873001&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873001",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401873001",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401873001",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401873001",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401873001",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401873001",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 6,
+   "atVs": "vs",
+   "gameDate": "2026-10-18T17:00:00.000+00:00",
+   "score": "26-19",
+   "homeTeamId": "17",
+   "awayTeamId": "20",
+   "homeTeamScore": "26",
+   "awayTeamScore": "19",
+   "gameResult": "W",
+   "opponent": {
+    "id": "20",
+    "uid": "s:20~l:28~t:20",
+    "displayName": "New York Jets",
+    "abbreviation": "NYJ",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/nyj/new-york-jets",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/nyj/new-york-jets",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:20&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/nyj/new-york-jets",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:20&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/nyj",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:20&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/nyj",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-york-jets-tickets--sports-nfl-football/performer/601?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/nyj/new-york-jets",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/nyj",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/nyj",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/nyj",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:20&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/nyj.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/nyj.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401873010": {
+   "id": "401873010",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873010/patriots-bears",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873010",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873010",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401873010",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401873010",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873010",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873010",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401873010&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873010",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401873010",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401873010",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401873010",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401873010",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401873010",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 7,
+   "atVs": "@",
+   "gameDate": "2026-10-23T00:15:00.000+00:00",
+   "score": "30-24",
+   "homeTeamId": "3",
+   "awayTeamId": "17",
+   "homeTeamScore": "30",
+   "awayTeamScore": "24",
+   "gameResult": "L",
+   "opponent": {
+    "id": "3",
+    "uid": "s:20~l:28~t:3",
+    "displayName": "Chicago Bears",
+    "abbreviation": "CHI",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/chi/chicago-bears",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/chi/chicago-bears",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:3&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/chi/chicago-bears",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:3&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/chi",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:3&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/chi",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/chicago-bears-tickets--sports-nfl-football/performer/159?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/chi/chicago-bears",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/chi",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/chi",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/chi",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:3&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/chi.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/chi.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401873034": {
+   "id": "401873034",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873034/patriots-dolphins",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873034",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873034",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401873034",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401873034",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873034",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873034",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401873034&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873034",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401873034",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401873034",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401873034",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401873034",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401873034",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 8,
+   "atVs": "@",
+   "gameDate": "2026-11-01T21:25:00.000+00:00",
+   "score": "24-19",
+   "homeTeamId": "15",
+   "awayTeamId": "17",
+   "homeTeamScore": "19",
+   "awayTeamScore": "24",
+   "gameResult": "W",
+   "opponent": {
+    "id": "15",
+    "uid": "s:20~l:28~t:15",
+    "displayName": "Miami Dolphins",
+    "abbreviation": "MIA",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/mia/miami-dolphins",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/mia/miami-dolphins",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:15&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/mia/miami-dolphins",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:15&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/mia",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:15&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/mia",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/miami-dolphins-tickets--sports-nfl-football/performer/532?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/mia/miami-dolphins",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/mia",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/mia",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/mia",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:15&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/mia.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401873049": {
+   "id": "401873049",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873049/packers-patriots",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873049",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873049",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401873049",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401873049",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873049",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873049",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401873049&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873049",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401873049",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401873049",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401873049",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401873049",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401873049",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 9,
+   "atVs": "vs",
+   "gameDate": "2026-11-08T21:25:00.000+00:00",
+   "score": "45-27",
+   "homeTeamId": "17",
+   "awayTeamId": "9",
+   "homeTeamScore": "27",
+   "awayTeamScore": "45",
+   "gameResult": "L",
+   "opponent": {
+    "id": "9",
+    "uid": "s:20~l:28~t:9",
+    "displayName": "Green Bay Packers",
+    "abbreviation": "GB",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/gb/green-bay-packers",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/gb/green-bay-packers",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:9&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/gb/green-bay-packers",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:9&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/gb",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:9&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/gb",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/green-bay-packers-tickets--sports-nfl-football/performer/339?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/gb/green-bay-packers",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/gb",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/gb",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/gb",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:9&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/gb.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  },
+  "401873053": {
+   "id": "401873053",
+   "links": [
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873053/patriots-lions",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "summary",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873053",
+     "text": "Gamecast",
+     "shortText": "Summary",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "now",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873053",
+     "text": "Now",
+     "shortText": "Now",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "teamstats",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/matchup?gameId=401873053",
+     "text": "Team Stats",
+     "shortText": "Team Stats",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/boxscore/_/gameId/401873053",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "boxscore",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873053",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/game/_/gameId/401873053",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "mobile",
+      "event"
+     ],
+     "href": "http://m.espn.com/nfl/gamecast?gameId=401873053&action=summary",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "gamecast",
+      "sportscenter",
+      "app",
+      "event"
+     ],
+     "href": "sportscenter://x-callback-url/showGame?sportName=football&leagueAbbrev=nfl&gameId=401873053",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "recap",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/recap?gameId=401873053",
+     "text": "Recap",
+     "shortText": "Recap",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401873053",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "videos",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/video?gameId=401873053",
+     "text": "Videos",
+     "shortText": "Videos",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nfl/odds/_/gameId/401873053",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en",
+     "rel": [
+      "odds",
+      "mobile",
+      "event"
+     ],
+     "href": "https://m.espn.com/nfl/odds/_/gameId/401873053",
+     "text": "Odds",
+     "shortText": "Odds",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "week": 10,
+   "atVs": "vs",
+   "gameDate": "2026-11-15T14:30:00.000+00:00",
+   "score": "35-10",
+   "homeTeamId": "8",
+   "awayTeamId": "17",
+   "homeTeamScore": "35",
+   "awayTeamScore": "10",
+   "gameResult": "L",
+   "opponent": {
+    "id": "8",
+    "uid": "s:20~l:28~t:8",
+    "displayName": "Detroit Lions",
+    "abbreviation": "DET",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/det/detroit-lions",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/det/detroit-lions",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:8&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/det/detroit-lions",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:8&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/det",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:8&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/det",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/detroit-lions-tickets--sports-nfl-football/performer/238?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/det/detroit-lions",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/det",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/det",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/det",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:8&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/det.png",
+    "logoDark": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/det.png"
+   },
+   "leagueName": "National Football League",
+   "leagueAbbreviation": "NFL",
+   "leagueShortName": "NFL",
+   "eventNote": "NFL Munich Game",
+   "team": {
+    "id": "17",
+    "uid": "s:20~l:28~t:17",
+    "abbreviation": "NE",
+    "links": [
+     {
+      "language": "en",
+      "rel": [
+       "clubhouse",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/_/name/ne/new-england-patriots",
+      "text": "Clubhouse",
+      "shortText": "Clubhouse",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/roster/_/name/ne/new-england-patriots",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "roster",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=roster",
+      "text": "Roster",
+      "shortText": "Roster",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/stats/_/name/ne/new-england-patriots",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "stats",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=stats",
+      "text": "Statistics",
+      "shortText": "Statistics",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/schedule/_/name/ne",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "schedule",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=scores",
+      "text": "Schedule",
+      "shortText": "Schedule",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "photos",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/photos/_/name/ne",
+      "text": "photos",
+      "shortText": "photos",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "tickets",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.vividseats.com/new-england-patriots-tickets--sports-nfl-football/performer/592?wsUser=717",
+      "text": "Tickets",
+      "shortText": "Tickets",
+      "isExternal": true,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "draftpicks",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/draft/teams/_/name/ne/new-england-patriots",
+      "text": "Draft Picks",
+      "shortText": "Draft Picks",
+      "isExternal": false,
+      "isPremium": true
+     },
+     {
+      "language": "en",
+      "rel": [
+       "transactions",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/transactions/_/name/ne",
+      "text": "Transactions",
+      "shortText": "Transactions",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "injuries",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/injuries/_/name/ne",
+      "text": "Injuries",
+      "shortText": "Injuries",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "desktop",
+       "team"
+      ],
+      "href": "https://www.espn.com/nfl/team/depth/_/name/ne",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     },
+     {
+      "language": "en",
+      "rel": [
+       "depthchart",
+       "sportscenter",
+       "app",
+       "team"
+      ],
+      "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28~t:17&section=depthchart",
+      "text": "Depth Chart",
+      "shortText": "Depth Chart",
+      "isExternal": false,
+      "isPremium": false
+     }
+    ],
+    "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+    "isAllStar": false
+   }
+  }
+ },
+ "seasonTypes": [
+  {
+   "displayName": "2026 Regular Season",
+   "displayTeam": "NE",
+   "categories": [
+    {
+     "displayName": "Regular Season Stats",
+     "type": "event",
+     "splitType": "2",
+     "events": [
+      {
+       "eventId": "401873053",
+       "stats": [
+        "3",
+        "4",
+        "48",
+        "75.0",
+        "12.0",
+        "0",
+        "0",
+        "26",
+        "1",
+        "114.6",
+        "31.2",
+        "1",
+        "11",
+        "11.0",
+        "0",
+        "11"
+       ]
+      },
+      {
+       "eventId": "401873049",
+       "stats": [
+        "21",
+        "38",
+        "299",
+        "55.3",
+        "7.9",
+        "3",
+        "3",
+        "36",
+        "4",
+        "74.3",
+        "31.0",
+        "1",
+        "3",
+        "3.0",
+        "0",
+        "3"
+       ]
+      },
+      {
+       "eventId": "401873034",
+       "stats": [
+        "16",
+        "20",
+        "199",
+        "80.0",
+        "10.0",
+        "2",
+        "0",
+        "48",
+        "3",
+        "141.5",
+        "77.6",
+        "8",
+        "5",
+        "0.6",
+        "1",
+        "2"
+       ]
+      },
+      {
+       "eventId": "401873010",
+       "stats": [
+        "24",
+        "31",
+        "321",
+        "77.4",
+        "10.4",
+        "2",
+        "1",
+        "48",
+        "2",
+        "117.8",
+        "79.4",
+        "4",
+        "26",
+        "6.5",
+        "1",
+        "15"
+       ]
+      },
+      {
+       "eventId": "401873001",
+       "stats": [
+        "18",
+        "32",
+        "235",
+        "56.3",
+        "7.3",
+        "3",
+        "0",
+        "42",
+        "0",
+        "110.8",
+        "84.4",
+        "4",
+        "24",
+        "6.0",
+        "0",
+        "21"
+       ]
+      },
+      {
+       "eventId": "401872986",
+       "stats": [
+        "26",
+        "34",
+        "374",
+        "76.5",
+        "11.0",
+        "4",
+        "0",
+        "49",
+        "1",
+        "150.9",
+        "92.2",
+        "7",
+        "25",
+        "3.6",
+        "1",
+        "10"
+       ]
+      },
+      {
+       "eventId": "401872971",
+       "stats": [
+        "22",
+        "37",
+        "269",
+        "59.5",
+        "7.3",
+        "3",
+        "1",
+        "26",
+        "1",
+        "97.7",
+        "93.4",
+        "8",
+        "54",
+        "6.8",
+        "0",
+        "26"
+       ]
+      },
+      {
+       "eventId": "401872957",
+       "stats": [
+        "14",
+        "25",
+        "199",
+        "56.0",
+        "8.0",
+        "0",
+        "2",
+        "38",
+        "3",
+        "48.6",
+        "19.5",
+        "4",
+        "18",
+        "4.5",
+        "0",
+        "9"
+       ]
+      },
+      {
+       "eventId": "401872946",
+       "stats": [
+        "14",
+        "22",
+        "208",
+        "63.6",
+        "9.5",
+        "0",
+        "1",
+        "63",
+        "3",
+        "75.6",
+        "58.4",
+        "4",
+        "17",
+        "4.3",
+        "0",
+        "13"
+       ]
+      },
+      {
+       "eventId": "401872656",
+       "stats": [
+        "23",
+        "33",
+        "178",
+        "69.7",
+        "5.4",
+        "1",
+        "3",
+        "19",
+        "3",
+        "54.9",
+        "66.6",
+        "7",
+        "47",
+        "6.7",
+        "0",
+        "16"
+       ]
+      }
+     ],
+     "totals": [
+      "181",
+      "276",
+      "2,330",
+      "65.6",
+      "8.4",
+      "18",
+      "11",
+      "63",
+      "21",
+      "97.0",
+      "73.3",
+      "48",
+      "230",
+      "4.8",
+      "3",
+      "26"
+     ]
+    }
+   ],
+   "summary": {
+    "displayName": "Regular Season Stats",
+    "stats": [
+     {
+      "displayName": "Totals",
+      "stats": [
+       "181",
+       "276",
+       "2,330",
+       "65.6",
+       "8.4",
+       "18",
+       "11",
+       "63",
+       "21",
+       "97.0",
+       "73.3",
+       "48",
+       "230",
+       "4.8",
+       "3",
+       "26"
+      ],
+      "type": "total"
+     }
+    ]
+   }
+  }
+ ],
+ "glossary": [
+  {
+   "abbreviation": "ATT",
+   "displayName": "Passing Attempts"
+  },
+  {
+   "abbreviation": "AVG",
+   "displayName": "Yards Per Pass Attempt"
+  },
+  {
+   "abbreviation": "CAR",
+   "displayName": "Rushing Attempts"
+  },
+  {
+   "abbreviation": "CMP",
+   "displayName": "Completions"
+  },
+  {
+   "abbreviation": "CMP%",
+   "displayName": "Completion Percentage"
+  },
+  {
+   "abbreviation": "INT",
+   "displayName": "Interceptions"
+  },
+  {
+   "abbreviation": "LNG",
+   "displayName": "Longest Pass"
+  },
+  {
+   "abbreviation": "QBR",
+   "displayName": "Adjusted QBR"
+  },
+  {
+   "abbreviation": "RTG",
+   "displayName": "Passer Rating"
+  },
+  {
+   "abbreviation": "SACK",
+   "displayName": "Total Sacks"
+  },
+  {
+   "abbreviation": "TD",
+   "displayName": "Passing Touchdowns"
+  },
+  {
+   "abbreviation": "YDS",
+   "displayName": "Passing Yards"
+  }
+ ]
+}

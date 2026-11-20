@@ -1,0 +1,3931 @@
+{
+ "header": {
+  "id": "401873066",
+  "uid": "s:20~l:28~e:401873066",
+  "season": {
+   "year": 2026,
+   "current": true,
+   "type": 2
+  },
+  "timeValid": true,
+  "competitions": [
+   {
+    "id": "401873066",
+    "uid": "s:20~l:28~e:401873066~c:401873066",
+    "date": "2026-11-20T01:15Z",
+    "neutralSite": false,
+    "conferenceCompetition": false,
+    "boxscoreAvailable": true,
+    "commentaryAvailable": false,
+    "liveAvailable": true,
+    "onWatchESPN": false,
+    "recent": true,
+    "wallclockAvailable": true,
+    "boxscoreSource": "full",
+    "playByPlaySource": "full",
+    "competitors": [
+     {
+      "id": "34",
+      "uid": "s:20~l:28~t:34",
+      "order": 0,
+      "homeAway": "home",
+      "team": {
+       "id": "34",
+       "guid": "595690b3-2161-4913-a7a7-814af2fd2621",
+       "uid": "s:20~l:28~t:34",
+       "location": "Houston",
+       "name": "Texans",
+       "nickname": "Texans",
+       "abbreviation": "HOU",
+       "displayName": "Houston Texans",
+       "color": "021018",
+       "alternateColor": "eb0028",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2024-06-25T18:50Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/hou.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2024-06-25T18:49Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/hou.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "scoreboard"
+         ],
+         "lastUpdated": "2024-06-25T18:50Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/scoreboard/hou.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "scoreboard",
+          "dark"
+         ],
+         "lastUpdated": "2024-06-25T18:49Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/grayscale.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "grayscale"
+         ],
+         "lastUpdated": "2026-03-31T12:54Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/primary_logo_on_white_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_white_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/primary_logo_on_black_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_black_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/primary_logo_on_primary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_primary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/primary_logo_on_secondary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_secondary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/primary_logo_black.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_black"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/primary_logo_white.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_white"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/secondary_logo_on_white_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_white_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/secondary_logo_on_black_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_black_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/secondary_logo_on_primary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_primary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/secondary_logo_on_secondary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_secondary_color"
+         ],
+         "lastUpdated": "2026-08-11T18:09Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/secondary_logo_black.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_black"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/595690b3-2161-4913-a7a7-814af2fd2621/logos/secondary_logo_white.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_white"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        }
+       ],
+       "links": [
+        {
+         "rel": [
+          "clubhouse",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nfl/team/_/name/hou/houston-texans",
+         "text": "Clubhouse"
+        }
+       ]
+      },
+      "score": "7",
+      "linescores": [
+       {
+        "displayValue": "7"
+       }
+      ],
+      "record": [
+       {
+        "type": "total",
+        "summary": "3-6",
+        "displayValue": "3-6"
+       },
+       {
+        "type": "home",
+        "summary": "0-4",
+        "displayValue": "0-4"
+       },
+       {
+        "type": "vsconf",
+        "summary": "3-4",
+        "displayValue": "3-4"
+       }
+      ],
+      "timeoutsUsed": 0,
+      "possession": false
+     },
+     {
+      "id": "11",
+      "uid": "s:20~l:28~t:11",
+      "order": 1,
+      "homeAway": "away",
+      "team": {
+       "id": "11",
+       "guid": "582d14eb-da61-e505-cc40-d972a1b60ed1",
+       "uid": "s:20~l:28~t:11",
+       "location": "Indianapolis",
+       "name": "Colts",
+       "nickname": "Colts",
+       "abbreviation": "IND",
+       "displayName": "Indianapolis Colts",
+       "color": "003b75",
+       "alternateColor": "ffffff",
+       "logos": [
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nfl/500/ind.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "default"
+         ],
+         "lastUpdated": "2024-06-25T18:50Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/ind.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "dark"
+         ],
+         "lastUpdated": "2024-06-25T18:50Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/ind.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "scoreboard"
+         ],
+         "lastUpdated": "2024-06-25T18:50Z"
+        },
+        {
+         "href": "https://a.espncdn.com/i/teamlogos/nfl/500-dark/scoreboard/ind.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "scoreboard",
+          "dark"
+         ],
+         "lastUpdated": "2024-06-25T18:50Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/grayscale.png",
+         "width": 500,
+         "height": 500,
+         "alt": "",
+         "rel": [
+          "full",
+          "grayscale"
+         ],
+         "lastUpdated": "2026-03-31T12:52Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/primary_logo_on_white_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_white_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/primary_logo_on_black_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_black_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/primary_logo_on_primary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_primary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/primary_logo_on_secondary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_on_secondary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/primary_logo_black.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_black"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/primary_logo_white.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "primary_logo_white"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/secondary_logo_on_white_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_white_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/secondary_logo_on_black_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_black_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/secondary_logo_on_primary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_primary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/secondary_logo_on_secondary_color.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_on_secondary_color"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/secondary_logo_black.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_black"
+         ],
+         "lastUpdated": "2026-02-13T03:12Z"
+        },
+        {
+         "href": "https://a.espncdn.com/guid/582d14eb-da61-e505-cc40-d972a1b60ed1/logos/secondary_logo_white.png",
+         "width": 4096,
+         "height": 4096,
+         "alt": "",
+         "rel": [
+          "full",
+          "secondary_logo_white"
+         ],
+         "lastUpdated": "2026-07-22T20:30Z"
+        }
+       ],
+       "links": [
+        {
+         "rel": [
+          "clubhouse",
+          "desktop",
+          "team"
+         ],
+         "href": "https://www.espn.com/nfl/team/_/name/ind/indianapolis-colts",
+         "text": "Clubhouse"
+        }
+       ]
+      },
+      "score": "3",
+      "linescores": [
+       {
+        "displayValue": "3"
+       }
+      ],
+      "record": [
+       {
+        "type": "total",
+        "summary": "3-7",
+        "displayValue": "3-7"
+       },
+       {
+        "type": "road",
+        "summary": "1-4",
+        "displayValue": "1-4"
+       },
+       {
+        "type": "vsconf",
+        "summary": "2-5",
+        "displayValue": "2-5"
+       }
+      ],
+      "timeoutsUsed": 0,
+      "possession": true
+     }
+    ],
+    "status": {
+     "displayClock": "2:14",
+     "period": 1,
+     "type": {
+      "id": "2",
+      "name": "STATUS_IN_PROGRESS",
+      "state": "in",
+      "completed": false,
+      "description": "In Progress",
+      "detail": "2:14 - 1st Quarter",
+      "shortDetail": "2:14 - 1st",
+      "statusPrimary": "2:14",
+      "statusSecondary": "1st"
+     },
+     "isTBDFlex": false,
+     "displayPeriod": "1st"
+    },
+    "odds": [
+     {
+      "awayTeamOdds": {
+       "favorite": false,
+       "underdog": true,
+       "moneyLine": 531,
+       "spreadOdds": -112,
+       "open": {
+        "favorite": false,
+        "pointSpread": {
+         "alternateDisplayValue": "+5.5",
+         "american": "+5.5"
+        },
+        "spread": {
+         "value": 1.9,
+         "displayValue": "10/11",
+         "alternateDisplayValue": "-110",
+         "decimal": 1.9,
+         "fraction": "10/11",
+         "american": "-110"
+        },
+        "moneyLine": {
+         "value": 2.95,
+         "displayValue": "39/20",
+         "alternateDisplayValue": "+195",
+         "decimal": 2.95,
+         "fraction": "39/20",
+         "american": "+195"
+        }
+       },
+       "close": {
+        "pointSpread": {
+         "alternateDisplayValue": "+12.5",
+         "american": "+12.5"
+        },
+        "spread": {
+         "value": 1.89,
+         "displayValue": "25/28",
+         "alternateDisplayValue": "-112",
+         "decimal": 1.89,
+         "fraction": "25/28",
+         "american": "-112"
+        },
+        "moneyLine": {
+         "value": 6.31,
+         "displayValue": "531/100",
+         "alternateDisplayValue": "+531",
+         "decimal": 6.31,
+         "fraction": "531/100",
+         "american": "+531"
+        }
+       },
+       "current": {
+        "pointSpread": {
+         "alternateDisplayValue": "+12.5",
+         "american": "+12.5"
+        },
+        "spread": {
+         "value": 1.89,
+         "displayValue": "25/28",
+         "alternateDisplayValue": "-112",
+         "decimal": 1.89,
+         "fraction": "25/28",
+         "american": "-112"
+        },
+        "moneyLine": {
+         "value": 6.31,
+         "displayValue": "531/100",
+         "alternateDisplayValue": "+531",
+         "decimal": 6.31,
+         "fraction": "531/100",
+         "american": "+531"
+        }
+       },
+       "team": {
+        "$ref": "http://sports.core.api.espn.pvt/v2/sports/football/leagues/nfl/seasons/2026/teams/11?lang=en&region=us"
+       }
+      },
+      "homeTeamOdds": {
+       "favorite": true,
+       "underdog": false,
+       "moneyLine": -750,
+       "spreadOdds": -107,
+       "open": {
+        "favorite": true,
+        "pointSpread": {
+         "alternateDisplayValue": "-5.5",
+         "american": "-5.5"
+        },
+        "spread": {
+         "value": 1.9,
+         "displayValue": "10/11",
+         "alternateDisplayValue": "-110",
+         "decimal": 1.9,
+         "fraction": "10/11",
+         "american": "-110"
+        },
+        "moneyLine": {
+         "value": 1.42,
+         "displayValue": "50/119",
+         "alternateDisplayValue": "-238",
+         "decimal": 1.42,
+         "fraction": "50/119",
+         "american": "-238"
+        }
+       },
+       "close": {
+        "pointSpread": {
+         "alternateDisplayValue": "-12.5",
+         "american": "-12.5"
+        },
+        "spread": {
+         "value": 1.93,
+         "displayValue": "100/107",
+         "alternateDisplayValue": "-107",
+         "decimal": 1.93,
+         "fraction": "100/107",
+         "american": "-107"
+        },
+        "moneyLine": {
+         "value": 1.13,
+         "displayValue": "2/15",
+         "alternateDisplayValue": "-750",
+         "decimal": 1.13,
+         "fraction": "2/15",
+         "american": "-750"
+        }
+       },
+       "current": {
+        "pointSpread": {
+         "alternateDisplayValue": "-12.5",
+         "american": "-12.5"
+        },
+        "spread": {
+         "value": 1.93,
+         "displayValue": "100/107",
+         "alternateDisplayValue": "-107",
+         "decimal": 1.93,
+         "fraction": "100/107",
+         "american": "-107"
+        },
+        "moneyLine": {
+         "value": 1.13,
+         "displayValue": "2/15",
+         "alternateDisplayValue": "-750",
+         "decimal": 1.13,
+         "fraction": "2/15",
+         "american": "-750"
+        }
+       },
+       "team": {
+        "$ref": "http://sports.core.api.espn.pvt/v2/sports/football/leagues/nfl/seasons/2026/teams/34?lang=en&region=us"
+       }
+      },
+      "close": {
+       "over": {
+        "value": 1.96,
+        "displayValue": "25/26",
+        "alternateDisplayValue": "-104",
+        "decimal": 1.96,
+        "fraction": "25/26",
+        "american": "-104"
+       },
+       "under": {
+        "value": 1.86,
+        "displayValue": "25/29",
+        "alternateDisplayValue": "-116",
+        "decimal": 1.86,
+        "fraction": "25/29",
+        "american": "-116"
+       },
+       "total": {
+        "alternateDisplayValue": "44.5",
+        "american": "44.5"
+       }
+      },
+      "current": {
+       "over": {
+        "value": 1.96,
+        "displayValue": "25/26",
+        "alternateDisplayValue": "-104",
+        "decimal": 1.96,
+        "fraction": "25/26",
+        "american": "-104"
+       },
+       "under": {
+        "value": 1.86,
+        "displayValue": "25/29",
+        "alternateDisplayValue": "-116",
+        "decimal": 1.86,
+        "fraction": "25/29",
+        "american": "-116"
+       },
+       "total": {
+        "alternateDisplayValue": "44.5",
+        "american": "44.5"
+       }
+      },
+      "propBets": [
+       {
+        "type": {
+         "id": "8",
+         "name": "Total Passing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "8",
+         "name": "Total Passing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "8",
+         "name": "Total Passing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "8",
+         "name": "Total Passing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "9",
+         "name": "Total Pass Completions (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "9",
+         "name": "Total Pass Completions (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "9",
+         "name": "Total Pass Completions (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "9",
+         "name": "Total Pass Completions (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "10",
+         "name": "Total Passing Touchdowns (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "10",
+         "name": "Total Passing Touchdowns (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "10",
+         "name": "Total Passing Touchdowns (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "10",
+         "name": "Total Passing Touchdowns (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       }
+      ]
+     },
+     {
+      "awayTeamOdds": {
+       "favorite": false,
+       "underdog": true,
+       "moneyLine": 244,
+       "spreadOdds": -110,
+       "open": {
+        "favorite": false,
+        "pointSpread": {
+         "alternateDisplayValue": "+12.5",
+         "american": "+12.5"
+        },
+        "spread": {
+         "value": 1.87,
+         "displayValue": "50/57",
+         "alternateDisplayValue": "-114",
+         "decimal": 1.87,
+         "fraction": "50/57",
+         "american": "-114"
+        },
+        "moneyLine": {
+         "value": 5.97,
+         "displayValue": "497/100",
+         "alternateDisplayValue": "+497",
+         "decimal": 5.97,
+         "fraction": "497/100",
+         "american": "+497"
+        }
+       },
+       "current": {
+        "pointSpread": {
+         "alternateDisplayValue": "+6.5",
+         "american": "+6.5"
+        },
+        "spread": {
+         "value": 1.9,
+         "displayValue": "10/11",
+         "alternateDisplayValue": "-110",
+         "decimal": 1.9,
+         "fraction": "10/11",
+         "american": "-110"
+        },
+        "moneyLine": {
+         "value": 3.44,
+         "displayValue": "61/25",
+         "alternateDisplayValue": "+244",
+         "decimal": 3.44,
+         "fraction": "61/25",
+         "american": "+244"
+        }
+       },
+       "team": {
+        "$ref": "http://sports.core.api.espn.pvt/v2/sports/football/leagues/nfl/seasons/2026/teams/11?lang=en&region=us"
+       }
+      },
+      "homeTeamOdds": {
+       "favorite": true,
+       "underdog": false,
+       "moneyLine": -343,
+       "spreadOdds": -120,
+       "open": {
+        "favorite": true,
+        "pointSpread": {
+         "alternateDisplayValue": "-12.5",
+         "american": "-12.5"
+        },
+        "spread": {
+         "value": 1.86,
+         "displayValue": "25/29",
+         "alternateDisplayValue": "-116",
+         "decimal": 1.86,
+         "fraction": "25/29",
+         "american": "-116"
+        },
+        "moneyLine": {
+         "value": 1.12,
+         "displayValue": "10/83",
+         "alternateDisplayValue": "-830",
+         "decimal": 1.12,
+         "fraction": "10/83",
+         "american": "-830"
+        }
+       },
+       "current": {
+        "pointSpread": {
+         "alternateDisplayValue": "-6.5",
+         "american": "-6.5"
+        },
+        "spread": {
+         "value": 1.83,
+         "displayValue": "5/6",
+         "alternateDisplayValue": "-120",
+         "decimal": 1.83,
+         "fraction": "5/6",
+         "american": "-120"
+        },
+        "moneyLine": {
+         "value": 1.29,
+         "displayValue": "100/343",
+         "alternateDisplayValue": "-343",
+         "decimal": 1.29,
+         "fraction": "100/343",
+         "american": "-343"
+        }
+       },
+       "team": {
+        "$ref": "http://sports.core.api.espn.pvt/v2/sports/football/leagues/nfl/seasons/2026/teams/34?lang=en&region=us"
+       }
+      },
+      "current": {
+       "over": {
+        "value": 1.83,
+        "displayValue": "5/6",
+        "alternateDisplayValue": "-120",
+        "decimal": 1.83,
+        "fraction": "5/6",
+        "american": "-120"
+       },
+       "under": {
+        "value": 1.91,
+        "displayValue": "100/109",
+        "alternateDisplayValue": "-109",
+        "decimal": 1.91,
+        "fraction": "100/109",
+        "american": "-109"
+       },
+       "total": {
+        "alternateDisplayValue": "41.5",
+        "american": "41.5"
+       }
+      },
+      "propBets": [
+       {
+        "type": {
+         "id": "8",
+         "name": "Total Passing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "8",
+         "name": "Total Passing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "8",
+         "name": "Total Passing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "8",
+         "name": "Total Passing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "9",
+         "name": "Total Pass Completions (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "9",
+         "name": "Total Pass Completions (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "9",
+         "name": "Total Pass Completions (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "9",
+         "name": "Total Pass Completions (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "10",
+         "name": "Total Passing Touchdowns (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "10",
+         "name": "Total Passing Touchdowns (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "10",
+         "name": "Total Passing Touchdowns (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "10",
+         "name": "Total Passing Touchdowns (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "11",
+         "name": "Total Carries (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       },
+       {
+        "type": {
+         "id": "12",
+         "name": "Total Rushing Yards (incl. overtime)"
+        }
+       }
+      ]
+     }
+    ],
+    "broadcasts": [
+     {
+      "type": {
+       "id": "4",
+       "shortName": "Streaming"
+      },
+      "market": {
+       "id": "1",
+       "type": "National"
+      },
+      "media": {
+       "shortName": "Prime Video"
+      },
+      "lang": "en",
+      "region": "us",
+      "isNational": true
+     }
+    ],
+    "boxscoreMinutes": true
+   }
+  ],
+  "links": [
+   {
+    "rel": [
+     "live",
+     "desktop",
+     "event"
+    ],
+    "href": "https://www.espn.com/nfl/game?gameId=401873066",
+    "text": "Gamecast",
+    "shortText": "Gamecast",
+    "isExternal": false,
+    "isPremium": false
+   },
+   {
+    "rel": [
+     "boxscore",
+     "desktop",
+     "event"
+    ],
+    "href": "https://www.espn.com/nfl/boxscore/_/gameId/401873066",
+    "text": "Box Score",
+    "shortText": "Box Score",
+    "isExternal": false,
+    "isPremium": false
+   },
+   {
+    "rel": [
+     "pbp",
+     "desktop",
+     "event"
+    ],
+    "href": "https://www.espn.com/nfl/playbyplay/_/gameId/401873066",
+    "text": "Play-by-Play",
+    "shortText": "Play-by-Play",
+    "isExternal": false,
+    "isPremium": false
+   },
+   {
+    "rel": [
+     "teamstats",
+     "desktop",
+     "event"
+    ],
+    "href": "https://www.espn.com/nfl/matchup?gameId=401873066",
+    "text": "Team Stats",
+    "shortText": "Team Stats",
+    "isExternal": false,
+    "isPremium": false
+   },
+   {
+    "rel": [
+     "odds",
+     "desktop",
+     "event"
+    ],
+    "href": "https://www.espn.com/nfl/odds/_/gameId/401873066",
+    "text": "Odds",
+    "shortText": "Odds",
+    "isExternal": false,
+    "isPremium": false
+   }
+  ],
+  "week": 11,
+  "league": {
+   "id": "28",
+   "uid": "s:20~l:28",
+   "name": "National Football League",
+   "abbreviation": "NFL",
+   "shortName": "NFL",
+   "slug": "nfl",
+   "isTournament": false,
+   "links": [
+    {
+     "rel": [
+      "index",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/",
+     "text": "Index"
+    },
+    {
+     "rel": [
+      "index",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28",
+     "text": "Index"
+    },
+    {
+     "rel": [
+      "schedule",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/schedule",
+     "text": "Schedule"
+    },
+    {
+     "rel": [
+      "schedule",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=scores",
+     "text": "Schedule"
+    },
+    {
+     "rel": [
+      "standings",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/standings",
+     "text": "Standings"
+    },
+    {
+     "rel": [
+      "standings",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=standings",
+     "text": "Standings"
+    },
+    {
+     "rel": [
+      "rankings",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/powerrankings",
+     "text": "Power Rankings"
+    },
+    {
+     "rel": [
+      "scores",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/scoreboard",
+     "text": "Scores"
+    },
+    {
+     "rel": [
+      "scores",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=scores",
+     "text": "Scores"
+    },
+    {
+     "rel": [
+      "stats",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/stats",
+     "text": "Stats"
+    },
+    {
+     "rel": [
+      "stats",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=stats",
+     "text": "Stats"
+    },
+    {
+     "rel": [
+      "teams",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/teams",
+     "text": "Teams"
+    },
+    {
+     "rel": [
+      "athletes",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/players",
+     "text": "Players"
+    },
+    {
+     "rel": [
+      "injuries",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/injuries",
+     "text": "Injuries"
+    },
+    {
+     "rel": [
+      "odds",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/odds",
+     "text": "Odds"
+    },
+    {
+     "rel": [
+      "odds",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=odds",
+     "text": "Odds"
+    },
+    {
+     "rel": [
+      "playoff-bracket",
+      "desktop",
+      "league"
+     ],
+     "href": "https://www.espn.com/nfl/playoff-bracket",
+     "text": "Bracket"
+    },
+    {
+     "rel": [
+      "playoff-bracket",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=bracket",
+     "text": "Bracket"
+    },
+    {
+     "rel": [
+      "freeagency",
+      "desktop",
+      "league"
+     ],
+     "href": "https://insider.espn.com/nfl/freeagency/",
+     "text": "Freeagency"
+    }
+   ],
+   "logos": [
+    {
+     "href": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+     "rel": [
+      "full",
+      "default"
+     ]
+    },
+    {
+     "href": "https://a.espncdn.com/i/teamlogos/leagues/500-dark/nfl.png",
+     "rel": [
+      "full",
+      "dark"
+     ]
+    }
+   ]
+  }
+ },
+ "boxscore": {
+  "teams": [
+   {
+    "team": {
+     "id": "11",
+     "uid": "s:20~l:28~t:11",
+     "slug": "indianapolis-colts",
+     "location": "Indianapolis",
+     "name": "Colts",
+     "abbreviation": "IND",
+     "displayName": "Indianapolis Colts",
+     "shortDisplayName": "Colts",
+     "color": "003b75",
+     "alternateColor": "ffffff",
+     "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ind.png"
+    },
+    "statistics": [
+     {
+      "name": "firstDowns",
+      "displayValue": "4",
+      "value": 4,
+      "label": "1st Downs"
+     },
+     {
+      "name": "firstDownsPassing",
+      "displayValue": "2",
+      "value": 2,
+      "label": "Passing 1st downs"
+     },
+     {
+      "name": "firstDownsRushing",
+      "displayValue": "1",
+      "value": 1,
+      "label": "Rushing 1st downs"
+     },
+     {
+      "name": "firstDownsPenalty",
+      "displayValue": "1",
+      "value": 1,
+      "label": "1st downs from penalties"
+     },
+     {
+      "name": "thirdDownEff",
+      "displayValue": "1-3",
+      "value": 0.3333333333,
+      "label": "3rd down efficiency"
+     },
+     {
+      "name": "fourthDownEff",
+      "displayValue": "0-0",
+      "value": "-",
+      "label": "4th down efficiency"
+     },
+     {
+      "name": "totalOffensivePlays",
+      "displayValue": "16",
+      "value": 16,
+      "label": "Total Plays"
+     },
+     {
+      "name": "totalYards",
+      "displayValue": "75",
+      "value": "-",
+      "label": "Total Yards"
+     },
+     {
+      "name": "yardsPerPlay",
+      "displayValue": "4.7",
+      "value": 4.6875,
+      "label": "Yards per Play"
+     },
+     {
+      "name": "totalDrives",
+      "displayValue": "3",
+      "value": 3,
+      "label": "Total Drives"
+     },
+     {
+      "name": "netPassingYards",
+      "displayValue": "55",
+      "value": 55,
+      "label": "Passing"
+     },
+     {
+      "name": "completionAttempts",
+      "displayValue": "4/9",
+      "value": "-",
+      "label": "Comp/Att"
+     },
+     {
+      "name": "yardsPerPass",
+      "displayValue": "6.1",
+      "value": 6.111111111111111,
+      "label": "Yards per pass"
+     },
+     {
+      "name": "interceptions",
+      "displayValue": "0",
+      "value": 0,
+      "label": "Interceptions thrown"
+     },
+     {
+      "name": "sacksYardsLost",
+      "displayValue": "0-0",
+      "value": "-",
+      "label": "Sacks-Yards Lost"
+     },
+     {
+      "name": "rushingYards",
+      "displayValue": "20",
+      "value": 20,
+      "label": "Rushing"
+     },
+     {
+      "name": "rushingAttempts",
+      "displayValue": "7",
+      "value": 7,
+      "label": "Rushing Attempts"
+     },
+     {
+      "name": "yardsPerRushAttempt",
+      "displayValue": "2.9",
+      "value": 2.857,
+      "label": "Yards per rush"
+     },
+     {
+      "name": "redZoneAttempts",
+      "displayValue": "0-1",
+      "value": 0,
+      "label": "Red Zone (Made-Att)"
+     },
+     {
+      "name": "totalPenaltiesYards",
+      "displayValue": "1-5",
+      "value": "-",
+      "label": "Penalties"
+     },
+     {
+      "name": "turnovers",
+      "displayValue": "0",
+      "value": "-",
+      "label": "Turnovers"
+     },
+     {
+      "name": "fumblesLost",
+      "displayValue": "0",
+      "value": 0,
+      "label": "Fumbles lost"
+     },
+     {
+      "name": "interceptions",
+      "displayValue": "0",
+      "value": 0,
+      "label": "Interceptions thrown"
+     },
+     {
+      "name": "defensiveTouchdowns",
+      "displayValue": "0",
+      "value": 0,
+      "label": "Defensive / Special Teams TDs"
+     },
+     {
+      "name": "possessionTime",
+      "displayValue": " 7:28",
+      "value": 448,
+      "label": "Possession"
+     }
+    ],
+    "displayOrder": 1,
+    "homeAway": "away"
+   },
+   {
+    "team": {
+     "id": "34",
+     "uid": "s:20~l:28~t:34",
+     "slug": "houston-texans",
+     "location": "Houston",
+     "name": "Texans",
+     "abbreviation": "HOU",
+     "displayName": "Houston Texans",
+     "shortDisplayName": "Texans",
+     "color": "021018",
+     "alternateColor": "eb0028",
+     "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png"
+    },
+    "statistics": [
+     {
+      "name": "firstDowns",
+      "displayValue": "4",
+      "value": 4,
+      "label": "1st Downs"
+     },
+     {
+      "name": "firstDownsPassing",
+      "displayValue": "2",
+      "value": 2,
+      "label": "Passing 1st downs"
+     },
+     {
+      "name": "firstDownsRushing",
+      "displayValue": "1",
+      "value": 1,
+      "label": "Rushing 1st downs"
+     },
+     {
+      "name": "firstDownsPenalty",
+      "displayValue": "1",
+      "value": 1,
+      "label": "1st downs from penalties"
+     },
+     {
+      "name": "thirdDownEff",
+      "displayValue": "0-1",
+      "value": 0,
+      "label": "3rd down efficiency"
+     },
+     {
+      "name": "fourthDownEff",
+      "displayValue": "0-0",
+      "value": "-",
+      "label": "4th down efficiency"
+     },
+     {
+      "name": "totalOffensivePlays",
+      "displayValue": "9",
+      "value": 9,
+      "label": "Total Plays"
+     },
+     {
+      "name": "totalYards",
+      "displayValue": "70",
+      "value": "-",
+      "label": "Total Yards"
+     },
+     {
+      "name": "yardsPerPlay",
+      "displayValue": "7.8",
+      "value": 7.7777777778,
+      "label": "Yards per Play"
+     },
+     {
+      "name": "totalDrives",
+      "displayValue": "2",
+      "value": 2,
+      "label": "Total Drives"
+     },
+     {
+      "name": "netPassingYards",
+      "displayValue": "58",
+      "value": 58,
+      "label": "Passing"
+     },
+     {
+      "name": "completionAttempts",
+      "displayValue": "4/5",
+      "value": "-",
+      "label": "Comp/Att"
+     },
+     {
+      "name": "yardsPerPass",
+      "displayValue": "11.6",
+      "value": 11.6,
+      "label": "Yards per pass"
+     },
+     {
+      "name": "interceptions",
+      "displayValue": "1",
+      "value": 1,
+      "label": "Interceptions thrown"
+     },
+     {
+      "name": "sacksYardsLost",
+      "displayValue": "0-0",
+      "value": "-",
+      "label": "Sacks-Yards Lost"
+     },
+     {
+      "name": "rushingYards",
+      "displayValue": "12",
+      "value": 12,
+      "label": "Rushing"
+     },
+     {
+      "name": "rushingAttempts",
+      "displayValue": "4",
+      "value": 4,
+      "label": "Rushing Attempts"
+     },
+     {
+      "name": "yardsPerRushAttempt",
+      "displayValue": "3.0",
+      "value": 3,
+      "label": "Yards per rush"
+     },
+     {
+      "name": "redZoneAttempts",
+      "displayValue": "0-0",
+      "value": "-",
+      "label": "Red Zone (Made-Att)"
+     },
+     {
+      "name": "totalPenaltiesYards",
+      "displayValue": "2-9",
+      "value": "-",
+      "label": "Penalties"
+     },
+     {
+      "name": "turnovers",
+      "displayValue": "1",
+      "value": "-",
+      "label": "Turnovers"
+     },
+     {
+      "name": "fumblesLost",
+      "displayValue": "0",
+      "value": 0,
+      "label": "Fumbles lost"
+     },
+     {
+      "name": "interceptions",
+      "displayValue": "1",
+      "value": 1,
+      "label": "Interceptions thrown"
+     },
+     {
+      "name": "defensiveTouchdowns",
+      "displayValue": "0",
+      "value": 0,
+      "label": "Defensive / Special Teams TDs"
+     },
+     {
+      "name": "possessionTime",
+      "displayValue": " 5:18",
+      "value": 318,
+      "label": "Possession"
+     }
+    ],
+    "displayOrder": 2,
+    "homeAway": "home"
+   }
+  ],
+  "players": [
+   {
+    "team": {
+     "id": "11",
+     "uid": "s:20~l:28~t:11",
+     "slug": "indianapolis-colts",
+     "location": "Indianapolis",
+     "name": "Colts",
+     "abbreviation": "IND",
+     "displayName": "Indianapolis Colts",
+     "shortDisplayName": "Colts",
+     "color": "003b75",
+     "alternateColor": "ffffff",
+     "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/ind.png"
+    },
+    "statistics": [
+     {
+      "name": "passing",
+      "keys": [
+       "completions/passingAttempts",
+       "passingYards",
+       "yardsPerPassAttempt",
+       "passingTouchdowns",
+       "interceptions",
+       "sacks-sackYardsLost",
+       "adjQBR",
+       "QBRating"
+      ],
+      "text": "Indianapolis Passing",
+      "labels": [
+       "C/ATT",
+       "YDS",
+       "AVG",
+       "TD",
+       "INT",
+       "SACKS",
+       "RTG"
+      ],
+      "descriptions": [
+       "Completions/Attempts",
+       "Yards",
+       "Yards Per Pass Attempt",
+       "Touchdowns",
+       "Interceptions",
+       "Sacks",
+       "Passer Rating"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "3917792",
+         "uid": "s:20~l:28~a:3917792",
+         "guid": "5ad1bcc2-57bc-bb72-bcd0-0cdd0d945444",
+         "firstName": "Daniel",
+         "lastName": "Jones",
+         "displayName": "Daniel Jones",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/3917792/daniel-jones",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3917792.png",
+          "alt": "Daniel Jones"
+         },
+         "jersey": "17"
+        },
+        "stats": [
+         "4/9",
+         "55",
+         "6.1",
+         "0",
+         "0",
+         "0-0",
+         "64.6"
+        ]
+       }
+      ],
+      "totals": [
+       "4/9",
+       "55",
+       "6.1",
+       "0",
+       "0",
+       "0-0",
+       "64.6"
+      ]
+     },
+     {
+      "name": "rushing",
+      "keys": [
+       "rushingAttempts",
+       "rushingYards",
+       "yardsPerRushAttempt",
+       "rushingTouchdowns",
+       "longRushing"
+      ],
+      "text": "Indianapolis Rushing",
+      "labels": [
+       "CAR",
+       "YDS",
+       "AVG",
+       "TD",
+       "LONG"
+      ],
+      "descriptions": [
+       "Rushing Attempts",
+       "Yards",
+       "Yards Per Rushing Attempt",
+       "Touchdowns",
+       "Longest Run"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4242335",
+         "uid": "s:20~l:28~a:4242335",
+         "guid": "ddd8786c-fd5a-4e55-ccc8-6ddf6f1ede33",
+         "firstName": "Jonathan",
+         "lastName": "Taylor",
+         "displayName": "Jonathan Taylor",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4242335/jonathan-taylor",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4242335.png",
+          "alt": "Jonathan Taylor"
+         },
+         "jersey": "28"
+        },
+        "stats": [
+         "5",
+         "15",
+         "3.0",
+         "0",
+         "6"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4686468",
+         "uid": "s:20~l:28~a:4686468",
+         "guid": "a045bb26-6f50-3f65-aa23-5ca7d3db91fe",
+         "firstName": "Seth",
+         "lastName": "McGowan",
+         "displayName": "Seth McGowan",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4686468/seth-mcgowan",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4686468.png",
+          "alt": "Seth McGowan"
+         },
+         "jersey": "20"
+        },
+        "stats": [
+         "2",
+         "5",
+         "2.5",
+         "0",
+         "8"
+        ]
+       }
+      ],
+      "totals": [
+       "7",
+       "20",
+       "2.9",
+       "0",
+       "8"
+      ]
+     },
+     {
+      "name": "receiving",
+      "keys": [
+       "receptions",
+       "receivingYards",
+       "yardsPerReception",
+       "receivingTouchdowns",
+       "longReception",
+       "receivingTargets"
+      ],
+      "text": "Indianapolis Receiving",
+      "labels": [
+       "REC",
+       "YDS",
+       "AVG",
+       "TD",
+       "LONG",
+       "TGTS"
+      ],
+      "descriptions": [
+       "Receptions",
+       "Yards",
+       "Yards Per Reception",
+       "Touchdowns",
+       "Longest Reception",
+       "Receiving Targets"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4061956",
+         "uid": "s:20~l:28~a:4061956",
+         "guid": "e91ee9f1-3b96-6c8d-6137-cd3f5dc85857",
+         "firstName": "Ashton",
+         "lastName": "Dulin",
+         "displayName": "Ashton Dulin",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4061956/ashton-dulin",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4061956.png",
+          "alt": "Ashton Dulin"
+         },
+         "jersey": "16"
+        },
+        "stats": [
+         "2",
+         "30",
+         "15.0",
+         "0",
+         "25",
+         "2"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4050373",
+         "uid": "s:20~l:28~a:4050373",
+         "guid": "0ce27b93-e277-8a52-52f9-317d1305bdae",
+         "firstName": "Quez",
+         "lastName": "Watkins",
+         "displayName": "Quez Watkins",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4050373/quez-watkins",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4050373.png",
+          "alt": "Quez Watkins"
+         },
+         "jersey": "9"
+        },
+        "stats": [
+         "1",
+         "26",
+         "26.0",
+         "0",
+         "26",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4431459",
+         "uid": "s:20~l:28~a:4431459",
+         "guid": "0f413f35-0856-304f-8a14-953ee7532190",
+         "firstName": "Tyler",
+         "lastName": "Warren",
+         "displayName": "Tyler Warren",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4431459/tyler-warren",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4431459.png",
+          "alt": "Tyler Warren"
+         },
+         "jersey": "84"
+        },
+        "stats": [
+         "0",
+         "0",
+         "0.0",
+         "0",
+         "0",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4683151",
+         "uid": "s:20~l:28~a:4683151",
+         "guid": "30e889dd-6d76-3cdc-8308-d4e1fea0a923",
+         "firstName": "Deion",
+         "lastName": "Burks",
+         "displayName": "Deion Burks",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4683151/deion-burks",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4683151.png",
+          "alt": "Deion Burks"
+         },
+         "jersey": "80"
+        },
+        "stats": [
+         "0",
+         "0",
+         "0.0",
+         "0",
+         "0",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4242335",
+         "uid": "s:20~l:28~a:4242335",
+         "guid": "ddd8786c-fd5a-4e55-ccc8-6ddf6f1ede33",
+         "firstName": "Jonathan",
+         "lastName": "Taylor",
+         "displayName": "Jonathan Taylor",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4242335/jonathan-taylor",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4242335.png",
+          "alt": "Jonathan Taylor"
+         },
+         "jersey": "28"
+        },
+        "stats": [
+         "1",
+         "-1",
+         "-1.0",
+         "0",
+         "-1",
+         "2"
+        ]
+       }
+      ],
+      "totals": [
+       "4",
+       "55",
+       "13.8",
+       "0",
+       "26",
+       "7"
+      ]
+     },
+     {
+      "name": "fumbles",
+      "keys": [
+       "fumbles",
+       "fumblesLost",
+       "fumblesRecovered"
+      ],
+      "text": "Indianapolis Fumbles",
+      "labels": [
+       "FUM",
+       "LOST",
+       "REC"
+      ],
+      "descriptions": [
+       "Fumbles",
+       "Fumbles Lost",
+       "Fumbles Recovered"
+      ],
+      "athletes": [],
+      "totals": []
+     },
+     {
+      "name": "defensive",
+      "keys": [
+       "totalTackles",
+       "soloTackles",
+       "sacks",
+       "tacklesForLoss",
+       "passesDefended",
+       "QBHits",
+       "defensiveTouchdowns"
+      ],
+      "text": "Indianapolis Defense",
+      "labels": [
+       "TOT",
+       "SOLO",
+       "SACKS",
+       "TFL",
+       "PD",
+       "QB HTS",
+       "TD"
+      ],
+      "descriptions": [
+       "Tackles",
+       "Solo Tackles",
+       "Sacks",
+       "Tackles For Loss",
+       "Passes Defended",
+       "Quarterback Hits",
+       "Touchdowns"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4682909",
+         "uid": "s:20~l:28~a:4682909",
+         "guid": "32eaaa3b-0c76-364f-9c2b-ef49304ebf3c",
+         "firstName": "Justin",
+         "lastName": "Walley",
+         "displayName": "Justin Walley",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4682909/justin-walley",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4682909.png",
+          "alt": "Justin Walley"
+         },
+         "jersey": "27"
+        },
+        "stats": [
+         "2",
+         "2",
+         "0",
+         "1",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4685324",
+         "uid": "s:20~l:28~a:4685324",
+         "guid": "947e3ce2-e8d9-36c2-b3f2-f184ee7c1746",
+         "firstName": "Caden",
+         "lastName": "Curry",
+         "displayName": "Caden Curry",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4685324/caden-curry",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4685324.png",
+          "alt": "Caden Curry"
+         },
+         "jersey": "55"
+        },
+        "stats": [
+         "2",
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "5088571",
+         "uid": "s:20~l:28~a:5088571",
+         "guid": "5c7de71e-9425-3801-b949-c034b5ffd31b",
+         "firstName": "Bryce",
+         "lastName": "Boettcher",
+         "displayName": "Bryce Boettcher",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/5088571/bryce-boettcher",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/5088571.png",
+          "alt": "Bryce Boettcher"
+         },
+         "jersey": "50"
+        },
+        "stats": [
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4695991",
+         "uid": "s:20~l:28~a:4695991",
+         "guid": "024793fa-92a4-3aa9-9d1c-a9214793d8e4",
+         "firstName": "Johnathan",
+         "lastName": "Edwards",
+         "displayName": "Johnathan Edwards",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4695991/johnathan-edwards",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4695991.png",
+          "alt": "Johnathan Edwards"
+         },
+         "jersey": "35"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4870598",
+         "uid": "s:20~l:28~a:4870598",
+         "guid": "5b74a91a-8f9e-38df-a824-8e475b5a9ca8",
+         "firstName": "CJ",
+         "lastName": "Allen",
+         "displayName": "CJ Allen",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4870598/cj-allen",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4870598.png",
+          "alt": "CJ Allen"
+         },
+         "jersey": "53"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4058825",
+         "uid": "s:20~l:28~a:4058825",
+         "guid": "f428c5d7-943a-6fa1-1452-8aaa6bb1f072",
+         "firstName": "Grover",
+         "lastName": "Stewart",
+         "displayName": "Grover Stewart",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4058825/grover-stewart",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4058825.png",
+          "alt": "Grover Stewart"
+         },
+         "jersey": "90"
+        },
+        "stats": [
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4427635",
+         "uid": "s:20~l:28~a:4427635",
+         "guid": "f1ba64df-da2f-fbdb-7bd4-7a399a0b26b9",
+         "firstName": "Adetomiwa",
+         "lastName": "Adebawore",
+         "displayName": "Adetomiwa Adebawore",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4427635/adetomiwa-adebawore",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4427635.png",
+          "alt": "Adetomiwa Adebawore"
+         },
+         "jersey": "95"
+        },
+        "stats": [
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4905664",
+         "uid": "s:20~l:28~a:4905664",
+         "guid": "29d4469a-f51e-3257-8473-594494000a7a",
+         "firstName": "A.J.",
+         "lastName": "Haulcy",
+         "displayName": "A.J. Haulcy",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4905664/aj-haulcy",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4905664.png",
+          "alt": "A.J. Haulcy"
+         },
+         "jersey": "25"
+        },
+        "stats": [
+         "1",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4035861",
+         "uid": "s:20~l:28~a:4035861",
+         "guid": "ce31187e-2a38-cfcd-f93d-ba91af1638f1",
+         "firstName": "Cam",
+         "lastName": "Bynum",
+         "displayName": "Cam Bynum",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4035861/cam-bynum",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4035861.png",
+          "alt": "Cam Bynum"
+         },
+         "jersey": "0"
+        },
+        "stats": [
+         "0",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0",
+         "0"
+        ]
+       }
+      ],
+      "totals": [
+       "11",
+       "6",
+       "0",
+       "1",
+       "2",
+       "0",
+       "0"
+      ]
+     },
+     {
+      "name": "interceptions",
+      "keys": [
+       "interceptions",
+       "interceptionYards",
+       "interceptionTouchdowns"
+      ],
+      "text": "Indianapolis Interceptions",
+      "labels": [
+       "INT",
+       "YDS",
+       "TD"
+      ],
+      "descriptions": [
+       "Interceptions",
+       "Yards",
+       "Touchdowns"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4905664",
+         "uid": "s:20~l:28~a:4905664",
+         "guid": "29d4469a-f51e-3257-8473-594494000a7a",
+         "firstName": "A.J.",
+         "lastName": "Haulcy",
+         "displayName": "A.J. Haulcy",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4905664/aj-haulcy",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4905664.png",
+          "alt": "A.J. Haulcy"
+         },
+         "jersey": "25"
+        },
+        "stats": [
+         "1",
+         "2",
+         "0"
+        ]
+       }
+      ],
+      "totals": [
+       "1",
+       "2",
+       "0"
+      ]
+     },
+     {
+      "name": "kickReturns",
+      "keys": [
+       "kickReturns",
+       "kickReturnYards",
+       "yardsPerKickReturn",
+       "longKickReturn",
+       "kickReturnTouchdowns"
+      ],
+      "text": "Indianapolis Kick Returns",
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "LONG",
+       "TD"
+      ],
+      "descriptions": [
+       "Kick Returns",
+       "Yards",
+       "Yards Per Kick Return",
+       "Longest Kick Return",
+       "Touchdowns"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4686468",
+         "uid": "s:20~l:28~a:4686468",
+         "guid": "a045bb26-6f50-3f65-aa23-5ca7d3db91fe",
+         "firstName": "Seth",
+         "lastName": "McGowan",
+         "displayName": "Seth McGowan",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4686468/seth-mcgowan",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4686468.png",
+          "alt": "Seth McGowan"
+         },
+         "jersey": "20"
+        },
+        "stats": [
+         "1",
+         "40",
+         "40.0",
+         "40",
+         "0"
+        ]
+       }
+      ],
+      "totals": [
+       "1",
+       "40",
+       "40.0",
+       "40",
+       "0"
+      ]
+     },
+     {
+      "name": "puntReturns",
+      "keys": [
+       "puntReturns",
+       "puntReturnYards",
+       "yardsPerPuntReturn",
+       "longPuntReturn",
+       "puntReturnTouchdowns"
+      ],
+      "text": "Indianapolis Punt Returns",
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "LONG",
+       "TD"
+      ],
+      "descriptions": [
+       "Punt Returns",
+       "Yards",
+       "Yards Per Punt Return",
+       "Longest Punt Return",
+       "Touchdowns"
+      ],
+      "athletes": [],
+      "totals": []
+     },
+     {
+      "name": "kicking",
+      "keys": [
+       "fieldGoalsMade/fieldGoalAttempts",
+       "fieldGoalPct",
+       "longFieldGoalMade",
+       "extraPointsMade/extraPointAttempts",
+       "totalKickingPoints"
+      ],
+      "text": "Indianapolis Kicking",
+      "labels": [
+       "FG",
+       "PCT",
+       "LONG",
+       "XP",
+       "PTS"
+      ],
+      "descriptions": [
+       "Field Goals Made/Attempts",
+       "Field Goal Percentage",
+       "Longest Field Goal Made",
+       "Extra Points Made/Attempts",
+       "Kicking Points"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4571557",
+         "uid": "s:20~l:28~a:4571557",
+         "guid": "bd38713e-d779-d178-0745-9f0873baadc6",
+         "firstName": "Spencer",
+         "lastName": "Shrader",
+         "displayName": "Spencer Shrader",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4571557/spencer-shrader",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4571557.png",
+          "alt": "Spencer Shrader"
+         },
+         "jersey": "3"
+        },
+        "stats": [
+         "1/2",
+         "50.0",
+         "34",
+         "0/0",
+         "3"
+        ]
+       }
+      ],
+      "totals": [
+       "1/2",
+       "50.0",
+       "34",
+       "0/0",
+       "3"
+      ]
+     },
+     {
+      "name": "punting",
+      "keys": [
+       "punts",
+       "puntYards",
+       "grossAvgPuntYards",
+       "touchbacks",
+       "puntsInside20",
+       "longPunt"
+      ],
+      "text": "Indianapolis Punting",
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "TB",
+       "In 20",
+       "LONG"
+      ],
+      "descriptions": [
+       "Punts",
+       "Yards",
+       "Average Punt Yards",
+       "Touchbacks",
+       "Punts Inside 20",
+       "Longest Punt"
+      ],
+      "athletes": [],
+      "totals": []
+     }
+    ],
+    "displayOrder": 1
+   },
+   {
+    "team": {
+     "id": "34",
+     "uid": "s:20~l:28~t:34",
+     "slug": "houston-texans",
+     "location": "Houston",
+     "name": "Texans",
+     "abbreviation": "HOU",
+     "displayName": "Houston Texans",
+     "shortDisplayName": "Texans",
+     "color": "021018",
+     "alternateColor": "eb0028",
+     "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png"
+    },
+    "statistics": [
+     {
+      "name": "passing",
+      "keys": [
+       "completions/passingAttempts",
+       "passingYards",
+       "yardsPerPassAttempt",
+       "passingTouchdowns",
+       "interceptions",
+       "sacks-sackYardsLost",
+       "adjQBR",
+       "QBRating"
+      ],
+      "text": "Houston Passing",
+      "labels": [
+       "C/ATT",
+       "YDS",
+       "AVG",
+       "TD",
+       "INT",
+       "SACKS",
+       "RTG"
+      ],
+      "descriptions": [
+       "Completions/Attempts",
+       "Yards",
+       "Yards Per Pass Attempt",
+       "Touchdowns",
+       "Interceptions",
+       "Sacks",
+       "Passer Rating"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4432577",
+         "uid": "s:20~l:28~a:4432577",
+         "guid": "147e6862-2ac0-3a97-8f36-e3b1c0147320",
+         "firstName": "C.J.",
+         "lastName": "Stroud",
+         "displayName": "C.J. Stroud",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4432577/cj-stroud",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4432577.png",
+          "alt": "C.J. Stroud"
+         },
+         "jersey": "7"
+        },
+        "stats": [
+         "4/5",
+         "58",
+         "11.6",
+         "1",
+         "1",
+         "0-0",
+         "115.0"
+        ]
+       }
+      ],
+      "totals": [
+       "4/5",
+       "58",
+       "11.6",
+       "1",
+       "1",
+       "0-0",
+       "115.0"
+      ]
+     },
+     {
+      "name": "rushing",
+      "keys": [
+       "rushingAttempts",
+       "rushingYards",
+       "yardsPerRushAttempt",
+       "rushingTouchdowns",
+       "longRushing"
+      ],
+      "text": "Houston Rushing",
+      "labels": [
+       "CAR",
+       "YDS",
+       "AVG",
+       "TD",
+       "LONG"
+      ],
+      "descriptions": [
+       "Rushing Attempts",
+       "Yards",
+       "Yards Per Rushing Attempt",
+       "Touchdowns",
+       "Longest Run"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4362478",
+         "uid": "s:20~l:28~a:4362478",
+         "guid": "3f5c9898-aae1-cba7-4a32-2f013d91cb49",
+         "firstName": "Emari",
+         "lastName": "Demercado",
+         "displayName": "Emari Demercado",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4362478/emari-demercado",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4362478.png",
+          "alt": "Emari Demercado"
+         },
+         "jersey": "21"
+        },
+        "stats": [
+         "1",
+         "10",
+         "10.0",
+         "0",
+         "10"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4432577",
+         "uid": "s:20~l:28~a:4432577",
+         "guid": "147e6862-2ac0-3a97-8f36-e3b1c0147320",
+         "firstName": "C.J.",
+         "lastName": "Stroud",
+         "displayName": "C.J. Stroud",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4432577/cj-stroud",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4432577.png",
+          "alt": "C.J. Stroud"
+         },
+         "jersey": "7"
+        },
+        "stats": [
+         "1",
+         "4",
+         "4.0",
+         "0",
+         "4"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4035538",
+         "uid": "s:20~l:28~a:4035538",
+         "guid": "c9be5cd2-4e6a-86b1-3c08-ab4e44e6b3bf",
+         "firstName": "David",
+         "lastName": "Montgomery",
+         "displayName": "David Montgomery",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4035538/david-montgomery",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4035538.png",
+          "alt": "David Montgomery"
+         },
+         "jersey": "32"
+        },
+        "stats": [
+         "2",
+         "-2",
+         "-1.0",
+         "0",
+         "3"
+        ]
+       }
+      ],
+      "totals": [
+       "4",
+       "12",
+       "3.0",
+       "0",
+       "10"
+      ]
+     },
+     {
+      "name": "receiving",
+      "keys": [
+       "receptions",
+       "receivingYards",
+       "yardsPerReception",
+       "receivingTouchdowns",
+       "longReception",
+       "receivingTargets"
+      ],
+      "text": "Houston Receiving",
+      "labels": [
+       "REC",
+       "YDS",
+       "AVG",
+       "TD",
+       "LONG",
+       "TGTS"
+      ],
+      "descriptions": [
+       "Receptions",
+       "Yards",
+       "Yards Per Reception",
+       "Touchdowns",
+       "Longest Reception",
+       "Receiving Targets"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4258173",
+         "uid": "s:20~l:28~a:4258173",
+         "guid": "338aa0be-bd63-1a24-1929-796af121cefb",
+         "firstName": "Nico",
+         "lastName": "Collins",
+         "displayName": "Nico Collins",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4258173/nico-collins",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4258173.png",
+          "alt": "Nico Collins"
+         },
+         "jersey": "12"
+        },
+        "stats": [
+         "1",
+         "42",
+         "42.0",
+         "1",
+         "42",
+         "2"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "3117256",
+         "uid": "s:20~l:28~a:3117256",
+         "guid": "6713c2d0-5594-f7b2-a1bc-f2a53b907fc0",
+         "firstName": "Dalton",
+         "lastName": "Schultz",
+         "displayName": "Dalton Schultz",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/3117256/dalton-schultz",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3117256.png",
+          "alt": "Dalton Schultz"
+         },
+         "jersey": "86"
+        },
+        "stats": [
+         "1",
+         "11",
+         "11.0",
+         "0",
+         "11",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4035538",
+         "uid": "s:20~l:28~a:4035538",
+         "guid": "c9be5cd2-4e6a-86b1-3c08-ab4e44e6b3bf",
+         "firstName": "David",
+         "lastName": "Montgomery",
+         "displayName": "David Montgomery",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4035538/david-montgomery",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4035538.png",
+          "alt": "David Montgomery"
+         },
+         "jersey": "32"
+        },
+        "stats": [
+         "1",
+         "3",
+         "3.0",
+         "0",
+         "3",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4686422",
+         "uid": "s:20~l:28~a:4686422",
+         "guid": "af81d35e-f3fe-332c-a099-3e7fc4e81130",
+         "firstName": "Xavier",
+         "lastName": "Hutchinson",
+         "displayName": "Xavier Hutchinson",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4686422/xavier-hutchinson",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4686422.png",
+          "alt": "Xavier Hutchinson"
+         },
+         "jersey": "19"
+        },
+        "stats": [
+         "1",
+         "2",
+         "2.0",
+         "0",
+         "2",
+         "1"
+        ]
+       }
+      ],
+      "totals": [
+       "4",
+       "58",
+       "14.5",
+       "1",
+       "42",
+       "5"
+      ]
+     },
+     {
+      "name": "fumbles",
+      "keys": [
+       "fumbles",
+       "fumblesLost",
+       "fumblesRecovered"
+      ],
+      "text": "Houston Fumbles",
+      "labels": [
+       "FUM",
+       "LOST",
+       "REC"
+      ],
+      "descriptions": [
+       "Fumbles",
+       "Fumbles Lost",
+       "Fumbles Recovered"
+      ],
+      "athletes": [],
+      "totals": []
+     },
+     {
+      "name": "defensive",
+      "keys": [
+       "totalTackles",
+       "soloTackles",
+       "sacks",
+       "tacklesForLoss",
+       "passesDefended",
+       "QBHits",
+       "defensiveTouchdowns"
+      ],
+      "text": "Houston Defense",
+      "labels": [
+       "TOT",
+       "SOLO",
+       "SACKS",
+       "TFL",
+       "PD",
+       "QB HTS",
+       "TD"
+      ],
+      "descriptions": [
+       "Tackles",
+       "Solo Tackles",
+       "Sacks",
+       "Tackles For Loss",
+       "Passes Defended",
+       "Quarterback Hits",
+       "Touchdowns"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4033812",
+         "uid": "s:20~l:28~a:4033812",
+         "guid": "70964d1d-e2b4-fbab-45ca-93762041f7e6",
+         "firstName": "Jake",
+         "lastName": "Hansen",
+         "displayName": "Jake Hansen",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4033812/jake-hansen",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4033812.png",
+          "alt": "Jake Hansen"
+         },
+         "jersey": "35"
+        },
+        "stats": [
+         "3",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4243956",
+         "uid": "s:20~l:28~a:4243956",
+         "guid": "d54cc2ba-73fb-a76c-b5cb-cb7c5a7c9d0d",
+         "firstName": "Reed",
+         "lastName": "Blankenship",
+         "displayName": "Reed Blankenship",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4243956/reed-blankenship",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4243956.png",
+          "alt": "Reed Blankenship"
+         },
+         "jersey": "6"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4361366",
+         "uid": "s:20~l:28~a:4361366",
+         "guid": "e0b05a30-043d-e257-f342-a641e6fcbbc2",
+         "firstName": "Tommy",
+         "lastName": "Togiai",
+         "displayName": "Tommy Togiai",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4361366/tommy-togiai",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4361366.png",
+          "alt": "Tommy Togiai"
+         },
+         "jersey": "72"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "1",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4426350",
+         "uid": "s:20~l:28~a:4426350",
+         "guid": "bbc3c6dd-5a52-d17f-3376-278d42820bcc",
+         "firstName": "Henry",
+         "lastName": "To'oTo'o",
+         "displayName": "Henry To'oTo'o",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4426350/henry-tootoo",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4426350.png",
+          "alt": "Henry To'oTo'o"
+         },
+         "jersey": "39"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4426434",
+         "uid": "s:20~l:28~a:4426434",
+         "guid": "20a10a50-95ee-3243-52da-67eeb2286eb2",
+         "firstName": "Derek",
+         "lastName": "Stingley Jr.",
+         "displayName": "Derek Stingley Jr.",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4426434/derek-stingley-jr",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4426434.png",
+          "alt": "Derek Stingley Jr."
+         },
+         "jersey": "24"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4046716",
+         "uid": "s:20~l:28~a:4046716",
+         "guid": "cce2facd-f9c8-c008-1176-02ca10c20260",
+         "firstName": "Naquan",
+         "lastName": "Jones",
+         "displayName": "Naquan Jones",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4046716/naquan-jones",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4046716.png",
+          "alt": "Naquan Jones"
+         },
+         "jersey": "91"
+        },
+        "stats": [
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4685724",
+         "uid": "s:20~l:28~a:4685724",
+         "guid": "d08ac2e7-518c-3ca3-b3b8-9262906e6a27",
+         "firstName": "Will",
+         "lastName": "Anderson Jr.",
+         "displayName": "Will Anderson Jr.",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4685724/will-anderson-jr",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4685724.png",
+          "alt": "Will Anderson Jr."
+         },
+         "jersey": "51"
+        },
+        "stats": [
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4241223",
+         "uid": "s:20~l:28~a:4241223",
+         "guid": "29f072f3-b213-84a4-cb4e-e8d85bb8f40b",
+         "firstName": "Jalen",
+         "lastName": "Pitre",
+         "displayName": "Jalen Pitre",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4241223/jalen-pitre",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4241223.png",
+          "alt": "Jalen Pitre"
+         },
+         "jersey": "5"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4360189",
+         "uid": "s:20~l:28~a:4360189",
+         "guid": "5831343c-bf0b-3396-86f3-1020590b1bf0",
+         "firstName": "Logan",
+         "lastName": "Hall",
+         "displayName": "Logan Hall",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4360189/logan-hall",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4360189.png",
+          "alt": "Logan Hall"
+         },
+         "jersey": "96"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "1",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4366031",
+         "uid": "s:20~l:28~a:4366031",
+         "guid": "dd36357c-436b-f059-d957-ddbb12cf33ab",
+         "firstName": "Tank",
+         "lastName": "Dell",
+         "displayName": "Tank Dell",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4366031/tank-dell",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4366031.png",
+          "alt": "Tank Dell"
+         },
+         "jersey": "1"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4594277",
+         "uid": "s:20~l:28~a:4594277",
+         "guid": "913de2ae-0d26-322f-bdf5-bd4f2c8149ac",
+         "firstName": "Jaylin",
+         "lastName": "Smith",
+         "displayName": "Jaylin Smith",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4594277/jaylin-smith",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4594277.png",
+          "alt": "Jaylin Smith"
+         },
+         "jersey": "22"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4602699",
+         "uid": "s:20~l:28~a:4602699",
+         "guid": "67e6616b-c75f-3103-8d03-dd4b24b55824",
+         "firstName": "Kamari",
+         "lastName": "Lassiter",
+         "displayName": "Kamari Lassiter",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/4602699/kamari-lassiter",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4602699.png",
+          "alt": "Kamari Lassiter"
+         },
+         "jersey": "3"
+        },
+        "stats": [
+         "0",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0",
+         "0"
+        ]
+       }
+      ],
+      "totals": [
+       "19",
+       "8",
+       "0",
+       "2",
+       "2",
+       "1",
+       "0"
+      ]
+     },
+     {
+      "name": "interceptions",
+      "keys": [
+       "interceptions",
+       "interceptionYards",
+       "interceptionTouchdowns"
+      ],
+      "text": "Houston Interceptions",
+      "labels": [
+       "INT",
+       "YDS",
+       "TD"
+      ],
+      "descriptions": [
+       "Interceptions",
+       "Yards",
+       "Touchdowns"
+      ],
+      "athletes": [],
+      "totals": []
+     },
+     {
+      "name": "kickReturns",
+      "keys": [
+       "kickReturns",
+       "kickReturnYards",
+       "yardsPerKickReturn",
+       "longKickReturn",
+       "kickReturnTouchdowns"
+      ],
+      "text": "Houston Kick Returns",
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "LONG",
+       "TD"
+      ],
+      "descriptions": [
+       "Kick Returns",
+       "Yards",
+       "Yards Per Kick Return",
+       "Longest Kick Return",
+       "Touchdowns"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "3134448",
+         "uid": "s:20~l:28~a:3134448",
+         "guid": "b1245167-b41b-9dc0-df68-5512ec91315c",
+         "firstName": "Tremon",
+         "lastName": "Smith",
+         "displayName": "Tremon Smith",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/3134448/tremon-smith",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3134448.png",
+          "alt": "Tremon Smith"
+         },
+         "jersey": "11"
+        },
+        "stats": [
+         "1",
+         "31",
+         "31.0",
+         "31",
+         "0"
+        ]
+       }
+      ],
+      "totals": [
+       "1",
+       "31",
+       "31.0",
+       "31",
+       "0"
+      ]
+     },
+     {
+      "name": "puntReturns",
+      "keys": [
+       "puntReturns",
+       "puntReturnYards",
+       "yardsPerPuntReturn",
+       "longPuntReturn",
+       "puntReturnTouchdowns"
+      ],
+      "text": "Houston Punt Returns",
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "LONG",
+       "TD"
+      ],
+      "descriptions": [
+       "Punt Returns",
+       "Yards",
+       "Yards Per Punt Return",
+       "Longest Punt Return",
+       "Touchdowns"
+      ],
+      "athletes": [],
+      "totals": []
+     },
+     {
+      "name": "kicking",
+      "keys": [
+       "fieldGoalsMade/fieldGoalAttempts",
+       "fieldGoalPct",
+       "longFieldGoalMade",
+       "extraPointsMade/extraPointAttempts",
+       "totalKickingPoints"
+      ],
+      "text": "Houston Kicking",
+      "labels": [
+       "FG",
+       "PCT",
+       "LONG",
+       "XP",
+       "PTS"
+      ],
+      "descriptions": [
+       "Field Goals Made/Attempts",
+       "Field Goal Percentage",
+       "Longest Field Goal Made",
+       "Extra Points Made/Attempts",
+       "Kicking Points"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "2971573",
+         "uid": "s:20~l:28~a:2971573",
+         "guid": "aeb0f227-f365-e95c-94dd-55325ce5edbf",
+         "firstName": "Ka'imi",
+         "lastName": "Fairbairn",
+         "displayName": "Ka'imi Fairbairn",
+         "links": [
+          {
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "href": "https://www.espn.com/nfl/player/_/id/2971573/kaimi-fairbairn",
+           "text": "Player Card"
+          }
+         ],
+         "headshot": {
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/2971573.png",
+          "alt": "Ka'imi Fairbairn"
+         },
+         "jersey": "15"
+        },
+        "stats": [
+         "0/0",
+         "0.0",
+         "0",
+         "1/1",
+         "1"
+        ]
+       }
+      ],
+      "totals": [
+       "0/0",
+       "0.0",
+       "0",
+       "1/1",
+       "1"
+      ]
+     },
+     {
+      "name": "punting",
+      "keys": [
+       "punts",
+       "puntYards",
+       "grossAvgPuntYards",
+       "touchbacks",
+       "puntsInside20",
+       "longPunt"
+      ],
+      "text": "Houston Punting",
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "TB",
+       "In 20",
+       "LONG"
+      ],
+      "descriptions": [
+       "Punts",
+       "Yards",
+       "Average Punt Yards",
+       "Touchbacks",
+       "Punts Inside 20",
+       "Longest Punt"
+      ],
+      "athletes": [],
+      "totals": []
+     }
+    ],
+    "displayOrder": 2
+   }
+  ]
+ }
+}
