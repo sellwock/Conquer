@@ -56,6 +56,7 @@ export async function priceLiveGame(
       propsAt: board.fetchedAt,
       propsProvider: board.provider,
       live: true,
+      clock: { period: game.period, clockSec: game.clockSec },
     },
   };
 }

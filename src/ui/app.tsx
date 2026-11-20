@@ -320,6 +320,7 @@ export function App() {
       propsAt: board.fetchedAt,
       propsProvider: board.provider,
       live: true,
+      clock: { period: g.period, clockSec: g.clockSec },
     };
   }, [sim.scenario, sim.liveFrom, props]);
 

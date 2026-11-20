@@ -86,6 +86,12 @@ export interface PropEntry {
   live?: PropSnap;
   /** A second look after halftime, when the first was taken before it. */
   live2?: PropSnap;
+  /**
+   * Looks outside the stretch the live fit trains on (src/model/liveWindow.ts): one in the opening
+   * quarter, one in the last. Graded and scored apart, never trained on.
+   */
+  early?: PropSnap;
+  late?: PropSnap;
   /** Saved when a player was newly ruled out before tip: one per scratched player. */
   news?: NewsSnap[];
   /** The pre-game book's lines in the last 20 minutes before tip (until model 1.2.0, only for games with news). */
@@ -94,6 +100,9 @@ export interface PropEntry {
   box?: Record<string, [number, number, number, number] | null>;
   gradedAt?: string;
 }
+
+/** The in-game looks a game's log can hold. */
+export type LiveKey = 'live' | 'live2' | 'early' | 'late';
 
 export type PropLogFile = Record<string, PropEntry>;
 

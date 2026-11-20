@@ -8,7 +8,7 @@ import { TRUST_BOOK, fitFeatures, fittedFrom, type FitCoef, type FitFeatures, ty
 import type { LeagueId, PropStat } from '../model/types';
 import { easternYmd } from './dates';
 import { BOX, lineMove } from './propGrade';
-import type { PropEntry } from './types';
+import type { LiveKey, PropEntry } from './types';
 
 /** Games a fit must have seen before its picks are scored, and before the site uses it. */
 export const MIN_TRAIN_GAMES = 20;
@@ -42,7 +42,7 @@ export interface FitRow {
 }
 
 /** Decided lines of final games from one kind of snapshot; players who sat are void, as at the book. */
-export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | 'live' | 'live2'): FitRow[] {
+export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | LiveKey): FitRow[] {
   const out: FitRow[] = [];
   for (const e of entries) {
     const snap = e[key];
@@ -316,6 +316,12 @@ export interface FitPart {
   test?: FitTest;
   /** Pre-game only: the same test on each game's first snapshot, usually hours earlier. */
   open?: FitTest;
+  /**
+   * Live only: the same fit scored on the looks it never trains on, in the opening quarter and the
+   * last (src/model/liveWindow.ts). The site shows picks from those stretches apart until these are ahead.
+   */
+  early?: FitTest;
+  late?: FitTest;
 }
 
 /**
@@ -362,7 +368,8 @@ export interface FitFile {
  * time, and the history for every other game. Without one, every logged pre-game line counts,
  * whatever model priced it. The test on each game's first snapshot only ever uses real-time rows,
  * because a re-simulation knows who went on to play, which opening lines didn't. Live lines can't
- * be replayed, so the live fit pools every version, and both of a game's live snapshots.
+ * be replayed, so the live fit pools every version, and both of a game's live snapshots in the
+ * tested stretch; its early and late looks are only scored.
  */
 export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts: FitOptions = {}): FitFile {
   const history = opts.model && opts.history?.model === opts.model && opts.history.entries.length ? opts.history : undefined;
@@ -377,6 +384,8 @@ export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts
     for (const r of rows) models[r.model] = (models[r.model] ?? 0) + 1;
     const scored = walkForward(rows);
     const first = key === 'pre' ? walkForward(rows, fitRows(fresh, 'open')) : [];
+    const early = key === 'live' ? walkForward(rows, fitRows(entries, 'early')) : [];
+    const late = key === 'live' ? walkForward(rows, fitRows(entries, 'late')) : [];
     const replayedIds = new Set(replayed.map((e) => e.id));
     return {
       coef: fitLogistic(rows).map(r4) as FitCoef,
@@ -388,6 +397,8 @@ export function buildFit(entries: PropEntry[], league: LeagueId, now: Date, opts
       // Closing lines only judge picks made before them: the log's own, not replayed closes or live ones.
       ...(scored.length ? { test: testOf(scored, key === 'pre' ? fresh : []) } : {}),
       ...(first.length ? { open: testOf(first, fresh) } : {}),
+      ...(early.length ? { early: testOf(early, []) } : {}),
+      ...(late.length ? { late: testOf(late, []) } : {}),
     };
   };
   const pre = part('pre'), live = part('live');

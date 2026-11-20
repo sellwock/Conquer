@@ -26,7 +26,7 @@ import { fmtAmerican } from '../lib/stats';
 import { one, pct, perHundred, tipTime } from './format';
 import type { PropState } from './app';
 import type { LiveSlate } from './liveSlate';
-import { BetTable, FitPicks, FitRecordLine, fitAhead, type FitState } from './bestBets';
+import { BetTable, FitPicks, FitRecordLine, fitAhead, splitByStage, type FitState } from './bestBets';
 
 export interface ScanState {
   status: 'idle' | 'running' | 'done';
@@ -875,7 +875,9 @@ export function LiveBetsPreview(props: { game: GameData; market?: GameMarket; st
   const weights = weightsFor(g.league, mode, fits);
   const pool = useMemo(() => (m ? [m] : []), [m]);
   const lines = useMemo(() => liveSingles(pool, weights, 'lines', 2), [pool, weights]);
-  const picks = useMemo(() => (fitted ? fitSingles(pool, weights).slice(0, 5) : liveSingles(pool, weights, 'props', 5)), [pool, weights, fitted]);
+  const split = useMemo(() => (fitted ? splitByStage(fitSingles(pool, weights), pool, props.fit) : undefined), [pool, weights, fitted, props.fit]);
+  const picks = useMemo(() => (split ? split.tested.slice(0, 5) : liveSingles(pool, weights, 'props', 5)), [split, pool, weights]);
+  const untested = split?.untested.length ?? 0;
   const hidden = fitted && !fitAhead(props.fit, 'live');
   const board = state?.status === 'ok' ? state.board : undefined;
   const posted = !!board && (board.lines.length > 0 || !!board.odds);
@@ -901,7 +903,14 @@ export function LiveBetsPreview(props: { game: GameData; market?: GameMarket; st
         {picks.length} live pick{picks.length === 1 ? '' : 's'} hidden, because the live pick model isn't ahead. All live bets can show them.
       </p>
     );
-  else if (!lines.length && !picks.length) body = <p class="muted">No live bet clears the bar right now. Passing is a fine choice.</p>;
+  else if (!lines.length && !picks.length)
+    body = (
+      <p class="muted">
+        {untested
+          ? `${untested} live pick${untested === 1 ? '' : 's'} from this point in the game, which the live record hasn't tested yet. All live bets can show them.`
+          : 'No live bet clears the bar right now. Passing is a fine choice.'}
+      </p>
+    );
   else
     body = (
       <>

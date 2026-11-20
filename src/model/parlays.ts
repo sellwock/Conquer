@@ -32,6 +32,8 @@ export interface GameMarket {
   propsProvider?: string;
   /** A game in progress, priced from the in-game book and a simulation from the current score. */
   live?: boolean;
+  /** Live games: the game clock it was priced at, which says whether the live record covers it (src/model/liveWindow.ts). */
+  clock?: { period: number; clockSec: number };
 }
 
 export interface PropMarket {
