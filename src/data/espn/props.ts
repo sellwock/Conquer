@@ -19,7 +19,10 @@ export interface PropLine {
   under: number;
   /** The line and prices the book first posted, when the feed carries them. */
   open?: { line: number; over: number; under: number };
-  /** When the book last changed this line or its prices (ISO), per the feed. */
+  /**
+   * When the book last changed this line or its prices (ISO UTC), from the feed's clock as
+   * corrected by `feedClock`. Reliable on live boards only.
+   */
   updated?: string;
 }
 
@@ -80,6 +83,29 @@ export function parsePropBets(items: J[]): PropLine[] {
   return out;
 }
 
+/** Lines updated this far ahead of our clock still count as "now" (clocks drift). */
+const CLOCK_SLACK_MS = 2 * 60_000;
+
+/**
+ * ESPN stamps prop lines in a time zone it labels UTC but isn't: on Nov 20, 2026 every in-game
+ * line on an NFL and two NBA boards was stamped 2h20m to 3h ahead of the real time, and the
+ * pre-game lines frozen at kickoff read kickoff plus exactly 3 hours. So the stamps are shifted
+ * back by the whole number of hours that puts the board's latest change just before `now`. That
+ * assumes the latest change on a board is under an hour old, which holds for a game in progress
+ * (the in-game feed refreshes every few minutes). Stamps no whole-hour shift can explain are
+ * dropped rather than trusted. Pre-game boards can sit unchanged for hours, so their corrected
+ * times may be off by whole hours; nothing reads them.
+ */
+export function feedClock(lines: PropLine[], now: number): PropLine[] {
+  const stamps = lines.map((l) => (l.updated ? Date.parse(l.updated) : NaN)).filter((t) => !Number.isNaN(t));
+  if (!stamps.length) return lines;
+  const ahead = Math.max(...stamps) - now;
+  const hours = ahead <= CLOCK_SLACK_MS ? 0 : Math.ceil((ahead - CLOCK_SLACK_MS) / 3_600_000);
+  if (hours > 14) return lines.map(({ updated: _u, ...l }) => l);
+  if (!hours) return lines;
+  return lines.map((l) => (l.updated ? { ...l, updated: new Date(Date.parse(l.updated) - hours * 3_600_000).toISOString() } : l));
+}
+
 /**
  * The book to read props from. During a game ESPN lists two: the frozen pre-game book
  * ("DraftKings") and its in-game feed ("DraftKings - Live Odds"), whose lines move with the game.
@@ -109,6 +135,6 @@ export async function loadProps(league: LeagueId, eventId: string, signal?: Abor
     items.push(...(json?.items ?? []));
     pages = Number(json?.pageCount) || 1;
   }
-  board.lines = parsePropBets(items);
+  board.lines = feedClock(parsePropBets(items), board.fetchedAt);
   return board;
 }
