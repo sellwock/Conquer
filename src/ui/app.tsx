@@ -28,6 +28,8 @@ import { SlateBoard } from './slate';
 import { marketFrom, useSlate } from './useSlate';
 import { useLiveSlate } from './liveSlate';
 import { useNews } from './news';
+import { ALERTS_KEY, useLiveAlerts } from './liveAlerts';
+import { useNotifyToggle } from './notify';
 import { useFit } from './bestBets';
 import { MyBets, TrackerContext, useTracker } from './myBets';
 
@@ -325,10 +327,12 @@ export function App() {
   // view is open. The open game is left to its own simulation from now when it has one.
   const [liveScope, setLiveScope] = useState<'game' | 'all'>('game');
   const liveWanted = (url.view === 'game' && url.tab === 'parlays' && liveScope === 'all') || url.view === 'slate';
-  const liveSlate = useLiveSlate(url.league, board.status === 'ok' ? board.games : NO_GAMES, liveMarket?.gameId, liveWanted, url.seed);
+  const liveAlerts = useNotifyToggle(ALERTS_KEY);
+  const liveSlate = useLiveSlate(url.league, board.status === 'ok' ? board.games : NO_GAMES, liveMarket?.gameId, liveWanted, url.seed, liveAlerts.on);
   // Injury news for the board's upcoming NBA games, while the slate is open.
   const news = useNews(url.league, board.status === 'ok' ? board.games : NO_GAMES, url.view === 'slate' && url.league === 'nba' && !offline);
   const liveMarkets = useMemo(() => ({ ...liveSlate.markets, ...(liveMarket ? { [liveMarket.gameId]: liveMarket } : {}) }), [liveSlate.markets, liveMarket]);
+  useLiveAlerts(url.league, fit, liveMarkets, liveAlerts.on);
 
   // The open game's market for the parlays tab: the simulation's outcomes plus any props.
   useEffect(() => {
@@ -424,6 +428,7 @@ export function App() {
           live={{ slate: liveSlate, markets: liveMarkets }}
           news={url.league === 'nba' ? news : undefined}
           fit={fit}
+          alerts={liveAlerts}
         />
       ) : (
         <>

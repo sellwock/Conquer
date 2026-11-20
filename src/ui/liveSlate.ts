@@ -1,6 +1,6 @@
 // Prices every game in progress for live parlays: each game's in-game prop lines and game lines
 // (moneyline, spread, total), and a simulation from its current score, clock and box score. Refreshes every two minutes
-// while asked to (and the tab is visible). Nothing is cached: live state goes stale in minutes.
+// while asked to (and the tab is visible, unless live-pick alerts are on). Nothing is cached: live state goes stale in minutes.
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import type { GameData, LeagueId, ScoreboardGame } from '../model/types';
 import type { GameMarket } from '../model/parlays';
@@ -38,7 +38,8 @@ export interface LiveSlate {
 
 const backgroundSimulate: Simulate = (spec, n, seed, opts) => runOutcomesInBackground(spec, n, seed, opts).promise;
 
-export function useLiveSlate(league: LeagueId, games: ScoreboardGame[], exclude: string | undefined, enabled: boolean, seed: string): LiveSlate {
+/** `background`: keep pricing in a hidden tab (live-pick alerts are on). */
+export function useLiveSlate(league: LeagueId, games: ScoreboardGame[], exclude: string | undefined, enabled: boolean, seed: string, background = false): LiveSlate {
   const [markets, setMarkets] = useState<Record<string, GameMarket>>({});
   const [progress, setProgress] = useState({ status: 'idle' as 'idle' | 'running', done: 0, total: 0, failed: 0 });
   const [updatedAt, setUpdatedAt] = useState<number>();
@@ -96,14 +97,14 @@ export function useLiveSlate(league: LeagueId, games: ScoreboardGame[], exclude:
       handled.current = manual;
       void scan(ac.signal);
     }
-    const poller = new Poller({ interval: LIVE_SLATE_MS, tick: (signal) => scan(signal).then(() => true) });
+    const poller = new Poller({ interval: LIVE_SLATE_MS, tick: (signal) => scan(signal).then(() => true), ...(background ? { isHidden: () => false } : {}) });
     poller.start();
     return () => {
       ac.abort();
       poller.stop();
       setProgress((p) => ({ ...p, status: 'idle' }));
     };
-  }, [active, idsKey, scan, manual]);
+  }, [active, idsKey, scan, manual, background]);
 
   return {
     markets,

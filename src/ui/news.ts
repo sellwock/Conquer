@@ -10,6 +10,7 @@ import { loadInjuries } from '../data/espn/injuries';
 import { loadInjuryLog } from '../track/forward';
 import { CancelledError, runOutcomesInBackground } from '../sim/client';
 import { Poller } from './live';
+import { firstSeen, showNotification, useNotifyToggle, type NotifyToggle } from './notify';
 
 export const NEWS_MS = 120_000;
 /** A priced event is repriced at most this often, to see whether the book has moved. */
@@ -39,27 +40,8 @@ export interface NewsScan {
   pause: () => void;
   resume: () => void;
   refresh: () => void;
-  notify: { supported: boolean; on: boolean; denied: boolean; toggle: () => void };
+  notify: NotifyToggle;
 }
-
-const store = {
-  get(k: string): string | null {
-    try {
-      return localStorage.getItem(k);
-    } catch {
-      return null;
-    }
-  },
-  set(k: string, v: string) {
-    try {
-      localStorage.setItem(k, v);
-    } catch {
-      /* private mode: nothing to remember */
-    }
-  },
-};
-
-const notifySupported = () => typeof window !== 'undefined' && 'Notification' in window;
 
 /** The line a notification shows: the strongest prop the news moves. */
 export function newsHeadline(item: NewsItem): { title: string; body: string } {
@@ -81,32 +63,24 @@ export function useNews(league: LeagueId, games: ScoreboardGame[], enabled: bool
   const [checkedAt, setCheckedAt] = useState<number>();
   const [error, setError] = useState<string>();
   const [paused, setPaused] = useState(false);
-  const [notifyOn, setNotifyOn] = useState(() => store.get(NOTIFY_KEY) === '1');
-  const [denied, setDenied] = useState(() => notifySupported() && Notification.permission === 'denied');
+  const notify = useNotifyToggle(NOTIFY_KEY);
+  const notifyOn = notify.on;
   const itemsRef = useRef(items);
   itemsRef.current = items;
   const gamesRef = useRef(games);
   gamesRef.current = games;
-  const notifyRef = useRef(notifyOn);
-  notifyRef.current = notifyOn;
   const upcoming = games.filter((g) => g.phase === 'pre' && Date.parse(g.date) > Date.now());
   const watching = league === 'nba' ? upcoming.length : 0;
 
   // A new date or league starts over.
   useEffect(() => setItems({}), [league, games.map((g) => g.id).join()]);
 
+  // Every priced event is marked announced, so turning notifications on doesn't replay old news.
   const announce = useCallback((item: NewsItem) => {
-    const seen: string[] = JSON.parse(store.get(SEEN_KEY) ?? '[]');
-    if (seen.includes(item.event.key)) return;
-    store.set(SEEN_KEY, JSON.stringify([...seen, item.event.key].slice(-200)));
-    if (!notifyRef.current || !notifySupported() || Notification.permission !== 'granted') return;
+    if (!firstSeen(SEEN_KEY, [item.event.key], 200).length || !notifyOn) return;
     const { title, body } = newsHeadline(item);
-    try {
-      new Notification(title, { body, tag: item.event.key });
-    } catch {
-      /* some mobile browsers only notify from a service worker */
-    }
-  }, []);
+    showNotification(title, body, item.event.key);
+  }, [notifyOn]);
 
   const scan = useCallback(
     async (signal: AbortSignal) => {
@@ -174,22 +148,6 @@ export function useNews(league: LeagueId, games: ScoreboardGame[], enabled: bool
     };
   }, [active, scan, manual, notifyOn]);
 
-  const toggle = useCallback(() => {
-    if (notifyOn) {
-      setNotifyOn(false);
-      store.set(NOTIFY_KEY, '0');
-      return;
-    }
-    if (!notifySupported()) return;
-    void Notification.requestPermission().then((p) => {
-      setDenied(p === 'denied');
-      if (p === 'granted') {
-        setNotifyOn(true);
-        store.set(NOTIFY_KEY, '1');
-      }
-    });
-  }, [notifyOn]);
-
   const list = Object.values(items).sort((a, b) => Date.parse(b.event.since ?? '') - Date.parse(a.event.since ?? '') || a.event.name.localeCompare(b.event.name));
   return {
     items: list,
@@ -205,6 +163,6 @@ export function useNews(league: LeagueId, games: ScoreboardGame[], enabled: bool
       setItems((cur) => Object.fromEntries(Object.entries(cur).map(([k, it]) => [k, { ...it, pricedAt: undefined }])));
       setManual((m) => m + 1);
     }, []),
-    notify: { supported: notifySupported(), on: notifyOn, denied, toggle },
+    notify,
   };
 }
