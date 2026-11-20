@@ -8,20 +8,30 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Which NFL prop types carry prices
-        run: node scripts/probe/nfl-odds.mjs
-      - name: Keep the responses on this branch
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: bt-cache
+          key: bt-espn-nfl-${{ github.run_id }}
+          restore-keys: bt-espn-nfl-
+      - name: Replay the NFL season's kept prop lines with the NFL prop model
+        run: npx tsx scripts/props-backtest.ts --league nfl --max 400 --cache bt-cache --out props-nfl.md --json nfl-entries.json
+      - name: Keep the report and rows on this branch
         if: always()
         run: |
-          [ -d data/probe-nfl ] || exit 0
+          mkdir -p data/probe-nfl
+          [ -f props-nfl.md ] && cp props-nfl.md data/probe-nfl/
+          [ -f nfl-entries.json ] && gzip -9 -c nfl-entries.json > data/probe-nfl/nfl-entries.json.gz
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/probe-nfl
-          git commit -q -m "NFL probe responses $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
+          git commit -q -m "NFL replay $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
+          git pull -q --rebase origin claude/probe-nfl || true
           git push -q origin HEAD:claude/probe-nfl
