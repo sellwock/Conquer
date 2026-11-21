@@ -89,7 +89,8 @@ export function Method(props: { game: GameData }) {
         picks with a fit of earlier days only; the Track record shows that out-of-sample record, and calls it tested only once it's clearly ahead. Once that
         model is fitted, it prices the props: the tab opens on "Pick model", and Best bets (here and at the top of the slate board) lists its single bets, one per
         player, each needing a 3% expected return at a price no longer than +200, under its record. If the record isn't ahead, the picks stay hidden until you
-        ask for them. Parlays in that ranking join picks from different games; picks that share a game are shown with the lowest same-game price worth taking,
+        ask for them. A switch under the live picks sends a browser notification the first time one appears on a line the book changed in the last five
+        minutes, once per bet, and only while the live record is ahead. Parlays in that ranking join picks from different games; picks that share a game are shown with the lowest same-game price worth taking,
         since a book prices those below the legs multiplied. The simulation's own ranking stays one tap away, marked unproven. The
         slate board's Injury news card watches ESPN's injury report every two minutes and reprices any game where someone with real minutes was newly ruled
         out, with and without him, to show which props his absence moves before the book catches up. These are suggestions from a model,

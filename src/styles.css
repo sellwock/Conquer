@@ -1843,3 +1843,15 @@ table.board td.best {
   font-weight: 600;
   color: var(--ink);
 }
+
+.alert-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 10px;
+}
+.alert-switch p {
+  flex: 1 1 260px;
+  margin: 0;
+}

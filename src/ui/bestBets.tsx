@@ -13,6 +13,7 @@ import { fitsFor, type FitFile } from '../track/fit';
 import { loadFit } from '../track/forward';
 import { STALE_LINE_MIN, ageText, lineAgeMin, one, pct, perHundred, signedPct } from './format';
 import { BankrollNote, LogBet } from './myBets';
+import type { NotifyToggle } from './notify';
 
 export interface FitState {
   /** The fit as the scheduled job wrote it, for its record. */
@@ -74,21 +75,26 @@ export function FitRecordLine(props: { fit: FitState; when: FitWhen; league: Lea
   );
 }
 
-/** Fitted single bets: the price, the fit's chance, the chance the price needs, and the return per $100. */
-/** "Still a bet at 23.5 or lower, at -129 or better" for a fitted live pick; nothing for others. */
+/** "Still a bet at 23.5 or lower, -129 or better" for a fitted live pick; empty for others. */
+export function stillText(leg: Parlay['legs'][number], fits?: PropFits): string {
+  const coef = fits?.live;
+  const s = coef && stillABet(leg, coef, fits!.minEdge);
+  if (!s) return '';
+  const moved = s.line !== leg.prop!.line;
+  return `Still a bet at ${moved ? `${s.line} or ${leg.side === 'over' ? 'lower' : 'higher'}` : `${s.line} only`}, ${fmtAmerican(s.price)} or better`;
+}
+
 function StillLine(props: { leg: Parlay['legs'][number]; fits?: PropFits }) {
-  const coef = props.fits?.live;
-  const s = coef && stillABet(props.leg, coef, props.fits!.minEdge);
-  if (!s) return null;
-  const over = props.leg.side === 'over';
-  const moved = s.line !== props.leg.prop!.line;
+  const text = stillText(props.leg, props.fits);
+  if (!text) return null;
   return (
     <span class="still" title="What to check at the book: its live line can be this far from the one shown and the bet still clears the bar, at today's price. A moved line is assumed to carry the same price.">
-      Still a bet at {moved ? `${s.line} or ${over ? 'lower' : 'higher'}` : `${s.line} only`}, {fmtAmerican(s.price)} or better
+      {text}
     </span>
   );
 }
 
+/** Fitted single bets: the price, the fit's chance, the chance the price needs, and the return per $100. */
 export function BetTable(props: { singles: Parlay[]; live?: boolean; onOpen?: (id: string) => void; league?: LeagueId; tested?: boolean; fits?: PropFits }) {
   return (
     <div class="table-wrap">
@@ -260,6 +266,8 @@ export function BestBets(props: {
   revealed: boolean;
   onReveal: () => void;
   onOpen: (id: string) => void;
+  /** The switch for live-pick alerts. */
+  alerts?: NotifyToggle;
 }) {
   const { fit } = props;
   if (!fit.fits) return null;
@@ -283,6 +291,7 @@ export function BestBets(props: {
           <p class="muted small">Live lines move fast, and the in-game prices ESPN relays can lag the book's by several minutes.</p>
         </>
       )}
+      {fit.fits.live && props.alerts && <AlertSwitch alerts={props.alerts} ahead={fitAhead(fit, 'live')} />}
       {fit.fits.pre ? (
         <>
           <h3 class="kicker">Before tip-off</h3>
@@ -304,5 +313,28 @@ export function BestBets(props: {
         </p>
       )}
     </section>
+  );
+}
+
+/** The switch for a notification when a live pick first appears, and what it can and can't do. */
+function AlertSwitch(props: { alerts: NotifyToggle; ahead: boolean }) {
+  const a = props.alerts;
+  return (
+    <div class="alert-switch">
+      {a.supported ? (
+        <button type="button" class={a.on ? 'btn' : 'ghost-btn'} aria-pressed={a.on} onClick={a.toggle} disabled={a.denied && !a.on}>
+          {a.on ? 'Live alerts on' : 'Alert me to new live picks'}
+        </button>
+      ) : null}
+      <p class="muted small">
+        {!a.supported
+          ? "This browser can't show notifications. iPhones allow them only for sites added to the Home Screen, so live alerts are for a computer or an Android phone."
+          : a.denied
+            ? "Notifications are blocked for this site in your browser's settings."
+            : `A notification the first time a live pick appears on a line the book changed in the last ${STALE_LINE_MIN} minutes, once per player and side.`}{' '}
+        {a.supported && !a.denied && 'They come from this page while the slate board is open; a background tab on a computer works, but a phone pauses the page once you switch apps.'}
+        {a.on && !props.ahead && ' None arrive while the live record is not ahead.'}
+      </p>
+    </div>
   );
 }

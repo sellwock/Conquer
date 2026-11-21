@@ -17,6 +17,7 @@ import type { LiveSlate } from './liveSlate';
 import { blendText, LiveStatus, propMixText } from './parlays';
 import { NewsCard } from './newsCard';
 import type { NewsScan } from './news';
+import type { NotifyToggle } from './notify';
 import { BestBets, fitAhead, type FitState } from './bestBets';
 
 type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge' | 'prop';
@@ -87,6 +88,8 @@ export function SlateBoard(props: {
   news?: NewsScan;
   /** The league's fitted pick model, when one has loaded. */
   fit: FitState;
+  /** The switch for live-pick alerts. */
+  alerts?: NotifyToggle;
 }) {
   const { slate, board, fit } = props;
   const liveMarkets = props.live?.markets;
@@ -155,7 +158,7 @@ export function SlateBoard(props: {
 
   return (
     <div class="slate">
-      <BestBets league={props.league} fit={fit} pre={preMarkets} live={inPlay} revealed={revealed} onReveal={() => setRevealed(true)} onOpen={props.onOpen} />
+      <BestBets league={props.league} fit={fit} pre={preMarkets} live={inPlay} revealed={revealed} onReveal={() => setRevealed(true)} onOpen={props.onOpen} alerts={props.alerts} />
       {props.news && (props.news.watching > 0 || props.news.items.length > 0) && <NewsCard news={props.news} games={board.games} onOpen={props.onOpen} />}
       <section class="card">
         <header class="card-head">
