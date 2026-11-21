@@ -82,6 +82,13 @@ describe('live-pick alerts', () => {
     expect(alertable('nba', fitOf(0.1), [{ ...market([prop('A. One', 0.8, 1)]), live: undefined }], NOW)).toEqual([]);
   });
 
+  it('stays quiet on games before or after the stretch the live record covers', () => {
+    const at = (period: number, clockSec: number) => ({ ...market([prop('A. One', 0.8, 1)]), clock: { period, clockSec } });
+    expect(alertable('nba', fitOf(0.1), [at(1, 400)], NOW)).toEqual([]);
+    expect(alertable('nba', fitOf(0.1), [at(4, 400)], NOW)).toEqual([]);
+    expect(alertable('nba', fitOf(0.1), [at(3, 400)], NOW)).toHaveLength(1);
+  });
+
   it('announces each pick once, however often the board refreshes', () => {
     expect(firstSeen('seen', ['a', 'b'])).toEqual(['a', 'b']);
     expect(firstSeen('seen', ['a', 'b'])).toEqual([]);

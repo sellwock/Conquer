@@ -206,6 +206,27 @@ describe('fitting the log', () => {
     expect(testOf(fitRows([e], 'live').map((r) => ({ row: r, pOver: 0.7 }))).bySnap).toBeUndefined();
   });
 
+  it('scores the early and late looks with the live fit, without training on them', () => {
+    const at = (period: number) => ({ period, clockSec: 300, home: 50, away: 48 });
+    const days = ['2026-11-02T01:30:00Z', '2026-11-03T01:30:00Z'];
+    const base = days.flatMap((tip, d) =>
+      Array.from({ length: MIN_TRAIN_GAMES }, (_, i) => entry(`d${d}g${i}`, tip, { live: { model: '1.2.0', takenAt: tip, n: 1000, rows, at: at(2) } })),
+    );
+    // The late looks lose every over: if they were trained on, the constant would fall.
+    const losing = rows.map((r) => [r[0], r[1], r[2] + 30, r[3], r[4], r[5], r[6], r[7]] as PropRow);
+    const withLooks = base.map((e) => ({ ...e, early: { ...e.live!, at: at(1) }, late: { ...e.live!, rows: losing, at: at(4) } }));
+    const plain = buildFit(base, 'nba', new Date('2026-11-04T00:00:00Z'));
+    const fit = buildFit(withLooks, 'nba', new Date('2026-11-04T00:00:00Z'));
+    expect(fit.live!.coef).toEqual(plain.live!.coef);
+    expect(fit.live!.test).toEqual(plain.live!.test);
+    expect(fit.live!.lines).toBe(plain.live!.lines);
+    // Each look is scored on the second day by the first day's fit, as its own record.
+    expect(fit.live!.early).toMatchObject({ games: MIN_TRAIN_GAMES, days: 1 });
+    expect(fit.live!.late).toMatchObject({ games: MIN_TRAIN_GAMES, days: 1 });
+    expect(plain.live!.early).toBeUndefined();
+    expect(plain.live!.late).toBeUndefined();
+  });
+
   it('splits live picks by how old their line was, once the log has ages', () => {
     const snap = { model: '1.2.0', takenAt: '', n: 1000, rows, at: { period: 2, clockSec: 300, home: 50, away: 48 }, age: [60, 900, null, 30] };
     const got = fitRows([entry('g1', '2026-11-02T01:30:00Z', { live: snap })], 'live');

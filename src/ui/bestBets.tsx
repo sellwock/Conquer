@@ -7,6 +7,7 @@ import type { ComponentChildren } from 'preact';
 import { MAX_PRICE, fitSingles, stillABet, weightsFor, type GameMarket, type Parlay } from '../model/parlays';
 import { fitVerdict, type FitVerdict, type PropFits } from '../model/propFit';
 import type { LeagueId } from '../model/types';
+import { stageOf, type LiveStage } from '../model/liveWindow';
 import { MODEL_VERSION } from '../model/version';
 import { fmtAmerican } from '../lib/stats';
 import { fitsFor, type FitFile } from '../track/fit';
@@ -44,6 +45,25 @@ export const verdictOf = (fit: FitState, when: FitWhen): FitVerdict => fitVerdic
 
 /** Whether a fit's picks are shown without asking: only when they're ahead on days it hadn't seen. */
 export const fitAhead = (fit: FitState, when: FitWhen) => verdictOf(fit, when) !== 'none';
+
+/**
+ * Whether live picks from a stretch of the game are listed without asking: the tested stretch
+ * always (its record is the fit's own), the opening and closing stretches once their own record,
+ * scored on lines the fit never trained on, is ahead.
+ */
+export const stageAhead = (fit: FitState, stage: LiveStage) => stage === 'tested' || fitVerdict(fit.file?.live?.[stage]?.picks) !== 'none';
+
+/** Live picks from games where the record applies, and those from a stretch of the game it hasn't shown it can call. */
+export function splitByStage(singles: Parlay[], markets: GameMarket[], fit: FitState): { tested: Parlay[]; untested: Parlay[] } {
+  const stage = new Map(markets.map((m) => [m.gameId, stageOf(m)]));
+  const tested: Parlay[] = [], untested: Parlay[] = [];
+  for (const p of singles) (stageAhead(fit, stage.get(p.legs[0].gameId) ?? 'tested') ? tested : untested).push(p);
+  return { tested, untested };
+}
+
+/** "the 4th quarter" / "the last 10 minutes" */
+export const stageText = (league: LeagueId, stage: Exclude<LiveStage, 'tested'>) =>
+  league === 'nba' ? (stage === 'early' ? 'the 1st quarter' : 'the 4th quarter and overtime') : stage === 'early' ? 'the first 10 minutes' : 'the last 10 minutes and overtime';
 
 /** The fit's out-of-sample record in a line, with what it does and doesn't show. */
 export function FitRecordLine(props: { fit: FitState; when: FitWhen; league: LeagueId }) {
@@ -203,7 +223,11 @@ export function FitPicks(props: {
   const { fit, when } = props;
   const [all, setAll] = useState(false);
   const fits = fit.fits;
-  const singles = useMemo(() => (fits ? fitSingles(props.markets, weightsFor(props.league, 'blend', fits)) : []), [props.markets, props.league, fits]);
+  const allPicks = useMemo(() => (fits ? fitSingles(props.markets, weightsFor(props.league, 'blend', fits)) : []), [props.markets, props.league, fits]);
+  const { tested: singles, untested } = useMemo(
+    () => (when === 'live' ? splitByStage(allPicks, props.markets, fit) : { tested: allPicks, untested: [] }),
+    [allPicks, props.markets, fit, when],
+  );
   if (!fits?.[when]) return null;
   const priced = props.markets.some((m) => m.props?.length);
   const hidden = !fitAhead(fit, when) && !props.revealed;
@@ -219,13 +243,16 @@ export function FitPicks(props: {
         (props.waiting ?? null)
       ) : hidden ? (
         <p>
-          {singles.length} pick{singles.length === 1 ? '' : 's'} hidden.{' '}
+          {allPicks.length} pick{allPicks.length === 1 ? '' : 's'} hidden.{' '}
           <button type="button" class="btn" onClick={props.onReveal}>
-            Show {singles.length === 1 ? 'it' : 'them'} anyway
+            Show {allPicks.length === 1 ? 'it' : 'them'} anyway
           </button>
         </p>
       ) : !singles.length ? (
-        <p class="muted">No prop clears the bar right now: {barText(fits)}. Passing is a fine choice.</p>
+        <p class="muted">
+          {untested.length ? 'No prop in a game at a point the record covers clears the bar right now.' : `No prop clears the bar right now: ${barText(fits)}.`} Passing is a fine
+          choice.
+        </p>
       ) : (
         <>
           <BetTable singles={shown} live={when === 'live'} onOpen={props.onOpen} league={props.league} tested={verdictOf(fit, when) === 'tested'} fits={fits} />
@@ -250,7 +277,44 @@ export function FitPicks(props: {
           </p>
         </>
       )}
+      {priced && !hidden && untested.length > 0 && <UntestedPicks fit={fit} league={props.league} singles={untested} markets={props.markets} onOpen={props.onOpen} />}
     </>
+  );
+}
+
+/**
+ * Live picks from games in the opening or closing stretch, which the live record doesn't cover:
+ * folded away, with the record those stretches have of their own so far.
+ */
+function UntestedPicks(props: { fit: FitState; league: LeagueId; singles: Parlay[]; markets: GameMarket[]; onOpen?: (id: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const stages = new Set(props.markets.filter((m) => props.singles.some((p) => p.legs[0].gameId === m.gameId)).map(stageOf));
+  const where = (['early', 'late'] as const).filter((s) => stages.has(s));
+  const n = props.singles.length;
+  return (
+    <div class="untested">
+      <p>
+        <span class="chip warn">Untested</span> {n} pick{n === 1 ? '' : 's'} from games in {where.map((s) => stageText(props.league, s)).join(' or ')}. The live record
+        covers lines from the 2nd and 3rd quarters{props.league === 'nba' ? '' : ' (10:00 into the game to 10:00 from the end)'}, so it says nothing yet about these.{' '}
+        {!open && (
+          <button type="button" class="link" onClick={() => setOpen(true)}>
+            Show {n === 1 ? 'it' : 'them'}
+          </button>
+        )}
+      </p>
+      {where.map((s) => {
+        const t = props.fit.file?.live?.[s]?.picks;
+        const label = stageText(props.league, s).replace(/ and overtime$/, '');
+        return (
+          <p key={s} class="muted small">
+            {t && t.win + t.loss
+              ? `Picks from ${label} so far: ${t.win}-${t.loss}, ${signedPct(t.roi)} per bet on days the fit hadn't seen (95% range ${signedPct(t.lo)} to ${signedPct(t.hi)}). They join the list above once that's ahead.`
+              : `No picks from ${label} graded yet. They join the list above once their own record is ahead.`}
+          </p>
+        );
+      })}
+      {open && <BetTable singles={props.singles} live onOpen={props.onOpen} league={props.league} tested={false} fits={props.fit.fits} />}
+    </div>
   );
 }
 

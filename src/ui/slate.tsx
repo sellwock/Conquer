@@ -18,7 +18,8 @@ import { blendText, LiveStatus, propMixText } from './parlays';
 import { NewsCard } from './newsCard';
 import type { NewsScan } from './news';
 import type { NotifyToggle } from './notify';
-import { BestBets, fitAhead, type FitState } from './bestBets';
+import { BestBets, fitAhead, stageAhead, type FitState } from './bestBets';
+import { stageOf } from '../model/liveWindow';
 
 type SortKey = 'tip' | 'spread' | 'total' | 'win' | 'edge' | 'prop';
 
@@ -42,6 +43,8 @@ interface Row {
   livePick?: boolean;
   /** The prop pick is the pick model's, and that model isn't ahead: hidden until asked for. */
   propHidden?: boolean;
+  /** A live game outside the stretch the live record covers. */
+  propUntested?: boolean;
   note?: string;
   logged?: { e: Entry; graded: Graded | null };
 }
@@ -129,11 +132,11 @@ export function SlateBoard(props: {
       const e = log[g.id];
       const row: Row = { g, n: e && fromEntry(e), logged: e ? { e, graded: e.status === 'final' ? gradeEntry(e) : null } : undefined };
       const lm = g.phase === 'in' ? liveMarkets?.[g.id] : undefined;
-      return lm ? { ...row, ...boardPicks(lm, weights), livePick: true, propHidden: hideLive } : row;
+      return lm ? { ...row, ...boardPicks(lm, weights), livePick: true, propHidden: hideLive, propUntested: !stageAhead(fit, stageOf(lm)) } : row;
     });
     const key = SORTS[sort];
     return out.sort((a, b) => key(b) - key(a) || Date.parse(a.g.date) - Date.parse(b.g.date));
-  }, [board.games, slate.markets, log, sort, liveMarkets, weights, hidePre, hideLive]);
+  }, [board.games, slate.markets, log, sort, liveMarkets, weights, hidePre, hideLive, fit]);
 
   // The best-bets card: upcoming games that are priced and haven't tipped, and games in progress.
   const preMarkets = useMemo(() => {
@@ -272,6 +275,11 @@ export function SlateBoard(props: {
 function BoardRowView(props: { r: Row; showProps: boolean; queued: boolean; scanning: boolean; open: boolean; onOpen: (id: string) => void }) {
   const { g, n, best, bestProp, logged, livePick, propHidden } = props.r;
   const hiddenProp = <span class="muted" title="The pick model isn't ahead on days it hadn't seen. Best bets, above, can show its picks.">Hidden</span>;
+  const untestedProp = (
+    <span class="muted" title="The live record covers lines from the middle of a game, not this early or late. Best bets, above, can show the pick.">
+      Untested now
+    </span>
+  );
   const pre = g.phase === 'pre';
   const waiting = pre && !n;
   const placeholder = waiting ? (props.queued ? (props.scanning ? 'Queued' : '–') : props.open && g.odds ? 'Simulating' : 'No line') : '–';
@@ -318,6 +326,8 @@ function BoardRowView(props: { r: Row; showProps: boolean; queued: boolean; scan
             props.r.hasProps ? (
               propHidden && bestProp ? (
                 hiddenProp
+              ) : props.r.propUntested && bestProp ? (
+                untestedProp
               ) : (
                 <BestCell best={bestProp} waiting={false} live />
               )

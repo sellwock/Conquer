@@ -348,6 +348,14 @@ function FitRecord({ part, live }: { part: FitPart; live: boolean }) {
       </section>
       {t && <FitTestStats t={t} what={live ? 'mid-game' : 'before tip-off'} />}
       {part.open && <FitTestStats t={part.open} what="at each game's first lines" />}
+      {part.early && <FitTestStats t={part.early} what="early in games, on lines it never trains on" />}
+      {part.late && <FitTestStats t={part.late} what="late in games, on lines it never trains on" />}
+      {live && (part.early || part.late) && (
+        <p class="muted small">
+          The live fit trains and is tested on lines from the middle of each game (NBA 2nd and 3rd quarters). Early and late lines are logged once per game and only scored;
+          the site lists picks from those stretches apart until their own record is ahead.
+        </p>
+      )}
     </>
   );
 }

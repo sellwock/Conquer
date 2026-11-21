@@ -1,12 +1,13 @@
 // Alerts when the pick model's live bet first appears: a browser notification naming the bet, its
 // price, how far the book can move and it's still a bet, and how old the line is. Only lines the
 // book changed in the last five minutes alert (ESPN's copy of older ones has usually moved at the
-// book), each pick once per game, and only while the live record is ahead on days it hadn't seen.
+// book), each pick once per game, only while the live record is ahead on days it hadn't seen, and
+// only from the part of a game that record covers.
 import { useEffect } from 'preact/hooks';
 import { fitSingles, weightsFor, type GameMarket, type Leg } from '../model/parlays';
 import type { LeagueId } from '../model/types';
 import { fmtAmerican } from '../lib/stats';
-import { fitAhead, stillText, type FitState } from './bestBets';
+import { fitAhead, splitByStage, stillText, type FitState } from './bestBets';
 import { STALE_LINE_MIN, ageText, lineAgeMin, pct } from './format';
 import { firstSeen, showNotification } from './notify';
 
@@ -27,7 +28,8 @@ export function alertable(league: LeagueId, fit: FitState, markets: GameMarket[]
   const fits = fit.fits;
   if (!fits?.live || !fitAhead(fit, 'live')) return [];
   const live = markets.filter((m) => m.live && m.props?.length);
-  return fitSingles(live, weightsFor(league, 'blend', fits)).flatMap((p) => {
+  // Picks from a stretch of the game the record hasn't covered don't alert.
+  return splitByStage(fitSingles(live, weightsFor(league, 'blend', fits)), live, fit).tested.flatMap((p) => {
     const l = p.legs[0];
     const age = lineAgeMin(l.prop?.updated, now);
     // A line the feed doesn't date can't be shown to be fresh.

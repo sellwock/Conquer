@@ -1855,3 +1855,7 @@ table.board td.best {
   flex: 1 1 260px;
   margin: 0;
 }
+
+.untested {
+  margin-top: 10px;
+}

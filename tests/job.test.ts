@@ -328,14 +328,25 @@ describe('player props in the forward log', () => {
     expect(files.get(PROPS)).toBeUndefined();
   });
 
-  it('saves the live lines once per game, mid-game only', async () => {
+  it('saves the live lines at set points: once early, twice mid-game, once late', async () => {
     withProps = true;
     const { io, files } = memoryIO();
-    // 1st quarter: too early.
-    liveAt = { period: 1, clock: '5:00' };
-    let r = await run(io, '2026-01-15T00:45:00Z');
+    // The opening minutes: too early.
+    liveAt = { period: 1, clock: '11:00' };
+    let r = await run(io, '2026-01-15T00:40:00Z');
     expect(r.propsLive).toBe(0);
     expect(files.get(PROPS)).toBeUndefined();
+
+    // Later in the 1st quarter: an early look, kept apart from the ones the fit trains on.
+    liveAt = { period: 1, clock: '5:00' };
+    r = await run(io, '2026-01-15T00:45:00Z');
+    expect(r.propsLive).toBe(1);
+    const early = (files.get(PROPS) as PropLogFile)['401810123'];
+    expect(early.early).toMatchObject({ model: MODEL_VERSION, at: { period: 1, clockSec: 300 } });
+    expect(early.live).toBeUndefined();
+    liveAt = { period: 1, clock: '2:00' };
+    r = await run(io, '2026-01-15T00:55:00Z');
+    expect(r.propsLive).toBe(0);
 
     // 2nd quarter: saved, with the game state and what each player had.
     liveAt = { period: 2, clock: '5:00' };
@@ -367,11 +378,23 @@ describe('player props in the forward log', () => {
     const again = (files.get(PROPS) as PropLogFile)['401810123'];
     expect(JSON.stringify(again.live)).toBe(JSON.stringify(e.live));
     expect(again.live2).toMatchObject({ model: MODEL_VERSION, at: { period: 3, clockSec: 360 } });
-    // And no third.
+    // And no third in the tested stretch.
     const twice = JSON.stringify(files.get(PROPS));
     r = await run(io, '2026-01-15T02:00:00Z');
     expect(r.propsLive).toBe(0);
     expect(JSON.stringify(files.get(PROPS))).toBe(twice);
+
+    // The 4th quarter: one late look, leaving the others as they were.
+    liveAt = { period: 4, clock: '8:00' };
+    r = await run(io, '2026-01-15T02:30:00Z');
+    expect(r.propsLive).toBe(1);
+    const late = (files.get(PROPS) as PropLogFile)['401810123'];
+    expect(late.late).toMatchObject({ model: MODEL_VERSION, at: { period: 4, clockSec: 480 } });
+    expect(JSON.stringify(late.live2)).toBe(JSON.stringify(again.live2));
+    expect(JSON.stringify(late.early)).toBe(JSON.stringify(early.early));
+    liveAt = { period: 4, clock: '6:00' };
+    r = await run(io, '2026-01-15T02:45:00Z');
+    expect(r.propsLive).toBe(0);
   });
 
   it('takes no second look when the first came after halftime', async () => {
@@ -403,11 +426,14 @@ describe('player props in the forward log', () => {
     expect(summaryCalls['401810123'] ?? 0).toBe(0);
   });
 
-  it('skips the 4th quarter', async () => {
+  it('skips the last minutes and overtime', async () => {
     withProps = true;
-    liveAt = { period: 4, clock: '8:00' };
     const { io, files } = memoryIO();
-    const r = await run(io, '2026-01-15T02:30:00Z');
+    liveAt = { period: 4, clock: '2:00' };
+    let r = await run(io, '2026-01-15T02:30:00Z');
+    expect(r.propsLive).toBe(0);
+    liveAt = { period: 5, clock: '3:00' };
+    r = await run(io, '2026-01-15T02:50:00Z');
     expect(r.propsLive).toBe(0);
     expect(files.get(PROPS)).toBeUndefined();
     expect(playedShare('nba', 2, 300)).toBeCloseTo((720 + 420) / 2880);

@@ -12,6 +12,7 @@ import { priceLiveGame } from '../model/liveMarket';
 import { findNews, injuryState, priceNews } from '../model/news';
 import { loadInjuries } from '../data/espn/injuries';
 import { MODEL_VERSION } from '../model/version';
+import { EARLY_FROM, LATE_TO, LIVE_FROM, LIVE_TO, playedShare } from '../model/liveWindow';
 import { runSims } from '../sim/run';
 import { runOutcomes } from '../sim/quick';
 import { getJson, requestCount, sitePath } from '../data/espn/client';
@@ -21,7 +22,7 @@ import { num, parseBoxPlayers, parseOdds, periodOf, phaseOf, seasonYear } from '
 import { predictionFrom } from './predict';
 import { easternYmd } from './dates';
 import { buildFit, FIT_FILE_VERSION, type FitFile, type PropHistory } from './fit';
-import type { CloseLine, Entry, InjuryLog, LogFile, NewsSnap, PropEntry, PropLogFile, PropRow, PropSnap } from './types';
+import type { CloseLine, Entry, InjuryLog, LiveKey, LogFile, NewsSnap, PropEntry, PropLogFile, PropRow, PropSnap } from './types';
 
 export interface LogIO {
   read<T>(path: string): T | undefined;
@@ -73,24 +74,24 @@ const GIVE_UP_AFTER_MIN = 72 * 60;
 const CLOSE_WITHIN_MIN = 20;
 // News the job found stays in its log this long, so the site can show it.
 const NEWS_KEEP_MS = 48 * 3_600_000;
-// Live props are saved once per game, mid-game: from a quarter of regulation played to three
-// quarters (NBA: 2nd and 3rd quarters; college: 10:00 left in the 1st half to 10:00 left in the
-// 2nd), so a run every 15 minutes or so catches each game.
-const LIVE_FROM = 0.25;
-const LIVE_TO = 0.75;
+export { playedShare };
 
-/** Share of regulation played; 1 once in overtime. */
-export function playedShare(league: LeagueId, period: number, clockSec: number): number {
-  const L = LEAGUES[league];
-  if (period > L.periods) return 1;
-  return ((Math.max(1, period) - 1) * L.periodSec + (L.periodSec - clockSec)) / (L.periods * L.periodSec);
-}
-
-const midGame = (league: LeagueId, period: number | undefined, clockSec: number | undefined) => {
-  if (!period) return false;
+/**
+ * Which live look a game in progress is due, by how much of regulation is played: one early look
+ * (8–25%), the first look in the tested stretch (25–75%), a second after halftime when the first
+ * came before it (lines in the third quarter are a different bet from lines in the second), and
+ * one late look (75–92%). Undefined when the game is outside them all or already has that look.
+ */
+export function liveLook(league: LeagueId, prev: PropEntry | undefined, period: number | undefined, clockSec: number | undefined): LiveKey | undefined {
+  if (!period) return undefined;
   const x = playedShare(league, period, clockSec ?? 0);
-  return x >= LIVE_FROM && x < LIVE_TO;
-};
+  if (x < EARLY_FROM || x >= LATE_TO) return undefined;
+  if (x < LIVE_FROM) return prev?.early ? undefined : 'early';
+  if (x >= LIVE_TO) return prev?.late ? undefined : 'late';
+  if (!prev?.live) return 'live';
+  const firstHalf = !!prev.live.at && playedShare(league, prev.live.at.period, prev.live.at.clockSec) < 0.5;
+  return !prev.live2 && firstHalf && x >= 0.5 ? 'live2' : undefined;
+}
 
 export { easternYmd };
 
@@ -144,7 +145,7 @@ const withPlayers = (prev: PropEntry, markets: PropMarket[]): PropEntry => ({
 });
 
 /** A game's first pre-game snapshot is also kept as its opening lines; later refreshes replace only `pre`. */
-const withSnap = (prev: PropEntry, markets: PropMarket[], key: 'pre' | 'live' | 'live2', snap: PropSnap): PropEntry => ({
+const withSnap = (prev: PropEntry, markets: PropMarket[], key: 'pre' | LiveKey, snap: PropSnap): PropEntry => ({
   ...withPlayers(prev, markets),
   ...(key === 'pre' && !prev.pre && !prev.open ? { open: snap } : {}),
   [key]: snap,
@@ -259,16 +260,13 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
     // College, as above, only with a posted line; and the in-game prop feed is checked (one or two
     // requests) before the game itself is loaded.
     const live = [...slate.values()]
-      .filter((g) => g.phase === 'in' && midGame(league, g.period, g.clockSec) && (league === 'nba' || !!g.odds))
+      .filter((g) => g.phase === 'in' && (league === 'nba' || !!g.odds))
       .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
     for (const g of live) {
       const ymd = easternYmd(new Date(g.date));
       const pp = propsPath(league, seasonYear(g.date, league), ymd);
       const prevP = propFile(pp)[g.id];
-      // One snapshot per game, and a second after halftime when the first came before it: lines
-      // in the third quarter are a different bet from lines in the second.
-      const firstHalf = (at?: PropSnap['at']) => !!at && playedShare(league, at.period, at.clockSec) < 0.5;
-      const key = !prevP?.live ? 'live' : !prevP.live2 && firstHalf(prevP.live.at) && playedShare(league, g.period ?? 1, g.clockSec ?? 0) >= 0.5 ? 'live2' : undefined;
+      const key = liveLook(league, prevP, g.period, g.clockSec);
       if (!key) continue;
       if (requestCount() > o.budget) {
         report.errors.push(`${league}: request budget reached; live props for ${g.away.abbr} @ ${g.home.abbr} skipped`);
@@ -280,8 +278,8 @@ export async function runJob(o: JobOptions): Promise<JobReport> {
         const r = await priceLiveGame(league, g.id, loaded, `${g.id}-live`, (spec, n, seed, opts) => runOutcomes(spec, n, seed, opts), undefined, o.sims);
         const gd = r.game;
         const markets = r.market?.props ?? [];
-        if (gd.phase !== 'in' || !midGame(league, gd.period, gd.clockSec) || !markets.length) continue;
-        if (key === 'live2' && playedShare(league, gd.period, gd.clockSec) < 0.5) continue;
+        // The scoreboard can be a few minutes behind the game: the look has to be due at the game's own clock too.
+        if (gd.phase !== 'in' || !markets.length || liveLook(league, prevP, gd.period, gd.clockSec) !== key) continue;
         put(
           pp,
           withSnap(prevP ?? propBase(league, gd), markets, key, {
