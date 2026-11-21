@@ -55,7 +55,9 @@ export function fitRows(entries: PropEntry[], key: 'open' | 'pre' | LiveKey): Fi
       if (final === line) continue;
       const pMarket = noVig(over, under)[0];
       const pSim = pPush < 1 ? pOver / (1 - pPush) : 0.5;
-      const age = snap.age?.[i];
+      // Lines sit still during a break (halftime, between quarters), so how long ago one last moved
+      // says nothing about whether ESPN's copy is behind the book's: such looks count as undated.
+      const age = snap.at?.clockSec === 0 ? undefined : snap.age?.[i];
       out.push({ gameId: e.id, day, athleteId, stat, line, over, under, pMarket, pSim, won: final > line ? 1 : 0, x: fitFeatures(pMarket, pSim), model: snap.model, ...(key === 'live2' ? { snap: key } : {}), ...(age != null ? { age } : {}) });
     }
   }

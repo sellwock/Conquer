@@ -241,6 +241,10 @@ describe('fitting the log', () => {
     // Without ages, no split.
     expect(testOf(scored.map(({ row, pOver }) => ({ row: { ...row, age: undefined }, pOver }))).byAge).toBeUndefined();
     expect(FRESH_LINE_SEC).toBe(300);
+    // A look taken during a break (halftime here): lines sit still, so their ages don't count.
+    const atBreak = fitRows([entry('g1', '2026-11-02T01:30:00Z', { live2: { ...snap, at: { period: 2, clockSec: 0, home: 60, away: 55 } } })], 'live2');
+    expect(atBreak).toHaveLength(2);
+    expect(atBreak.map((r) => r.age)).toEqual([undefined, undefined]);
   });
 
   it('counts what every over and every under returned at the posted prices', () => {

@@ -55,6 +55,13 @@ export type FitVerdict = 'tested' | 'promising' | 'none';
 export const TESTED_MIN_PICKS = 300;
 
 /**
+ * Picks a stretch of the game the live fit doesn't train on (its opening and closing quarters)
+ * needs, graded out of sample and ahead, before its picks are listed with the rest. A handful of
+ * wins is a coin flip, not a record.
+ */
+export const STAGE_MIN_PICKS = 100;
+
+/**
  * "tested": enough out-of-sample picks and the whole 95% range of their return is above zero.
  * "promising": ahead so far, but the range still includes zero. "none": behind, or no test yet.
  */

@@ -3,6 +3,8 @@
 import { describe, expect, it } from 'vitest';
 import { liveStage, playedShare, stageOf } from '../src/model/liveWindow';
 import { liveLook } from '../src/track/job';
+import { stageAhead, type FitState } from '../src/ui/bestBets';
+import { STAGE_MIN_PICKS } from '../src/model/propFit';
 import type { PropEntry, PropSnap } from '../src/track/types';
 
 describe('the live window', () => {
@@ -43,5 +45,20 @@ describe('the live window', () => {
     expect(liveLook('nba', with_({ late: snap(4, 600) }), 4, 400)).toBeUndefined();
     expect(liveLook('nba', none, 4, 120)).toBeUndefined();
     expect(liveLook('nba', none, undefined, undefined)).toBeUndefined();
+  });
+
+  it("lists a stretch's picks with the rest only once its own record is ahead over enough picks", () => {
+    type Picks = { win: number; loss: number; roi: number; lo: number; hi: number };
+    const fit = (late?: Picks) => ({ fits: { live: [0, 1, 0], minEdge: 0.03 }, file: { live: { ...(late ? { late: { picks: late } } : {}) } } }) as unknown as FitState;
+    expect(STAGE_MIN_PICKS).toBe(100);
+    expect(stageAhead(fit(), 'tested')).toBe(true);
+    expect(stageAhead(fit(), 'late')).toBe(false);
+    // A good first night is a coin flip, not a record.
+    expect(stageAhead(fit({ win: 3, loss: 1, roi: 0.4, lo: -0.5, hi: 1 }), 'late')).toBe(false);
+    expect(stageAhead(fit({ win: 57, loss: 42, roi: 0.1, lo: -0.05, hi: 0.25 }), 'late')).toBe(false);
+    expect(stageAhead(fit({ win: 58, loss: 42, roi: 0.1, lo: -0.05, hi: 0.25 }), 'late')).toBe(true);
+    expect(stageAhead(fit({ win: 50, loss: 55, roi: -0.05, lo: -0.2, hi: 0.1 }), 'late')).toBe(false);
+    // Each stretch on its own record.
+    expect(stageAhead(fit({ win: 58, loss: 42, roi: 0.1, lo: -0.05, hi: 0.25 }), 'early')).toBe(false);
   });
 });

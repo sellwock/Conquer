@@ -288,17 +288,18 @@ function FitTestStats({ t, what }: { t: FitTest; what: string }) {
           <strong class={t.byAge.fresh.roi > 0 ? 'pos' : t.byAge.fresh.roi < 0 ? 'neg' : ''}>{t.byAge.fresh.win + t.byAge.fresh.loss ? signedPct(t.byAge.fresh.roi) : '–'}</strong>
           <span class="muted">
             {t.byAge.fresh.win}-{t.byAge.fresh.loss} on lines the book had changed in the last {FRESH_LINE_SEC / 60} minutes; {t.byAge.stale.win}-{t.byAge.stale.loss} (
-            {signedPct(t.byAge.stale.roi)}) on older ones{t.byAge.unknown ? `, ${t.byAge.unknown} with no time` : ''}. An old line may already have moved at the book.
+            {signedPct(t.byAge.stale.roi)}) on older ones{t.byAge.unknown ? `, ${t.byAge.unknown} left out (taken during a break, when lines sit still, or before line times were logged)` : ''}. An
+            old line may already have moved at the book.
           </span>
         </div>
       ) : null}
       {t.bySnap ? (
         <div class="stat">
-          <span class="kicker">After halftime</span>
+          <span class="kicker">At or after halftime</span>
           <strong class={t.bySnap.second.roi > 0 ? 'pos' : t.bySnap.second.roi < 0 ? 'neg' : ''}>{signedPct(t.bySnap.second.roi)}</strong>
           <span class="muted">
-            {t.bySnap.second.win}-{t.bySnap.second.loss} on each game's second look, after halftime; {t.bySnap.first.win}-{t.bySnap.first.loss} ({signedPct(t.bySnap.first.roi)}) on the
-            first, before it
+            {t.bySnap.second.win}-{t.bySnap.second.loss} on each game's second look, at halftime or just after; {t.bySnap.first.win}-{t.bySnap.first.loss} ({signedPct(t.bySnap.first.roi)}) on
+            the first, before it
           </span>
         </div>
       ) : null}
