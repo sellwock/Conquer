@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { MAX_PRICE, fitSingles, stillABet, weightsFor, type GameMarket, type Parlay } from '../model/parlays';
-import { fitVerdict, type FitVerdict, type PropFits } from '../model/propFit';
+import { STAGE_MIN_PICKS, fitVerdict, type FitVerdict, type PropFits } from '../model/propFit';
 import type { LeagueId } from '../model/types';
 import { stageOf, type LiveStage } from '../model/liveWindow';
 import { MODEL_VERSION } from '../model/version';
@@ -49,9 +49,13 @@ export const fitAhead = (fit: FitState, when: FitWhen) => verdictOf(fit, when) !
 /**
  * Whether live picks from a stretch of the game are listed without asking: the tested stretch
  * always (its record is the fit's own), the opening and closing stretches once their own record,
- * scored on lines the fit never trained on, is ahead.
+ * scored on lines the fit never trained on, is ahead over at least STAGE_MIN_PICKS picks.
  */
-export const stageAhead = (fit: FitState, stage: LiveStage) => stage === 'tested' || fitVerdict(fit.file?.live?.[stage]?.picks) !== 'none';
+export function stageAhead(fit: FitState, stage: LiveStage): boolean {
+  if (stage === 'tested') return true;
+  const t = fit.file?.live?.[stage]?.picks;
+  return !!t && t.win + t.loss >= STAGE_MIN_PICKS && fitVerdict(t) !== 'none';
+}
 
 /** Live picks from games where the record applies, and those from a stretch of the game it hasn't shown it can call. */
 export function splitByStage(singles: Parlay[], markets: GameMarket[], fit: FitState): { tested: Parlay[]; untested: Parlay[] } {
@@ -308,8 +312,8 @@ function UntestedPicks(props: { fit: FitState; league: LeagueId; singles: Parlay
         return (
           <p key={s} class="muted small">
             {t && t.win + t.loss
-              ? `Picks from ${label} so far: ${t.win}-${t.loss}, ${signedPct(t.roi)} per bet on days the fit hadn't seen (95% range ${signedPct(t.lo)} to ${signedPct(t.hi)}). They join the list above once that's ahead.`
-              : `No picks from ${label} graded yet. They join the list above once their own record is ahead.`}
+              ? `Picks from ${label} so far: ${t.win}-${t.loss}, ${signedPct(t.roi)} per bet on days the fit hadn't seen (95% range ${signedPct(t.lo)} to ${signedPct(t.hi)}). They join the list above once that's ahead over at least ${STAGE_MIN_PICKS} picks.`
+              : `No picks from ${label} graded yet. They join the list above once their own record is ahead over at least ${STAGE_MIN_PICKS} picks.`}
           </p>
         );
       })}

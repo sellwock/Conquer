@@ -78,8 +78,8 @@ export { playedShare };
 
 /**
  * Which live look a game in progress is due, by how much of regulation is played: one early look
- * (8–25%), the first look in the tested stretch (25–75%), a second after halftime when the first
- * came before it (lines in the third quarter are a different bet from lines in the second), and
+ * (8–25%), the first look in the tested stretch (25–75%), a second at or after halftime when the
+ * first came before it (usually during the break: the first run once half the game is played), and
  * one late look (75–92%). Undefined when the game is outside them all or already has that look.
  */
 export function liveLook(league: LeagueId, prev: PropEntry | undefined, period: number | undefined, clockSec: number | undefined): LiveKey | undefined {
