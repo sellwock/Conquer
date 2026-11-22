@@ -1,9 +1,9 @@
 {
-"lastRun": "2026-11-22T20:15:19.082Z",
+"lastRun": "2026-11-22T20:30:22.587Z",
 "model": "1.2.0",
-"requests": 17,
+"requests": 91,
 "snapshots": 0,
-"refreshed": 0,
+"refreshed": 4,
 "graded": 1,
 "voided": 0,
 "results": 0,
@@ -13,7 +13,7 @@
 "propsOpen": 0,
 "news": 0,
 "propsNews": 0,
-"propsClose": 1,
+"propsClose": 0,
 "fit": 0,
 "errors": ["ncaam 401926774: Couldn't load the Louisiana Ragin' Cajuns roster."]
 }
