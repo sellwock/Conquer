@@ -1,7 +1,7 @@
 {
-"lastRun": "2026-11-25T05:45:23.517Z",
+"lastRun": "2026-11-25T06:00:30.526Z",
 "model": "1.2.0",
-"requests": 11,
+"requests": 10,
 "snapshots": 0,
 "refreshed": 0,
 "graded": 1,
@@ -9,11 +9,11 @@
 "results": 1,
 "propsPre": 0,
 "propsLive": 0,
-"propsGraded": 1,
+"propsGraded": 0,
 "propsOpen": 0,
 "news": 0,
 "propsNews": 0,
 "propsClose": 0,
-"fit": 1,
+"fit": 0,
 "errors": []
 }
