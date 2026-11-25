@@ -1,10 +1,10 @@
 {
-"lastRun": "2026-11-25T02:45:19.593Z",
+"lastRun": "2026-11-25T03:00:23.034Z",
 "model": "1.2.0",
-"requests": 129,
-"snapshots": 4,
-"refreshed": 2,
-"graded": 1,
+"requests": 102,
+"snapshots": 0,
+"refreshed": 4,
+"graded": 3,
 "voided": 0,
 "results": 0,
 "propsPre": 0,
@@ -13,7 +13,7 @@
 "propsOpen": 0,
 "news": 0,
 "propsNews": 0,
-"propsClose": 1,
+"propsClose": 0,
 "fit": 0,
 "errors": []
 }
