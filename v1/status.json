@@ -1,5 +1,5 @@
 {
-"lastRun": "2026-11-26T05:15:18.321Z",
+"lastRun": "2026-11-26T05:30:23.513Z",
 "model": "1.2.0",
 "requests": 13,
 "snapshots": 0,
@@ -9,11 +9,11 @@
 "results": 1,
 "propsPre": 0,
 "propsLive": 0,
-"propsGraded": 0,
+"propsGraded": 1,
 "propsOpen": 0,
 "news": 0,
 "propsNews": 0,
 "propsClose": 0,
-"fit": 0,
+"fit": 1,
 "errors": []
 }
